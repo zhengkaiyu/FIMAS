@@ -304,6 +304,9 @@ try
                 framenum=numel(frame_pos);
             end
             [linenum,linestop_framenum]=histc(line_pos,frame_pos);
+            if linenum==0
+                linenum=numel(line_pos);
+            end
             [pixelnum,~]=histc(pixel_pos,line_pos);
             validframe=[];
             % validate line per frame and pixel per line
