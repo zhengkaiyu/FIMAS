@@ -1,9 +1,9 @@
 function bfUpgradeCheck(varargin)
 % Check for new version of Bio-Formats and update it if applicable
-% 
+%
 % SYNOPSIS: bfUpgradeCheck(autoDownload, 'STABLE')
 %
-% Input 
+% Input
 %    autoDownload - Optional. A boolean specifying of the latest version
 %    should be downloaded
 %
@@ -15,7 +15,7 @@ function bfUpgradeCheck(varargin)
 
 % OME Bio-Formats package for reading and converting biological file formats.
 %
-% Copyright (C) 2012 - 2013 Open Microscopy Environment:
+% Copyright (C) 2012 - 2016 Open Microscopy Environment:
 %   - Board of Regents of the University of Wisconsin-Madison
 %   - Glencoe Software, Inc.
 %   - University of Dundee
@@ -41,13 +41,17 @@ ip.addOptional('version', 'STABLE', @(x) any(strcmpi(x, versions)))
 ip.parse(varargin{:})
 
 % Create UpgradeChecker
-upgrader = loci.formats.UpgradeChecker();
+upgrader = javaObject('loci.formats.UpgradeChecker');
 if upgrader.alreadyChecked(), return; end
 
 % Check for new version of Bio-Formats
-canUpgrade = upgrader.newVersionAvailable('MATLAB');
-if ~canUpgrade,
-    fprintf('*** loci_tools.jar is up-to-date ***\n');
+if is_octave()
+    caller = 'Octave';
+else
+    caller = 'MATLAB';
+end
+if ~ upgrader.newVersionAvailable(caller)
+    fprintf('*** bioformats_package.jar is up-to-date ***\n');
     return;
 end
 
@@ -55,7 +59,7 @@ fprintf('*** A new stable version of Bio-Formats is available ***\n');
 % If appliable, download new version of Bioformats
 if ip.Results.autoDownload
     fprintf('*** Downloading... ***');
-    path = fullfile(fileparts(mfilename('fullpath')), 'loci_tools.jar');
+    path = fullfile(fileparts(mfilename('fullpath')), 'bioformats_package.jar');
     buildName = [upper(ip.Results.version) '_BUILD'];
     upgrader.install(loci.formats.UpgradeChecker.(buildName), path);
     fprintf('*** Upgrade will be finished when MATLAB is restarted ***\n');

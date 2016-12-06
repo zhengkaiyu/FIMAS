@@ -13,13 +13,14 @@ try
     bfstatus = bfCheckJavaPath(autoloadBioFormats);
     assert(bfstatus, ['Missing Bio-Formats library. Either add loci_tools.jar '...
         'to the static Java path or add it to the Matlab path.']);
-    % initialize logging
-    loci.common.DebugTools.enableLogging('INFO');
+    % Initialize logging
+    bfInitLogging();
+    
     % Get the channel filler
     r = bfGetReader(filename, stitchFiles);
-    %-----
+    
     % Test plane size
-    planeSize = loci.formats.FormatTools.getPlaneSize(r);
+    planeSize = javaMethod('getPlaneSize', 'loci.formats.FormatTools', r);
     
     if planeSize/(1024)^3 >= 2,
         error(['Image plane too large. Only 2GB of data can be extracted '...
@@ -27,7 +28,11 @@ try
             'the plane in tiles.']);
     end
     
-    numSeries = r.getSeriesCount(); %number of series
+    numSeries = r.getSeriesCount();
+    result = cell(numSeries, 2);
+    
+    globalMetadata = r.getGlobalMetadata();
+    
     
     for s = 1:numSeries
         fprintf('Reading series #%d\n', s);
@@ -42,7 +47,7 @@ try
         sizeZ = r.getSizeZ();%z-stack size
         sizeC = r.getSizeC();%channel size
         sizeT = r.getSizeT();%time series size
-
+        
         %preallocate
         imageList = cell( sizeC, 1 );
         imageList = cellfun(@(x)zeros(1,sizeX,sizeY,sizeZ,sizeT),imageList,'UniformOutput',false);
@@ -59,12 +64,64 @@ try
         end
         
         % extract metadata table for this series
-        metadata=r.getMetadata();
-        field_array=metadata.keySet.toArray;
-        val_array=metadata.values.toArray;
-        for f_idx = 1:metadata.size
+        seriesMetadata = r.getSeriesMetadata();
+        javaMethod('merge', 'loci.formats.MetadataTools', ...
+            globalMetadata, seriesMetadata, 'Global ');
+        field_array=seriesMetadata.keySet.toArray;
+        val_array=seriesMetadata.values.toArray;
+        for f_idx = 1:seriesMetadata.size
             f_name=cat(2,'f_',regexprep(field_array(f_idx),'\W',''));
             info.(f_name)=val_array(f_idx);
+        end
+        
+        % extract xml data set
+        xmlmetadatastore=r.getMetadataStore;
+        xmlmetadata=char(xmlmetadatastore.dumpXML);
+        %{
+        [sm,sstart,send]=regexp(xmlmetadata,'<MetadataOnly/>','match');
+        [~,~,~,~,temp]=regexp(xmlmetadata(1:sstart(1)-1),'[<|\s]([ a-zA-Z_0-9]*)="([ \.:a-zA-Z_0-9]*)"','match');
+        %before <MetadataOnly/>
+        for f_idx=1:numel(temp)
+            f_name=cat(2,'xml_',regexprep(temp{f_idx}{1},'\W',''));
+            info.(f_name)=temp{f_idx}{2};
+        end
+        %after <MetadataOnly/>
+        [~,~,~,~,temp]=regexp(xmlmetadata(send(end)+1:end),'[<|\s]([ a-zA-Z_0-9]*)="([ \.:a-zA-Z_0-9]*)"','match');
+        for f_idx=1:numel(temp)
+            f_name=cat(2,'xml_',regexprep(temp{f_idx}{1},'\W',''));
+            info.(f_name)=temp{f_idx}{2};
+        end
+        %<MetadataOnly/> section to get real timeing information
+        %}
+        [~,~,~,~,temp]=regexp(xmlmetadata,'[<|\s]([ a-zA-Z_0-9]*)="([ \.:a-zA-Z_0-9]*)"','match');
+        pseudo_frame_idx=0;
+        for f_idx=1:numel(temp)
+            f_name=temp{f_idx}{1};
+            switch f_name
+                case {'Plane DeltaT'}
+                    f_name=regexprep(f_name,'\s','_');
+                    pseudo_frame_idx=pseudo_frame_idx+1;
+                    if pseudo_frame_idx==1
+                        scaninfo.(f_name)(1)=str2double(temp{f_idx}{2});
+                    else
+                        scaninfo.(f_name)(end+1)=str2double(temp{f_idx}{2});
+                    end
+                case {'DeltaTUnit','PositionZUnit'}
+                    if pseudo_frame_idx==1
+                        scaninfo.(f_name){1}=char(temp{f_idx}{2});
+                    else
+                        scaninfo.(f_name){end+1}=temp{f_idx}{2};
+                    end
+                case {'PositionZ','TheC','TheT','TheZ'}
+                    if pseudo_frame_idx==1
+                        scaninfo.(f_name)(1)=str2double(temp{f_idx}{2});
+                    else
+                        scaninfo.(f_name)(end+1)=str2double(temp{f_idx}{2});
+                    end
+                otherwise
+                    f_name=cat(2,'xmlmeta_',regexprep(f_name,'\s','_'));
+                    info.(f_name)=temp{f_idx}{2};
+            end
         end
         
         % save images and metadata into our master series list
@@ -81,24 +138,24 @@ try
             
             %Z-axis
             if sizeZ>1
-                Z_start=str2double(info.f_Axis3ParametersCommonStartPosition);
-                Z_end=str2double(info.f_Axis3ParametersCommonEndPosition);
+                Z_start=str2double(info.f_GlobalAxis3ParametersCommonStartPosition);
+                Z_end=str2double(info.f_GlobalAxis3ParametersCommonEndPosition);
                 dZ=(Z_end-Z_start)/(sizeZ-1);
                 obj.data(data_end_pos).datainfo.dZ=dZ;
                 obj.data(data_end_pos).datainfo.Z=Z_start:dZ:Z_end;
             end
             %X-axis
             if sizeX>1
-                X_start=str2double(info.f_Axis0ParametersCommonStartPosition);
-                X_end=str2double(info.f_Axis0ParametersCommonEndPosition);
+                X_start=str2double(info.f_GlobalAxis0ParametersCommonStartPosition);
+                X_end=str2double(info.f_GlobalAxis0ParametersCommonEndPosition);
                 dX=(X_end-X_start)/(sizeX-1);
                 obj.data(data_end_pos).datainfo.dX=dX;
                 obj.data(data_end_pos).datainfo.X=X_start:dX:X_end;
             end
             %Y-axis
             if sizeY>1
-                Y_start=str2double(info.f_Axis1ParametersCommonStartPosition);
-                Y_end=str2double(info.f_Axis1ParametersCommonEndPosition);
+                Y_start=str2double(info.f_GlobalAxis1ParametersCommonStartPosition);
+                Y_end=str2double(info.f_GlobalAxis1ParametersCommonEndPosition);
                 dY=(Y_end-Y_start)/(sizeY-1);
                 if dY==0
                     Y_start=1;
@@ -110,17 +167,24 @@ try
             end
             %T-axis
             if sizeT>1
-                T_start=str2double(info.f_Axis4ParametersCommonStartPosition);
-                T_end=str2double(info.f_Axis4ParametersCommonEndPosition);
-                dT=(T_end-T_start)/(sizeT-1);
-                obj.data(data_end_pos).datainfo.dT=dT;
-                obj.data(data_end_pos).datainfo.T=T_start:dT:T_end;
+                [~,tidx]=unique(scaninfo.TheT);
+                if sizeT==numel(tidx)
+                    obj.data(data_end_pos).datainfo.dT=info.xmlmeta_TimeIncrement;
+                    obj.data(data_end_pos).datainfo.T=scaninfo.Plane_DeltaT(tidx);
+                else
+                    T_start=str2double(info.f_GlobalAxis4ParametersCommonStartPosition);
+                    T_end=str2double(info.f_GlobalAxis4ParametersCommonEndPosition);
+                    dT=(T_end-T_start)/(sizeT-1);
+                    obj.data(data_end_pos).datainfo.dT=dT;
+                    obj.data(data_end_pos).datainfo.T=T_start:dT:T_end;
+                end
+                
             end
             
             %core meta infos
-            obj.data(data_end_pos).datainfo.t_aquasition=str2double(info.f_TimePerSeries)/(1000*1000);%in seconds
-            obj.data(data_end_pos).datainfo.digital_zoom=info.f_AcquisitionParametersCommonZoomValue;
-            obj.data(data_end_pos).datainfo.optical_zoom=info.f_Magnification;
+            obj.data(data_end_pos).datainfo.t_aquasition=str2double(info.f_GlobalTimePerSeries)/(1000*1000);%in seconds
+            obj.data(data_end_pos).datainfo.digital_zoom=info.f_GlobalAcquisitionParametersCommonZoomValue;
+            obj.data(data_end_pos).datainfo.optical_zoom=info.f_GlobalMagnification;
             
             obj.data(data_end_pos).datainfo.data_idx=obj.current_data;
             obj.data(data_end_pos).datainfo.data_dim=[1,sizeX,sizeY,sizeZ,sizeT];
@@ -128,12 +192,12 @@ try
             obj.data(data_end_pos).datatype=obj.get_datatype;
             obj.data(data_end_pos).datainfo.last_change=datestr(now);
             
-            obj.data(data_end_pos).dataname=cat(2,info.f_FileInfoDataName,'_S',num2str(s),'_C',num2str(channel_idx));
+            obj.data(data_end_pos).dataname=cat(2,info.f_GlobalFileInfoDataName,'_S',num2str(s),'_C',num2str(channel_idx));
             if isfield(info,'f_FileInfoUserComment')
                 %if there are comments
-                obj.data(data_end_pos).datainfo.note=info.f_FileInfoUserComment;
+                obj.data(data_end_pos).datainfo.note=info.f_GlobalFileInfoUserComment;
             end
-        end     
+        end
     end
     r.close();%close file
     message=sprintf('%g series from %g channels\n',numSeries,sizeC);

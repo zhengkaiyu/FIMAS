@@ -16,7 +16,7 @@ function volume = bfOpen3DVolume(filename)
 
 % OME Bio-Formats package for reading and converting biological file formats.
 %
-% Copyright (C) 2012 - 2013 Open Microscopy Environment:
+% Copyright (C) 2012 - 2016 Open Microscopy Environment:
 %   - Board of Regents of the University of Wisconsin-Madison
 %   - Glencoe Software, Inc.
 %   - University of Dundee
@@ -37,7 +37,7 @@ function volume = bfOpen3DVolume(filename)
 
 % load the Bio-Formats library into the MATLAB environment
 status = bfCheckJavaPath();
-assert(status, ['Missing Bio-Formats library. Either add loci_tools.jar '...
+assert(status, ['Missing Bio-Formats library. Either add bioformats_package.jar '...
     'to the static Java path or add it to the Matlab path.']);
 
 % Prompt for a file if not input

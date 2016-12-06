@@ -1,26 +1,30 @@
 function [status, version] = bfCheckJavaPath(varargin)
 % bfCheckJavaPath check Bio-Formats is included in the Java class path
-% 
+%
 % SYNOPSIS  bfCheckJavaPath()
 %           status = bfCheckJavaPath(autoloadBioFormats)
 %           [status, version] = bfCheckJavaPath()
 %
-% Input 
+% Input
 %
-%    autoloadBioFormats - Optional. A boolean specifying the action to take
-%    if loci_tools is not in the Java class path. If true, add loci_tools 
-%    to the dynamic Java path. Default - true
+%    autoloadBioFormats - Optional. A boolean specifying the action
+%    to take if Bio-Formats is not in the javaclasspath.  If true,
+%    tries to find a Bio-Formats jar file and adds it to the java
+%    class path.
+%    Default - true
 %
 % Output
 %
-%    status - Boolean. True if loci_tools.jar is in the Java class path.
+%    status - Boolean. True if the Bio-Formats classes are in the Java
+%    class path.
 %
-%    version - String specifying the current version of Bio-Formats if 
-%    loci_tools.jar is in the Java class path. Empty string else.
+%
+%    version - String specifying the current version of Bio-Formats if
+%    Bio-Formats is in the Java class path. Empty string otherwise.
 
 % OME Bio-Formats package for reading and converting biological file formats.
 %
-% Copyright (C) 2012 - 2013 Open Microscopy Environment:
+% Copyright (C) 2012 - 2016 Open Microscopy Environment:
 %   - Board of Regents of the University of Wisconsin-Madison
 %   - Glencoe Software, Inc.
 %   - University of Dundee
@@ -44,28 +48,36 @@ ip = inputParser;
 ip.addOptional('autoloadBioFormats', true, @isscalar);
 ip.parse(varargin{:});
 
-% Check if loci_tools is in the Java class path (static or dynamic)
-jPath = javaclasspath('-all');
-isLociTools = cellfun(@(x) ~isempty(regexp(x, '.*loci_tools.jar$', 'once')),...
-    jPath);
-status = any(isLociTools);
+[status, version] = has_working_bioformats();
 
 if ~status && ip.Results.autoloadBioFormats,
-    % Assume the jar is in Matlab path or under the same folder as this file
-    path = which('loci_tools.jar');
-    if isempty(path)
-        path = fullfile(fileparts(mfilename('fullpath')), 'loci_tools.jar');
+    jarPath = fullfile(fileparts(mfilename('fullpath')), ...
+                       'bioformats_package.jar');
+    if (exist(jarPath) == 2)
+        javaaddpath(jarPath);
+        [status, version] = has_working_bioformats();
+        if (~status)
+            javarmpath(jarPath);
+        end
     end
-    assert(exist(path, 'file') == 2, 'Cannot automatically locate loci_tools.jar');
-    
-    % Add loci_tools to dynamic Java class path
-    javaaddpath(path);
-    status = true;
 end
 
-if status
-    % Read Bio-Formats version
-    version = char(loci.formats.FormatTools.VERSION);
-else
-    version = '';
+% Return true if bioformats java interface is working, false otherwise.
+% Not working will probably mean that the classes are not in
+% the javaclasspath.
+function [status, version] = has_working_bioformats()
+
+status = true;
+version = '';
+try
+    % If the following fails for any reason, then bioformats is not working.
+    % Getting the version number and creating a reader is the bare minimum.
+    reader = javaObject('loci.formats.in.FakeReader');
+    if is_octave()
+        version = char(java_get('loci.formats.FormatTools', 'VERSION'));
+    else
+        version = char(loci.formats.FormatTools.VERSION);
+    end
+catch
+    status = false;
 end
