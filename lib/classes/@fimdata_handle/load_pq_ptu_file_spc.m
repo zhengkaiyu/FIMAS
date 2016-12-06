@@ -46,7 +46,7 @@ try
     if fid>=3 %successfully opened
         %------------
         %read header
-        
+        info.('File_Name')=char(filename);
         %Preamble Tags
         info.('File_Type')=char(fread(fid, 8, 'char')');
         info.('File_Format_Version')=char(fread(fid, 8, 'char')');

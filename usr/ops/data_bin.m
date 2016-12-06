@@ -170,7 +170,11 @@ try
                     if newdatasize(1)>1
                         [~,t_new]=hist(obj.data(parent_data).datainfo.t,obj.data(parent_data).datainfo.t(1:tbin:end));
                         dtime=obj.data(parent_data).dataval(:,2);
-                        temp=hist3([dtime,newid],{t_new,1:1:new_ppl*new_lpf*new_nframe});
+                        if new_ppl*new_lpf*new_nframe==1
+                            temp=histc(dtime,t_new);
+                        else
+                            temp=hist3([dtime,newid],{t_new,1:1:new_ppl*new_lpf*new_nframe});
+                        end
                     else
                         t_new=0;
                         temp=histc(newid,1:1:new_ppl*new_lpf*new_nframe);

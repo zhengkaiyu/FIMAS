@@ -104,7 +104,7 @@ else
     set(hObject,'Value',get(handles.SLIDER_MINX,'Min'));
 end
 
-function VAL_XMAXBOUND_Callback(hObject, ~, ~)
+function VAL_XMAXBOUND_Callback(hObject, ~, handles)
 global SETTING;
 val=str2double(get(hObject,'String'));
 [valid,~]=SETTING.update_panel_control('set','xmaxbound',val);

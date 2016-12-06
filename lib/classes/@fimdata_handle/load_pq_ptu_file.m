@@ -43,7 +43,7 @@ try
     if fid>=3 %successfully opened
         %------------
         %read header
-        
+        info.('File_Name')=char(filename);
         %Preamble Tags
         info.('File_Type')=char(fread(fid, 8, 'char')');
         info.('File_Format_Version')=char(fread(fid, 8, 'char')');
@@ -424,13 +424,13 @@ try
     end
 catch exception
     message=sprintf('%s\n',exception.message);
-     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end
 end
 
 
-    function n=myhist3(x,edges)        
+    function n=myhist3(x,edges)
         if ~(iscell(edges) && numel(edges)==2 && isnumeric(edges{1}) && isnumeric(edges{2}))
             edges = {edges{1}(:)' edges{2}(:)'};
             nbins = [length(edges{1}) length(edges{2})];
