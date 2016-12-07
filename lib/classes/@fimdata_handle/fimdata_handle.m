@@ -1,7 +1,7 @@
 classdef (ConstructOnLoad = true) fimdata_handle < handle
     % Fluorescent Imaging Microscopy data container
     %   Designed to import and hold various format of imaging data
-    %   Version 1.1 supported formats:
+    %   Version 1.2 supported formats:
     %   Biorad          PIC
     %   Olympus         OIB
     %   Becker & Hickl  SDT,SPC

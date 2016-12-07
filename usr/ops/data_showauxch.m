@@ -18,7 +18,6 @@ try
                 scale=1/1000;
             case 's'
                 scale=1;
-                
         end
         % downsample
         y=downsample(y,10);

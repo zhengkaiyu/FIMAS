@@ -417,7 +417,7 @@ try
             'Position',[pos(3)/2 0 3*pos(3)/2 pos(4)],...% maximise table
             'ColumnWidth',{floor(pos(3)/8) floor(1.5*pos(3)/8)},...
             'ColumnEditable',[false false]);% no editing required
-        button = questdlg('Check data info is correct','Proceed Further?','Proceed','Cancel','Proceed') ;
+        button = questdlg('Check data info is correct','Proceed Further?','Cancel','Proceed','Proceed') ;
         % ------------------------
         switch button
             case 'Proceed'

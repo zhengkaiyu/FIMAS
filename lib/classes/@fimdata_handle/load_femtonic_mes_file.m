@@ -11,15 +11,15 @@ try
     data_name=fieldnames(raw_data);
     % find data variables, Data field temp_data.Df*
     isdata=find(cellfun(@(x)~isempty(x),regexp(data_name,'Df|DF')));
-    
     temp_data=cellfun(@(x)raw_data.(x),data_name(isdata),'UniformOutput',false);
     timestr=cell2mat(cellfun(@(x)datevec(x(1).MeasurementDate,'yyyy.mm.dd. HH:MM:SS,FFF'),temp_data,'UniformOutput',false));
+    commentstr=cellfun(@(x)char(x(1).Comment),temp_data,'UniformOutput',false);
     [~,measure_order]=sortrows(timestr,[1 2 3 4 5 6]);
     timestr=datestr(timestr(measure_order,:),'yyyy-mm-dd|HH:MM:SS');
-    datalist=[char(data_name(isdata(measure_order))),repmat('|',numel(isdata),1),(timestr)];
+    datalist=[char(data_name(isdata(measure_order))),repmat('|',numel(isdata),1),timestr,repmat('|',numel(isdata),1),char(commentstr(measure_order))];
     set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
     set(0,'DefaultUicontrolForegroundColor','k');
-    [selected,answer]=listdlg('Name','Select Data Item','PromptString','Which data items?','OKString','Load','ListString',datalist);
+    [selected,answer]=listdlg('Name','Select Data Item','PromptString','Which data items?','OKString','Load','ListString',datalist,'ListSize',[400,500],'InitialValue',1:1:numel(isdata));
     set(0,'DefaultUicontrolBackgroundColor','k');
     set(0,'DefaultUicontrolForegroundColor','w');
     if answer

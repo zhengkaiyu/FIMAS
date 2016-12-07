@@ -1,7 +1,7 @@
 function FIMAS
 % FIMAS Main executable of the FIMAS software
 %   Initialises environment for programme and start the main GUI
-%   Version 1.1
+%   Version 1.2
 %% function complete
 % ---------------------------------------------------
 % clear command window
