@@ -390,6 +390,7 @@ try
                 %gtime=gtime(validdata);%remove nondata record
                 clock_data=double(clock_data(validdata,:));
                 %delaytime=delaytime(validdata)=[];%remove nondata record
+                pixel_per_line=max(clock_data(:,3));
                 clock_data=sub2ind([pixel_per_line,line_per_frame,framenum], clock_data(:,3), clock_data(:,2), clock_data(:,1));
                 
                 %assign data
