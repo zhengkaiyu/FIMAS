@@ -13,6 +13,7 @@ try
         %remove old roi handles
         if isvalid(obj.data(obj.current_data).roi(m).handle)
             set(obj.data(obj.current_data).roi(m).handle,'Visible','off');
+            set(obj.data(obj.current_data).roi(m).handle,'PickableParts','none');
         end
     end
     
