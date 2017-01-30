@@ -53,8 +53,10 @@ if ~isempty(surface)
                     roi=inpolygon(pixel_x,pixel_y,xys(:,1),xys(:,2));
                     p_roi_idx=find(roi==1);
                     if size(xys,1)==2
+                        % distance for two points impoly
                         roilength=sum(sqrt(sum(diff(xys,1,1).^2,2)));
                     else
+                        % length for two points impoly
                         roilength=sum(sqrt(sum(diff([xys;xys(1,:)],1,1).^2,2)));
                     end
                 case 'impoint'
