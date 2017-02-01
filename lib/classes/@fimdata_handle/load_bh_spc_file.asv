@@ -450,18 +450,19 @@ try
                             if isempty(line_pos)
                                 % in case no line clock was registered
                                 if numel(frame_pos)==1
-                                    [pop,~,line_idx]=histcounts(gtime(1:end),line_per_frame);
-                                    line_pos=cumsum(pop(:));
-                                    %clock_data(:,2)=line_idx;
+                                    [pop,~,line_idx]=histcounts(gtime(1:end),line_per_frame+1);
+                                    line_pos=cumsum(pop);
+                                    clock_data(:,2)=line_idx;
                                 else
-                                    [pop,~,line_idx]=arrayfun(@(fs,fe)histcounts(gtime(fs+1:fe),line_per_frame),[1;frame_pos(1:end)],[frame_pos(1:end);numel(gtime)],'UniformOutput',false);
-                                    line_pos=cell2mat(cellfun(@(p)cumsum(p(:)),pop,'UniformOutput',false));
-                                    %clock_data(2:end,2)=cell2mat(line_idx);
+                                    [pop,~,line_idx]=arrayfun(@(fs,fe)histcounts(gtime(fs+1:fe),line_per_frame+1),[1;frame_pos(1:end)],[frame_pos(1:end);numel(gtime)],'UniformOutput',false);
+                                    line_pos=cell2mat(cellfun(@(p)cumsum(p),pop,'UniformOutput',false));
+                                    clock_data(2:end,2)=cell2mat(line_idx);
                                 end
-                            end
+                            else
                                 clock_data(line_pos,2)=1;
                                 clock_data(frame_pos(2:end),2)=-linenum(1:end-1)+1;
                                 clock_data(:,2)=cumsum(clock_data(:,2));
+                            end
                             % get pixel clock
                             if isempty(pixel_pos)
                                 % in case no pixel clock was registered
