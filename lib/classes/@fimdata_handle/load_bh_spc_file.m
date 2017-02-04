@@ -459,9 +459,9 @@ try
                                     %clock_data(2:end,2)=cell2mat(line_idx);
                                 end
                             end
-                                clock_data(line_pos,2)=1;
-                                clock_data(frame_pos(2:end),2)=-linenum(1:end-1)+1;
-                                clock_data(:,2)=cumsum(clock_data(:,2));
+                            clock_data(line_pos,2)=1;
+                            clock_data(frame_pos(2:end),2)=-linenum(1:end-1)+1;
+                            clock_data(:,2)=cumsum(clock_data(:,2));
                             % get pixel clock
                             if isempty(pixel_pos)
                                 % in case no pixel clock was registered

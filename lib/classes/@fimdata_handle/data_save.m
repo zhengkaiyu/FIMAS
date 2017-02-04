@@ -1,6 +1,6 @@
 function [ status, message ] = data_save( obj )
 %saves currently opend fimdata_handle into matlab format
-%   
+%
 
 %% function complete
 
@@ -24,14 +24,22 @@ try
         filename=cat(2,pathname,filename);
         % update template name to filename
         obj.data(1).dataname=filename;
+        for dataidx=2:numel(obj.data)
+            % clear handles
+            obj.data(dataidx).datainfo.panel=[];
+            if numel(obj.data(dataidx).roi)>1
+                obj.data(dataidx).roi(2:end).panel=[];
+                obj.data(dataidx).roi(2:end).handle=[];
+            end
+        end
         %try
-            % ver 7 is much faster and create smaller file than ver 7.3
+        % ver 7 is much faster and create smaller file than ver 7.3
         %    save(filename,'obj','-mat','-v7');
         %    version='7';
         %catch
-            % if data is >2G we need v7.3
-            save(filename,'obj','-mat','-v7.3');
-            version='7.3';
+        % if data is >2G we need v7.3
+        save(filename,'obj','-mat','-v7.3');
+        version='7.3';
         %end
         % update saved path
         obj.path.saved=pathname;

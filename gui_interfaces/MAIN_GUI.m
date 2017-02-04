@@ -10,7 +10,7 @@ function varargout = MAIN_GUI(varargin)
 % Operating System: 64bit Matlab 2008b to 2016b on Linux/Mac/Windows
 % PDF Manual: require xpdf on linux and default pdf viewer on Mac/Windows
 
-% Last Modified by GUIDE v2.5 16-Jan-2015 19:23:44
+% Last Modified by GUIDE v2.5 01-Feb-2017 15:54:51
 
 %==============================================================
 % Begin initialization code - DO NOT EDIT
@@ -623,6 +623,18 @@ end
 %print command output from the user function steps
 update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
 
+
+% add polyline roi to data
+function BUTTON_ROIPOLYLINE_Callback(hObject, eventdata, handles)
+global hDATA;
+[ success, message ]=hDATA.roi_add('impolyline',[]);
+if success
+    % update roi list
+    populate_list(handles.LIST_ROI,{hDATA.data(hDATA.current_data).roi.name},hDATA.data(hDATA.current_data).current_roi);
+end
+%print command output from the user function steps
+update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
+
 % add rectangular roi to data
 function BUTTON_ROIRECT_Callback(~, ~, handles)
 global hDATA;
@@ -635,7 +647,7 @@ end
 update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
 
 % add polygon roi to data
-function BUTTON_ROIPOLY_Callback(~, ~, handles)
+function BUTTON_ROIPOLYAREA_Callback(~, ~, handles)
 global hDATA;
 [ success, message ]=hDATA.roi_add('impoly',[]);
 if success
@@ -1003,10 +1015,12 @@ if isnew
     set(handles.BUTTON_CALCULATE,'CData',iconimg);
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'roi_point_icon.png'));%#ok<NODEF>
     set(handles.BUTTON_ROIPT,'CData',iconimg);
+    iconimg=imread(cat(2,SETTING.rootpath.icon_path,'roi_polyline_icon.png'));%#ok<NODEF>
+    set(handles.BUTTON_ROIPOLYLINE,'CData',iconimg);
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'roi_rect_icon.png'));%#ok<NODEF>
     set(handles.BUTTON_ROIRECT,'CData',iconimg);
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'roi_poly_icon.png'));%#ok<NODEF>
-    set(handles.BUTTON_ROIPOLY,'CData',iconimg);
+    set(handles.BUTTON_ROIPOLYAREA,'CData',iconimg);
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'link_break.png'));%#ok<NODEF>
     set(handles.BUTTON_LINK,'CData',iconimg);
     % change main window icon

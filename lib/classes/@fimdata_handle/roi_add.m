@@ -12,7 +12,7 @@ try
             %recreate all saved roi for a data item
             current_data=obj.current_data;% find selected data
             if numel(obj.data(obj.current_data).roi)>1
-                if ~isvalid(obj.data(obj.current_data).roi(2).handle)
+                if isempty(obj.data(obj.current_data).roi(2).handle)||~isvalid(obj.data(obj.current_data).roi(2).handle)
                     obj.roi_add('redraw');
                 end
                 for roi_idx=2:numel(obj.data(current_data).roi)
@@ -36,13 +36,22 @@ try
                 for roi_idx=2:nroi
                     obj.data(current_data).roi(roi_idx).panel=where_to;
                     %end
-                    roitype=obj.data(current_data).roi(roi_idx).type;
+                    
                     pos=obj.data(current_data).roi(roi_idx).coord; %#ok<NASGU>
                     tag=obj.data(current_data).roi(roi_idx).name;
                     xlimit=[min(obj.data(current_data).datainfo.Y),max(obj.data(current_data).datainfo.Y)];
                     ylimit=[min(obj.data(current_data).datainfo.X),max(obj.data(current_data).datainfo.X)];
-                    fcn = makeConstrainToRectFcn(roitype,xlimit,ylimit);
-                    eval(cat(2,'h=',roitype,'(where_to,pos,''PositionConstraintFcn'',fcn);'));
+                    switch obj.data(current_data).roi(roi_idx).type
+                        case 'impolyline'
+                            roitype='impoly';
+                            fcn = makeConstrainToRectFcn(roitype,xlimit,ylimit);
+                            eval(cat(2,'h=',roitype,'(where_to,pos,''Closed'',false,''PositionConstraintFcn'',fcn);'));
+                        otherwise
+                            roitype=obj.data(current_data).roi(roi_idx).type;
+                            fcn = makeConstrainToRectFcn(roitype,xlimit,ylimit);
+                            eval(cat(2,'h=',roitype,'(where_to,pos,''PositionConstraintFcn'',fcn);'));
+                    end
+                    
                     obj.data(current_data).roi(roi_idx).handle=h;
                     set(obj.data(current_data).roi(roi_idx).handle,'Tag',tag);
                     setPositionConstraintFcn(obj.data(current_data).roi(roi_idx).handle,fcn);
@@ -135,6 +144,67 @@ try
                     eval(cat(2,'h=',type,'(where_to,''PositionConstraintFcn'',fcn);'));
                 else
                     eval(cat(2,'h=',type,'(where_to,position,''PositionConstraintFcn'',fcn);'));
+                end
+                if ~isempty(h)
+                    % copy template from 'ALL'
+                    obj.data(current_data).roi(end+1)=obj.data(current_data).roi(1);
+                    % update current roi index
+                    current_roi=numel(obj.data(current_data).roi);
+                    %assign auto name
+                    obj.data(current_data).roi(current_roi).name=cat(2,'ROI',num2str(current_data),'-',num2str(current_roi));
+                    % assign handle
+                    obj.data(current_data).roi(current_roi).handle=h;
+                    obj.data(current_data).roi(current_roi).coord=h.getPosition;
+                    obj.data(current_data).roi(current_roi).panel=get(where_to,'Tag');
+                    % set handle name
+                    set(obj.data(current_data).roi(current_roi).handle,'Tag',obj.data(current_data).roi(current_roi).name);
+                    % change colour to white
+                    setColor(obj.data(current_data).roi(current_roi).handle,'w');
+                    % add call back to print back current position
+                    obj.data(current_data).roi(current_roi).handle.addNewPositionCallback(@(p)fprintf('y = %g; x = %g\n',p));
+                    % clear temporary handle
+                    clear h;
+                    obj.data(current_data).roi(current_roi).panel=where_to;
+                    obj.data(current_data).roi(current_roi).type=type;
+                    obj.data(current_data).current_roi=current_roi;
+                    obj.roi_select(current_roi);
+                    message=sprintf('%s ROI added\n',type);
+                    status=true;
+                else
+                    %if cancelled new roi return previous one to white
+                    
+                    for current_roi=obj.data(current_data).current_roi
+                        if current_roi>1
+                            % ignore template whoes index is 1
+                            % change colour of the current one to blue
+                            setColor(obj.data(current_data).roi(current_roi).handle,'w');
+                        end
+                    end
+                    message=sprintf('Add %s ROI cancelled\n',type);
+                end
+            else
+                message=sprintf('no panel assigned to this data\n');
+            end
+        case 'impolyline'
+            % get current data and roi
+            current_data=obj.current_data;
+            % get plot handle
+            where_to=obj.data(current_data).datainfo.panel;
+            if ~isempty(where_to)
+                for current_roi=obj.data(current_data).current_roi
+                    if current_roi>1
+                        % ignore template whoes index is 1
+                        % change colour of the current one to blue
+                        setColor(obj.data(current_data).roi(current_roi).handle,'b');
+                    end
+                end
+                % make constrain function to the plot area
+                fcn = makeConstrainToRectFcn('impoly',get(where_to,'XLim'),get(where_to,'YLim')); %#ok<NASGU>
+                % create roi handle
+                if isempty(position)
+                    eval(cat(2,'h=impoly(where_to,''Closed'',false,''PositionConstraintFcn'',fcn);'));
+                else
+                    eval(cat(2,'h=impoly(where_to,position,''Closed'',false,''PositionConstraintFcn'',fcn);'));
                 end
                 if ~isempty(h)
                     % copy template from 'ALL'
