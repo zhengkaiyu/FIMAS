@@ -13,9 +13,13 @@ try
         filename=cat(2,pathname,filename);
         dataitem=obj.data(index); %#ok<NASGU>
         % clear handles
-        dataitem.datainfo.panel=[];
-        dataitem.roi(2:end).panel=[];
-        dataitem.roi(2:end).handle=[];
+        for dataidx=2:numel(dataitem)
+            dataitem(dataidx).datainfo.panel=[];
+            if numel(dataitem(dataidx).roi)>1
+                dataitem(dataidx).roi(2:end).panel=[];
+                dataitem(dataidx).roi(2:end).handle=[];
+            end
+        end
         %to cope with large file size
         save(filename,'dataitem','-mat','-v7.3');
         %update saved path
