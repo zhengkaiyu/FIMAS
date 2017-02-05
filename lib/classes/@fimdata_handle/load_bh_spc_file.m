@@ -535,7 +535,6 @@ try
                             obj.data(data_end_pos).datainfo.T=T;
                             obj.data(data_end_pos).datainfo.dT=framestep;
                         end
-                        
                         obj.data(data_end_pos).dataval=[clock_data,dtime(validdata),gtime(validdata)];
                         clear clock_data dtime gtime validdata;
                         %data information
@@ -543,8 +542,7 @@ try
                         for f_idx=1:length(f_name)
                             obj.data(data_end_pos).metainfo.(f_name{f_idx})=info.(f_name{f_idx});
                         end
-                        
-                        obj.data(data_end_pos).datainfo.note='';
+                        %obj.data(data_end_pos).datainfo.note='';
                         obj.data(data_end_pos).datainfo.T_acquisition=info.setup_info.SP_COL_T;
                         obj.data(data_end_pos).datainfo.last_change=datestr(now);
                         obj.data(data_end_pos).datainfo.data_idx=obj.current_data;
@@ -691,7 +689,7 @@ try
                         obj.data(data_end_pos).datainfo.dX=double(1);
                         obj.data(data_end_pos).datainfo.dY=double(1);
                         obj.data(data_end_pos).datainfo.dZ=double(1);
-                        obj.data(data_end_pos).datainfo.note='';
+                        %obj.data(data_end_pos).datainfo.note='';
                         obj.data(data_end_pos).datainfo.T_acquisition=info.setup_info.SP_COL_T;
                         obj.data(data_end_pos).datainfo.last_change=datestr(now);
                         obj.data(data_end_pos).datainfo.data_idx=obj.current_data;

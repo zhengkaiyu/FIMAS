@@ -77,6 +77,7 @@ try
                 end
             end
             % output message and status
+            obj.data(current_data).datainfo.last_change=datestr(now);
             status=true;
             message=sprintf('%s appended into %s\n',sprintf('%s\n',...
                 obj.data(selected_data).dataname),...

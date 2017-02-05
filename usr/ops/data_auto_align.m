@@ -252,6 +252,7 @@ try
             delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
             %save shift information
             save('./xyshift.dat','shift_size','-ascii');
+            obj.data(current_data).datainfo.last_change=datestr(now);
             status=true;
             message=sprintf('data auto-aligned discretly for %g slices\n x-y shift data is saved in xyshift.dat\n',n_slices);
         case 'No'

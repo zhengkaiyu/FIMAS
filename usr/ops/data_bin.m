@@ -124,6 +124,10 @@ try
                 % get new data index
                 current_data=obj.current_data;
                 % set parent data index
+                obj.data(current_data).datainfo=obj.data(parent_data).datainfo;
+                % set data index
+                obj.data(current_data).datainfo.data_idx=current_data;
+                % set parent data index
                 obj.data(current_data).datainfo.parent_data_idx=parent_data;
                 obj.data(current_data).datainfo.operator='data_bin';
                 obj.data(current_data).datainfo.bin_dim=binsize;
@@ -220,6 +224,7 @@ try
                         %redefine data type
                         obj.data(current_data).datainfo.data_dim=newdatasize;
                         obj.data(current_data).datatype=obj.get_datatype(current_data);
+                        obj.data(current_data).datainfo.last_change=datestr(now);
                     else
                         message=sprintf('data binned failed\n');
                     end
@@ -309,6 +314,7 @@ try
                             %redefine data type
                             obj.data(current_data).datainfo.data_dim=newsize;
                             obj.data(current_data).datatype=obj.get_datatype(current_data);
+                            obj.data(current_data).datainfo.last_change=datestr(now);
                         end
                     end
             end

@@ -386,7 +386,8 @@ if success
         'ColumnName',{'Field','Value'},...
         'Position',[0 0 pos(3:4)],...% maximise table
         'ColumnWidth',{floor(pos(3)/2)-10 floor(2*pos(3)/5)-10},...
-        'ColumnEditable',[false false]);% no editing required
+        'ColumnEditable',[false false],...
+        'KeyPressFcn',@fieldsearch);% no editing required
 else
     % something went wrong, inform error
     update_info(sprintf('%s\n',message),1,handles.EDIT_INFO);
@@ -1051,3 +1052,55 @@ populate_list(handles.LIST_ROI,{hDATA.data(1).roi.name},1); %#ok<NODEF>
 
 % update info window
 update_info(sprintf('%s\n','New Session Initialised'),1,handles.EDIT_INFO);
+
+function fieldsearch(hObject, eventdata, handles)
+global SETTING;
+persistent combkey;%for combination keys
+switch eventdata.Key
+    case {'control'}
+        % don't display anything for utility keys
+        combkey=eventdata.Key;
+    case {'f','F'}
+        %display
+        if strmatch(combkey,'control','exact');
+            %search field name
+            tabledata=hObject.Data;
+            if ~isempty(tabledata)
+                fname=tabledata(:,1);
+                set(0,'DefaultUicontrolBackgroundColor','w');
+                set(0,'DefaultUicontrolForegroundColor','k');
+                options.WindowStyle='modal';
+                answer = inputdlg('Find field names containing (case insensitive):','Find Field',1,{'search text here'},options);
+                set(0,'DefaultUicontrolBackgroundColor','k');
+                set(0,'DefaultUicontrolForegroundColor','w');
+                if ~isempty(answer)
+                    temp=regexpi(tabledata,answer);
+                    foundinfo=tabledata(find(sum(cellfun(@(x)~isempty(x),temp),2)),:);
+                    if ~isempty(foundinfo)
+                        temp = figure(...
+                            'WindowStyle','modal',...% able to use
+                            'MenuBar','none',...% no menu
+                            'Resize','off',... % disallow resize
+                            'Position',[100,100,800,500],...% fixed size
+                            'Name',sprintf('Search field name containing %s',answer{1}));% use data name
+                        % change metainfo window icon
+                        javaFrame = get(temp,'JavaFrame');
+                        javaFrame.setFigureIcon(javax.swing.ImageIcon(cat(2,SETTING.rootpath.icon_path,'main_icon.png')));
+                        % get new figure position
+                        pos=get(temp,'Position');
+                        % create table to display information
+                        uitable(...
+                            'Parent',temp,...
+                            'Data',foundinfo,...% output metainfo
+                            'ColumnName',{'Field','Value'},...
+                            'Position',[0 0 pos(3:4)],...% maximise table
+                            'ColumnWidth',{floor(pos(3)/2)-10 floor(2*pos(3)/5)-10},...
+                            'ColumnEditable',[false false]);% no editing required
+                    else
+                        errordlg(sprintf('No field containting %s found.',answer{1}),'No field found','modal');
+                    end
+                end
+            end
+            combkey='';
+        end
+end

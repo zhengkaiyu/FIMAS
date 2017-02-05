@@ -1,6 +1,6 @@
 function [ status, message ] = data_rearrangedim( obj, selected_data )
 % DATA_REARRANGEDIM permutes dimensions of a 5D data
-%   input permutation vector for dimension index and 
+%   input permutation vector for dimension index and
 %   operation will apply to the current data selected
 %   process is reversible
 %   e.g. input [1,2,5,4,3] will change a tXYZT data to tXTZY

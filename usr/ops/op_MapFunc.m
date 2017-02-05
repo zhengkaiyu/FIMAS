@@ -157,6 +157,7 @@ try
                             val=reshape(val,size(data));
                             data_handle.data(current_data).dataval=val;
                             data_handle.data(current_data).datatype=data_handle.get_datatype;
+                            data_handle.data(current_data).datainfo.last_change=datestr(now);
                             status=true;
                         else
                             fprintf('Calculate Parent Data first\n');

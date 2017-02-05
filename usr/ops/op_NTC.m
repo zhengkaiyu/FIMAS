@@ -201,6 +201,7 @@ try
                         data_handle.data(current_data).datainfo.dt=0;
                         data_handle.data(current_data).datainfo.t=0;
                         delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
+                        data_handle.data(current_data).datainfo.last_change=datestr(now);
                         status=true;
                     case {'DATA_TRACE'}
                         min_threshold=data_handle.data(current_data).datainfo.bg_threshold;
@@ -213,14 +214,14 @@ try
                         data_handle.data(current_data).dataval=val;
                         data_handle.data(current_data).datainfo.data_dim=[1,1,1,1,1];
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
-                        
+                        data_handle.data(current_data).datainfo.last_change=datestr(now);
                         message=sprintf('NTC = %g\n',val);
                         status=1;
                 end
             end
     end
 catch exception
-     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end
     message=exception.message;

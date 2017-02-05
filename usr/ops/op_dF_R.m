@@ -163,7 +163,7 @@ try
                         data_handle.data(current_data).datainfo.data_dim=size(data_handle.data(current_data).dataval);
                         data_handle.data(current_data).datainfo.display_dim=(size(data_handle.data(current_data).dataval)>1);
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
-                        
+                        data_handle.data(current_data).datainfo.last_change=datestr(now);
                         message=sprintf('%s%s calculated on %s\n',message,data_handle.data(current_data).datainfo.operator,data_handle.data(current_data).dataname);
                     case 'DATA_TRACE'
                         datasize=[2,data_handle.data(parent_data).datainfo.data_dim(2:end)];
@@ -206,7 +206,7 @@ try
                         data_handle.data(current_data).datainfo.data_dim=size(data_handle.data(current_data).dataval);
                         data_handle.data(current_data).datainfo.display_dim=(size(data_handle.data(current_data).dataval)>1);
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
-                        
+                        data_handle.data(current_data).datainfo.last_change=datestr(now);
                         message=sprintf('%s%s calculated on %s\n',message,data_handle.data(current_data).datainfo.operator,data_handle.data(current_data).dataname);
                 end
             end

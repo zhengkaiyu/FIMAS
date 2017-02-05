@@ -62,6 +62,7 @@ try
         else
             %flip upside down
             obj.data(current_data).dataval=flipdim(obj.data(current_data).dataval,dim);
+            obj.data(current_data).datainfo.last_change=datestr(now);
             status=true;
             message=sprintf('Data fliped along %s-axis\n',obj.DIM_TAG{dim});
         end
