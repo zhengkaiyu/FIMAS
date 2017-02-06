@@ -1,5 +1,5 @@
 function varargout = MAIN_GUI(varargin)
-% Fluorescence Imaging Microscopy Analysis Software Ver 1.2
+% Fluorescence Imaging Microscopy Analysis Software Ver 1.2.2
 % Author: Kaiyu Zheng
 % Email: k.zheng@ucl.ac.uk
 % -------------------------------
@@ -7,7 +7,7 @@ function varargout = MAIN_GUI(varargin)
 % CPU: Multi-Core System
 % RAM: > 4GB depending on image data size, ideally 16GB for TCSPC
 % HDD: > 4GB free
-% Operating System: 64bit Matlab 2008b to 2016b on Linux/Mac/Windows
+% Operating System: 64bit Matlab 2016a on Linux/Mac/Windows
 % PDF Manual: require xpdf on linux and default pdf viewer on Mac/Windows
 
 % Last Modified by GUIDE v2.5 01-Feb-2017 15:54:51
@@ -684,7 +684,7 @@ current_roi=current_roi(current_roi>1);
 % ask for name template
 roi_name={hDATA.data(current_data).roi(current_roi).name};
 options.WindowStyle='modal';
-set(0,'DefaultUicontrolBackgroundColor','w');
+set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
 set(0,'DefaultUicontrolForegroundColor','k');
 if ~isempty(roi_name)
     answer = inputdlg(roi_name,'Rename ROIs',1,roi_name,options);
@@ -1039,13 +1039,13 @@ else
     % reset graphics e.g. open new data file
     
 end
-%{
+
 % clear axes
 for panelidx=1:numel(SETTING.PANEL_NAME_LIST)
     SETTING.current_panel=panelidx;
     SETTING.update_panel_control('clear');
 end
-%}
+
 % update data list and roi list
 populate_list(handles.LIST_DATA,{hDATA.data.dataname},1); %#ok<NODEF>
 populate_list(handles.LIST_ROI,{hDATA.data(1).roi.name},1); %#ok<NODEF>
@@ -1067,14 +1067,14 @@ switch eventdata.Key
             tabledata=hObject.Data;
             if ~isempty(tabledata)
                 fname=tabledata(:,1);
-                set(0,'DefaultUicontrolBackgroundColor','w');
+                set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
                 set(0,'DefaultUicontrolForegroundColor','k');
                 options.WindowStyle='modal';
                 answer = inputdlg('Find field names containing (case insensitive):','Find Field',1,{'search text here'},options);
                 set(0,'DefaultUicontrolBackgroundColor','k');
                 set(0,'DefaultUicontrolForegroundColor','w');
                 if ~isempty(answer)
-                    temp=regexpi(tabledata,answer);
+                    temp=regexpi(fname,answer);
                     foundinfo=tabledata(find(sum(cellfun(@(x)~isempty(x),temp),2)),:);
                     if ~isempty(foundinfo)
                         temp = figure(...

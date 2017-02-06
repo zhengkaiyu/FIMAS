@@ -93,63 +93,43 @@ try
                 case 'XY'%images
                     switch metainfo.Context
                         case 'Zstack'
-                            switch numel(metainfo.DIMS)
-                                case 3
-                                    Channels=metainfo.info_Posinfo.channel;
-                                    nCh=numel(Channels);
-                                    % t/Ch info
-                                    datainfo.t=1:1:nCh;
-                                    datainfo.dt=1;
-                                    % X info
-                                    datainfo.X=linspace(metainfo.WidthOrigin,metainfo.WidthOrigin+metainfo.Width*metainfo.WidthStep,metainfo.Width);
-                                    datainfo.dX=metainfo.WidthStep;
-                                    % Y info
-                                    datainfo.Y=linspace(metainfo.HeightOrigin,metainfo.HeightOrigin+metainfo.Height*metainfo.HeightStep,metainfo.Height);
-                                    datainfo.dY=metainfo.HeightStep;
-                                    % Z info
-                                    datainfo.Z=metainfo.info_Posinfo.zstart:metainfo.info_Posinfo.zstep:metainfo.info_Posinfo.zstop;
-                                    datainfo.dZ=metainfo.info_Posinfo.zstep;
-                                    % T info
-                                    datainfo.T=0;
-                                    datainfo.dT=0;
-                                    ifname={dataitem.IMAGE};
-                                    nimg=numel(ifname);
-                                    nZSlice=nimg/nCh;
-                                    if nZSlice==metainfo.info_Posinfo.znum
-                                        nZSlice=metainfo.info_Posinfo.znum;
-                                    else
-                                        message=sprintf('Z Slice number missing\n');
-                                        datainfo.Z=datainfo.Z(1:nZSlice);
-                                    end
-                                    
-                                    temp=cellfun(@(x)raw_data.(x),ifname,'UniformOutput',false);
-                                    obj.data(data_end_pos).dataval(:,:,:,:,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels),nZSlice]),[3,1,2,4]);
-                                    datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,nZSlice,1];
-                                case 2
-                                    ifname={dataitem.IMAGE};
-                                    Channels={dataitem.Channel};
-                                    nCh=numel(Channels);
-                                    % t/Ch info
-                                    datainfo.t=1:1:nCh;
-                                    datainfo.dt=1;
-                                    % X info
-                                    datainfo.X=linspace(metainfo.WidthOrigin,metainfo.WidthOrigin+metainfo.Width*metainfo.WidthStep,metainfo.Width);
-                                    datainfo.dX=metainfo.WidthStep;
-                                    % Y info
-                                    datainfo.Y=linspace(metainfo.HeightOrigin,metainfo.HeightOrigin+metainfo.Height*metainfo.HeightStep,metainfo.Height);
-                                    datainfo.dY=metainfo.HeightStep;
-                                    % Z info
-                                    datainfo.Z=metainfo.Rect3D.xyz(3);
-                                    datainfo.dZ=0;
-                                    % T info
-                                    datainfo.T=0;
-                                    datainfo.dT=0;
-                                    
-                                    temp=cellfun(@(x)raw_data.(x),ifname,'UniformOutput',false);
-                                    obj.data(data_end_pos).dataval(:,:,:,:,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels),1]),[3,1,2,4]);
-                                    datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,1,1];
-                                    %
+                            if isfield(metainfo,'info_Posinfo')
+                                Channels=metainfo.info_Posinfo.channel;
+                                % Z info
+                                datainfo.Z=metainfo.info_Posinfo.zstart:metainfo.info_Posinfo.zstep:metainfo.info_Posinfo.zstop;
+                                datainfo.dZ=metainfo.info_Posinfo.zstep;
+                            else
+                                Channels={dataitem.Channel};
+                                % Z info
+                                datainfo.Z=metainfo.Rect3D.xyz(3);
+                                datainfo.dZ=0;
                             end
+                            nCh=numel(Channels);
+                            % t/Ch info
+                            datainfo.t=1:1:nCh;
+                            datainfo.dt=1;
+                            % X info
+                            datainfo.X=linspace(metainfo.WidthOrigin,metainfo.WidthOrigin+metainfo.Width*metainfo.WidthStep,metainfo.Width);
+                            datainfo.dX=metainfo.WidthStep;
+                            % Y info
+                            datainfo.Y=linspace(metainfo.HeightOrigin,metainfo.HeightOrigin+metainfo.Height*metainfo.HeightStep,metainfo.Height);
+                            datainfo.dY=metainfo.HeightStep;
+                            
+                            % T info
+                            datainfo.T=0;
+                            datainfo.dT=0;
+                            ifname={dataitem.IMAGE};
+                            nimg=numel(ifname);
+                            nZSlice=nimg/nCh;
+                            if isfield(metainfo,'info_Posinfo')
+                                nZSlice=metainfo.info_Posinfo.znum;
+                            else
+                                message=sprintf('Z Slice number missing\n');
+                                datainfo.Z=datainfo.Z(1:nZSlice);
+                            end
+                            temp=cellfun(@(x)raw_data.(x),ifname,'UniformOutput',false);
+                            obj.data(data_end_pos).dataval(:,:,:,:,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels),nZSlice]),[3,1,2,4]);
+                            datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,nZSlice,1];
                         case 'Photo'
                             Channels=metainfo.info_Posinfo.channel;
                             nCh=numel(Channels);
