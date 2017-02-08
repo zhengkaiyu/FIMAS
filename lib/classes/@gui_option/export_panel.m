@@ -1,4 +1,4 @@
-function [ status, message ] = export_panel( obj )
+function [ status, message ] = export_panel( obj, panel_handle )
 %EXPORT_PANEL export different type of plots from matlab
 %   export plot type
 %   trace,histogram,surface,scatter
@@ -11,12 +11,15 @@ status=false;message='';
 % default to current path
 PathName=obj.rootpath.exported_data;
 try
-    panel_idx=obj.current_panel;
-    panel_handle=obj.panel(panel_idx).handle;
-    if ishandle(panel_handle)
+    if isempty(panel_handle)
+        panel_idx=obj.current_panel;
+        panel_handle=obj.panel(panel_idx).handle;
         % if panel current exist
         panel_tag=obj.panel(panel_idx).name;
-        
+    else
+        panel_tag=panel_handle.Title.String;
+    end
+    if ishandle(panel_handle)
         % --- export traces/histogram ---
         trace=findobj(panel_handle,'Type','line');% find trace plot
         if ~isempty(trace)

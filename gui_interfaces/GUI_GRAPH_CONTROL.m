@@ -115,7 +115,7 @@ else
     set(hObject,'Value',get(handles.SLIDER_MINX,'Max'));
 end
 
-function TOGGLE_LOGX_Callback(hObject, ~, handles)
+function TOGGLE_LOGX_Callback(hObject, ~, ~)
 global SETTING;
 val=get(hObject,'Value');
 SETTING.update_panel_control('set','xlog',val);
@@ -301,7 +301,7 @@ SETTING.update_panel_control('clear',handles);
 
 function BUTTON_EXPORT_Callback(~, ~, ~)
 global SETTING;
-SETTING.export_panel;
+SETTING.export_panel([]);
 
 %===========================================================
 % --- Executes when user attempts to close GC_PANEL.

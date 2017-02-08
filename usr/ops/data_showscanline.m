@@ -2,29 +2,27 @@ function [ status, message ] = data_showscanline( obj, selected_data )
 %DATA_showscanline plot line scan trace onto background image for femtonics
 %data
 
-
-%% function check
+%% function complete
 % assume worst
 status=false;message='';
 try
-    current_data=obj.current_data;
-    where_to=obj.data(current_data).datainfo.panel;
-    if isfield(obj.data(current_data).datainfo,'ScanLine')
+    where_to=obj.data(selected_data).datainfo.panel;
+    if isfield(obj.data(selected_data).datainfo,'ScanLine')
         % check for type
-        switch obj.data(current_data).datainfo.ScanLine.Type
+        switch obj.data(selected_data).datainfo.ScanLine.Type
             case 'composite'
-                [sl_names,sl_idx,sl_order]=unique({obj.data(current_data).datainfo.ScanLine.ODDarray.name});
-                time=obj.data(current_data).datainfo.ScanLine.Data2*(1/obj.data(current_data).datainfo.ScanLine.Param1);
+                [sl_names,sl_idx,sl_order]=unique({obj.data(selected_data).datainfo.ScanLine.ODDarray.name});
+                time=obj.data(selected_data).datainfo.ScanLine.Data2*(1/obj.data(selected_data).datainfo.ScanLine.Param1);
                 for sl_n=1:numel(sl_idx)
                     % loop through unique scanlines in the composite
-                    sl_data=obj.data(current_data).datainfo.ScanLine.ODDarray(sl_idx(sl_n)).Data2(1:2,:);
+                    sl_data=obj.data(selected_data).datainfo.ScanLine.ODDarray(sl_idx(sl_n)).Data2(1:2,:);
                     if numel(find(sl_data~=0))==0
                         % not test line try real line
-                        sl_data=obj.data(current_data).datainfo.ScanLine.ODDarray(sl_idx(sl_n)).Data1(1:2,:);
+                        sl_data=obj.data(selected_data).datainfo.ScanLine.ODDarray(sl_idx(sl_n)).Data1(1:2,:);
                     end
                     [length,radius,area]=draw_sl(sl_data,sl_names{sl_idx(sl_n)},where_to);    
                     message=sprintf('%s\n Scan Line %s (red dot start)\n ( L = %0.2fum, r = %0.2fum, A = %0.2fum^2 ) added to %s plot\n',...
-                        message,sl_names{sl_idx(sl_n)},length,radius,area,obj.data(current_data).dataname);
+                        message,sl_names{sl_idx(sl_n)},length,radius,area,obj.data(selected_data).dataname);
                 end
                 % plot time course
                 sl_order=reshape(repmat(sl_order,1,2)',numel(sl_order)*2,1);
@@ -42,22 +40,22 @@ try
                 status=true;
             case 'square'
                 % ---- Calculation ----
-                sl_data=obj.data(current_data).datainfo.ScanLine.Data2(1:2,:);
-                sl_name=obj.data(current_data).datainfo.ScanLine.name;
+                sl_data=obj.data(selected_data).datainfo.ScanLine.Data2(1:2,:);
+                sl_name=obj.data(selected_data).datainfo.ScanLine.name;
                 if numel(find(sl_data~=0))==0
                     % not test line try real line
-                    sl_data=obj.data(current_data).datainfo.ScanLine.Data1(1:2,:);
+                    sl_data=obj.data(selected_data).datainfo.ScanLine.Data1(1:2,:);
                 end
                 
                 [length,radius,area]=draw_sl(sl_data,sl_name,where_to);
                 message=sprintf('%s\n Scan Line (red dot start)\n ( L = %0.2fum, r = %0.2fum, A = %0.2fum^2 ) added to %s plot\n',...
-                    message,length,radius,area,obj.data(current_data).dataname);
+                    message,length,radius,area,obj.data(selected_data).dataname);
                 status=true;
             otherwise
-                message=sprintf('%s\n %s has unknown scan line type %s\n',message,obj.data(current_data).dataname,obj.data(current_data).datainfo.ScanLine.Type);
+                message=sprintf('%s\n %s has unknown scan line type %s\n',message,obj.data(selected_data).dataname,obj.data(selected_data).datainfo.ScanLine.Type);
         end
     else
-        message=sprintf('%s\n %s has not scan line\n',message,obj.data(current_data).dataname);
+        message=sprintf('%s\n %s has no scan line\n',message,obj.data(selected_data).dataname);
     end
 catch exception
     message=exception.message;

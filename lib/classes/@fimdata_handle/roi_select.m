@@ -32,8 +32,7 @@ if ~isempty(surface)
             %i.e. not the 'ALL' template
             setColor(obj.data(current_data).roi(roi_idx(m)).handle,'w');
             xys=getPosition(obj.data(current_data).roi(roi_idx(m)).handle);
-            obj.data(current_data).roi(roi_idx(m)).coord=xys;
-            
+            obj.data(current_data).roi(roi_idx(m)).coord=xys;   
             %get boundary coordinate and find inpoly points
             switch obj.data(current_data).roi(roi_idx(m)).type
                 case 'imrect'

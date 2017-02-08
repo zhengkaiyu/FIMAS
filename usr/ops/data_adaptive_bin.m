@@ -4,7 +4,7 @@ function [ status, message ] = data_adaptive_bin( obj, selected_data )
 %   Data which does not fit into whole bins at the end will be discarded
 %   Default mode is sum. nan* mode should be used if data contain nan
 
-%% function complete
+%% function check
 
 % assume worst
 status=false;

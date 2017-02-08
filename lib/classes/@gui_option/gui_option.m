@@ -61,6 +61,6 @@ classdef ( ConstructOnLoad = true ) gui_option < handle
         [ status, message, axeshandle, panel_idx ] = find_panels( obj, f_handle, panel );
         [ status, message, panel_handle ] = change_panel( obj, panel );
         [ status, message ] = update_panel_control( obj, action, varargin );
-        [ status, message ] = export_panel( obj );
+        [ status, message ] = export_panel( obj, panel_handle );
     end
 end

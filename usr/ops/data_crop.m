@@ -80,9 +80,9 @@ try
                             crop_index=cellfun(@(x,y)find(obj.data(current_data).datainfo.(x)>=y(1)&obj.data(current_data).datainfo.(x)<=y(2)),obj.DIM_TAG,dim_interval,'UniformOutput',false);
                             [p,l,f]=ind2sub([data_size(2),data_size(3),data_size(5)],obj.data(current_data).dataval(:,1));
                             spc_index=((obj.data(current_data).dataval(:,2)>=dim_interval{1}(1))&(obj.data(current_data).dataval(:,2)<=dim_interval{1}(2))&...
-                                       (p>=crop_index{2}(1))&(p<=crop_index{2}(end))&...
-                                       (l>=crop_index{3}(1))&(l<=crop_index{3}(end))&...
-                                       (f>=crop_index{5}(1))&(f<=crop_index{5}(end)));
+                                (p>=crop_index{2}(1))&(p<=crop_index{2}(end))&...
+                                (l>=crop_index{3}(1))&(l<=crop_index{3}(end))&...
+                                (f>=crop_index{5}(1))&(f<=crop_index{5}(end)));
                             newdatasize=cellfun(@(x)numel(x),crop_index);
                             pixel_per_line=newdatasize(2);
                             line_per_frame=newdatasize(3);
@@ -90,7 +90,8 @@ try
                             % reindex
                             clock_data=sub2ind([pixel_per_line,line_per_frame,framenum], p(spc_index)-crop_index{2}(1)+1,l(spc_index)-crop_index{3}(1)+1,f(spc_index)-crop_index{5}(1)+1);
                         case 'inverse'
-                             message=sprintf('inverse crop for spc data not implemented yet\n');
+                            message=sprintf('inverse crop for spc data not implemented yet\n');
+                            return;
                     end
                     % add new data
                     [ success, message ] = obj.data_add(cat(2,'data_crop|',obj.data(current_data).dataname),[clock_data,obj.data(current_data).dataval(spc_index,2:3)],[]);
@@ -127,9 +128,10 @@ try
                         % correct data type and size
                         obj.data(new_data).datatype=obj.data(parent_data).datatype;
                         obj.data(new_data).datainfo.data_dim=newdatasize;
+                        obj.data(new_data).datainfo.last_change=datestr(now);
+                        status=true;
+                        message=sprintf('data cropped\n%s',message);
                     end
-                    status=true;
-                    message=sprintf('data cropped\n%s',message);
                 otherwise
                     switch mode
                         case 'normal'
@@ -139,7 +141,7 @@ try
                     end
                     emptyidx=cellfun(@(x)isempty(find(x)),crop_index);
                     if find(emptyidx)
-                        crop_index{cellfun(@(x)isempty(find(x)),crop_index)}=1;%#ok<EFIND> %make sure we have at least one 
+                        crop_index{cellfun(@(x)isempty(find(x)),crop_index)}=1;%#ok<EFIND> %make sure we have at least one
                     end
                     newdataval=obj.data(current_data).dataval(crop_index{1},crop_index{2},crop_index{3},crop_index{4},crop_index{5});
                     % add new data
@@ -173,9 +175,10 @@ try
                         if ~isempty(obj.data(parent_data).datainfo.T)
                             obj.data(new_data).datainfo.T=obj.data(parent_data).datainfo.T(crop_index{5});
                         end
+                        obj.data(new_data).datainfo.last_change=datestr(now);
+                        status=true;
+                        message=sprintf('data cropped\n%s',message);
                     end
-                    status=true;
-                    message=sprintf('data cropped\n%s',message);
             end
         else
             message=sprintf('action cancelled\n');

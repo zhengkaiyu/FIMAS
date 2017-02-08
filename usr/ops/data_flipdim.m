@@ -1,6 +1,7 @@
 function [ status, message ] = data_flipdim( obj, selected_data )
-% DATA_FLIPUD Flipimages upside down in selected dimension
+% DATA_FLIPDIM Flipimages upside down in selected dimension
 %   flip images in either t,X,Y,Z or T dimension
+%   no spc data implementation yet
 
 %% function complete
 % assume worst
@@ -61,7 +62,7 @@ try
             message=sprintf('action cancelled\n');
         else
             %flip upside down
-            obj.data(current_data).dataval=flipdim(obj.data(current_data).dataval,dim);
+            obj.data(current_data).dataval=flip(obj.data(current_data).dataval,dim);
             obj.data(current_data).datainfo.last_change=datestr(now);
             status=true;
             message=sprintf('Data fliped along %s-axis\n',obj.DIM_TAG{dim});

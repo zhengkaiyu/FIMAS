@@ -4,6 +4,7 @@ function [ status, message ] = data_rearrangedim( obj, selected_data )
 %   operation will apply to the current data selected
 %   process is reversible
 %   e.g. input [1,2,5,4,3] will change a tXYZT data to tXTZY
+%   no spc data implementation yet
 
 %% function complete
 status=false;message='';

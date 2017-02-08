@@ -106,17 +106,23 @@ try
                     % assign auto name
                     obj.data(current_data).roi(end).name=regexprep(obj.roi_placeholder(m).name,'ROI\d*-',cat(2,'ROI',num2str(current_data),'-'));
                     obj.data(current_data).roi(end).handle=[];
-                    % create roi handle
-                    eval(cat(2,'obj.data(current_data).roi(end).handle=',obj.roi_placeholder(m).type,'(where_to,obj.roi_placeholder(m).coord);'));
-                    
                     % assign handle properties
                     obj.data(current_data).roi(end).coord=obj.roi_placeholder(m).coord;
                     obj.data(current_data).roi(end).panel=where_to;
+                    % create roi handle
+                    switch obj.data(current_data).roi(end).type
+                        case 'impolyline'
+                            roitype='impoly';
+                            eval(cat(2,'obj.data(current_data).roi(end).handle=',roitype,'(where_to,obj.roi_placeholder(m).coord,''Closed'',false);'));
+                        otherwise
+                            roitype=obj.data(current_data).roi(end).type;
+                            eval(cat(2,'obj.data(current_data).roi(end).handle=',roitype,'(where_to,obj.roi_placeholder(m).coord);'));
+                    end
+                    % make constrain function to the plot area
+                    fcn = makeConstrainToRectFcn(roitype,get(where_to,'XLim'),get(where_to,'YLim'));
+                    setPositionConstraintFcn(obj.data(current_data).roi(end).handle,fcn);
                     % change colour to white
                     setColor(obj.data(current_data).roi(end).handle,'w');
-                    % make constrain function to the plot area
-                    fcn = makeConstrainToRectFcn(obj.roi_placeholder(m).type,get(where_to,'XLim'),get(where_to,'YLim'));
-                    setPositionConstraintFcn(obj.data(current_data).roi(end).handle,fcn);
                     % add call back to print back current position
                     obj.data(current_data).roi(end).handle.addNewPositionCallback(@(p)fprintf('y = %g; x = %g\n',p));
                 end

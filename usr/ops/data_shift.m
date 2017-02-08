@@ -1,6 +1,7 @@
 function [ status, message ] = data_shift( obj, selected_data )
 % DATA_SHIFT shift data in selected dimension
 %   circular shift current data in either t,X,Y,Z or T dimension
+%   no spc data implementation yet
 
 %% function complete
 
@@ -57,6 +58,7 @@ try
         else
             %circular shift data around the specified dimension
             obj.data(current_data).dataval=circshift(obj.data(current_data).dataval,shift_size);
+            obj.data(current_data).datainfo.last_change=datestr(now);
             status=true;
             message=sprintf('data shifted by %g pixels in tXYZT-axis\n',shift_size);
         end

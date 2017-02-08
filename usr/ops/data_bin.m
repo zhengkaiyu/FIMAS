@@ -15,7 +15,7 @@ try
         % get the current data index
         current_data=selected_data(data_idx);
         % check for data operator
-        if strmatch(obj.data(current_data).datainfo.operator,'data_bin','exact')
+        if find(strcmp(obj.data(current_data).datainfo.operator,'data_bin'))
             % existing data
             newdata=false;
         else
