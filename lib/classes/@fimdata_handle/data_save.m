@@ -27,9 +27,9 @@ try
         for dataidx=2:numel(obj.data)
             % clear handles
             obj.data(dataidx).datainfo.panel=[];
-            if numel(obj.data(dataidx).roi)>1
-                obj.data(dataidx).roi(2:end).panel=[];
-                obj.data(dataidx).roi(2:end).handle=[];
+            for roiidx=2:numel(obj.data(dataidx).roi)
+                obj.data(dataidx).roi(roiidx).panel=[];
+                obj.data(dataidx).roi(roiidx).handle=[]; 
             end
         end
         %try

@@ -4,10 +4,11 @@ function [ status, message ] = op_Spiral2Img( data_handle, option, varargin )
 
 parameters=struct('note','',...
     'operator','op_Spiral2Img',...
-    'disp_lb',20,...
-    'disp_ub',100);
+    'ref_scanline',[],...
+    'grid_interp_size',2,...
+    'grid_interp','spline');
 
-status=[];message='';
+status=false;message='';
 
 try
     data_idx=data_handle.current_data;%default to current data
@@ -31,11 +32,11 @@ try
         case 'add_data'
             for current_data=data_idx
                 switch data_handle.data(current_data).datatype
-                    case {'RESULT_IMAGE'}
+                    case {'DATA_IMAGE','RESULT_IMAGE'}
                         % check data dimension, we only take tXT
                         switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
-                            case {25}
-                               %tXT (11001)
+                            case {9,25}
+                                %XT (01001), tXT (11001)
                                 parent_data=current_data;
                                 % add new data
                                 data_handle.data_add(cat(2,'op_Spiral2Img|',data_handle.data(current_data).dataname),[],[]);
@@ -52,7 +53,8 @@ try
                                 message=sprintf('%s added\n',data_handle.data(new_data).dataname);
                                 status=true;
                             otherwise
-                                message=sprintf('only take XT or XYT data type\n');
+                                message=sprintf('only take tXT, XT NON-SPC format data type\n');
+                                errordlg(message,'Check selection','modal');
                                 return;
                         end
                 end
@@ -71,23 +73,49 @@ try
                     case 'operator'
                         message=sprintf('%sUnauthorised to change %s\n',message,parameters);
                         status=false;
-                    case 'disp_lb'
-                        val=str2double(val);
-                        if val>=data_handle.data(current_data).datainfo.disp_ub;
-                            message=sprintf('disp_lb must be strictly < disp_ub\n');
-                            status=false;
+                    case 'ref_scanline'
+                        status=false;
+                        % ask for ref .mat file or ref data item
+                        orig_ref= data_handle.data(current_data).datainfo.ref_scanline;
+                        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
+                        set(0,'DefaultUicontrolForegroundColor','k');
+                        % ask to select dataitem
+                        [s,v]=listdlg('ListString',{data_handle.data.dataname},...
+                            'SelectionMode','single',...
+                            'Name','op_Spiral2Img',...
+                            'PromptString','Select scanref data item',...
+                            'ListSize',[400,300]);
+                        set(0,'DefaultUicontrolBackgroundColor','k');
+                        set(0,'DefaultUicontrolForegroundColor','w');
+                        if v
+                            % check if scanline field exist
+                            if isfield(data_handle.data(s).datainfo,'ScanLine')
+                                data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(s).datainfo.ScanLine;
+                                message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
+                            else
+                                errordlg('Selected dataitem has now ScanLine information','Check selection','modal');
+                            end
                         else
-                            data_handle.data(current_data).datainfo.disp_lb=val;
-                            status=true;
+                            % didn't change
+                            data_handle.data(current_data).datainfo.ref_scanline=orig_ref;
                         end
-                    case 'disp_ub'
-                        val=str2double(val);
-                        if val<=data_handle.data(current_data).datainfo.disp_lb;
-                            message=sprintf('disp_ub must be strictly > disp_up\n');
-                            status=false;
-                        else
-                            data_handle.data(current_data).datainfo.disp_ub=val;
-                            status=true;
+                    case 'grid_interp_size'
+                        % ask to select dataitem
+                        button = questdlg(sprintf('grid interpolation factor?\nChoose 1 for no interpolation'),'Grid Interpolation','1','2','3','1');
+                        switch button
+                            case ''
+                                message=sprintf('%scancelled %s change\n',message,parameters);
+                            otherwise
+                                data_handle.data(current_data).datainfo.grid_interp_size=str2double(button);
+                        end
+                    case 'grid_interp'
+                        % ask to select dataitem
+                        button = questdlg('grid interpolation method?','Grid Interpolation','linear','cubic','spline','none');
+                        switch button
+                            case ''
+                                message=sprintf('%scancelled %s change\n',message,parameters);
+                            otherwise
+                                data_handle.data(current_data).datainfo.grid_interp=char(button);
                         end
                     otherwise
                         message=sprintf('%sUnauthorised to change %s\n',message,parameters);
@@ -102,25 +130,74 @@ try
             for current_data=data_idx
                 % go through each selected data
                 parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
-                switch data_handle.data(parent_data).datatype
-                    case {'RESULT_IMAGE'}%originated from 3D/4D traces_image
-                        data=data_handle.data(parent_data).dataval;
-                        if ~isempty(data)
-                            calib_func=str2func(data_handle.data(current_data).datainfo.calib_func);
-                            val=calib_func(data(:));
-                            val(imag(val)~=0)=nan;%rid of imaginary
-                            val(isinf(val))=nan;%rid of infinity
-                            val=reshape(val,size(data));
-                            data_handle.data(current_data).dataval=val;
-                            data_handle.data(current_data).datatype=data_handle.get_datatype;
+                if isstruct(data_handle.data(current_data).datainfo.ref_scanline)
+                    % has scanlin ref information
+                    switch data_handle.data(parent_data).datatype
+                        case {'DATA_IMAGE','RESULT_IMAGE'}%originated from 3D/4D traces_image
+                            scaninfo=data_handle.data(current_data).datainfo.ref_scanline;
+                            nscanpts=size(scaninfo.Data1,2);%get scanline info size
+                            linescan_size=data_handle.data(parent_data).datainfo.data_dim(2);%get line scan X size
+                            dwellpoint=downsample(scaninfo.Data1(1:2,:)',max(floor(nscanpts/linescan_size),1));%downsize
+                            dwellpoint=dwellpoint(1:linescan_size,:);%match size to linescan data
+                            unit_len=data_handle.data(parent_data).datainfo.dX;
+                            xlim=min(dwellpoint(:,1)):unit_len:max(dwellpoint(:,1));%get new x grid
+                            xsize=numel(xlim);
+                            ylim=min(dwellpoint(:,2)):unit_len:max(dwellpoint(:,2));%get new y grid
+                            ysize=numel(ylim);
+                            %initialise new 5D data
+                            temp=zeros(data_handle.data(parent_data).datainfo.data_dim(1),...
+                                xsize,ysize,...
+                                data_handle.data(parent_data).datainfo.data_dim(4),...
+                                data_handle.data(parent_data).datainfo.data_dim(5));
+                            [~,~,~,xbin,ybin]=histcounts2(dwellpoint(:,1),dwellpoint(:,2),[xsize,ysize]);
+                            for pt_idx=1:linescan_size
+                                temp(:,xbin(pt_idx),ybin(pt_idx),1,:)=temp(:,xbin(pt_idx),ybin(pt_idx),1,:)+data_handle.data(parent_data).dataval(:,pt_idx,:,1,:);
+                            end
+                            data_handle.data(current_data).dataval=[];
+                            switch data_handle.data(current_data).datainfo.grid_interp_size
+                                case 1
+                                    data_handle.data(current_data).dataval=temp;
+                                otherwise
+                                    Tlim=data_handle.data(parent_data).datainfo.T;
+                                    div=data_handle.data(current_data).datainfo.grid_interp_size;
+                                    switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
+                                        case 9
+                                            %XT (01001)
+                                            F = griddedInterpolant({xlim,ylim,Tlim},squeeze(temp(1,:,:,1,:)),'spline');
+                                            xlim=min(dwellpoint(:,1)):unit_len/div:max(dwellpoint(:,1));%get new x grid
+                                            ylim=min(dwellpoint(:,2)):unit_len/div:max(dwellpoint(:,2));%get new y grid
+                                            data_handle.data(current_data).dataval(1,:,:,1,:)=F({xlim,ylim,Tlim});
+                                        case 25
+                                            %tXT (11001)
+                                            tlim=data_handle.data(parent_data).datainfo.t;
+                                            F = griddedInterpolant({tlim,xlim,ylim,Tlim},squeeze(temp(:,:,:,1,:)),'spline');
+                                            xlim=min(dwellpoint(:,1)):unit_len/div:max(dwellpoint(:,1));%get new x grid
+                                            ylim=min(dwellpoint(:,2)):unit_len/div:max(dwellpoint(:,2));%get new y grid
+                                            data_handle.data(current_data).dataval(:,:,:,1,:)=F({tlim,xlim,ylim,Tlim});
+                                            data_handle.data(current_data).datainfo.t=tlim;
+                                    end
+                                    %figure(10);mesh(X1,Y1,squeeze(mean(temp,5)),'FaceColor','interp','EdgeColor','none');view([0 90]);
+                                    %figure(11);mesh(X2,Y2,squeeze(mean(V,3)),'FaceColor','interp','EdgeColor','none');view([0 90]);
+                            end
+                            data_handle.data(current_data).datainfo.X=xlim;
+                            data_handle.data(current_data).datainfo.dX=xlim(2)-xlim(1);
+                            data_handle.data(current_data).datainfo.Y=ylim;
+                            data_handle.data(current_data).datainfo.dY=ylim(2)-ylim(1);
+                            data_handle.data(current_data).datainfo.data_dim=size(data_handle.data(current_data).dataval);
+                            data_handle.data(current_data).datatype='DATA_IMAGE';
+                            data_handle.data(current_data).datainfo.last_change=datestr(now);
                             status=true;
-                        else
-                            fprintf('Calculate Parent Data first\n');
-                        end
+                            message=sprintf('%s spiral line scan converted to normal images\n',message);
+                    end
+                else
+                    errordlg(sprintf('Load ScanLine information first.\nGo to the bottome of the datainfo table.\nChange the value in ref_scanline field to invoke list dialogue.\n'),'Check ref_scanline','modal');
                 end
             end
+            status=true;
     end
 catch exception
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
     message=exception.message;
 end
-

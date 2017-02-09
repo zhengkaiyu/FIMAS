@@ -127,6 +127,7 @@ try
             end
             %redefine data type
             obj.data(new_data).datatype=obj.get_datatype(new_data);
+            obj.data(new_data).datainfo.parameter_space=[];
             obj.data(new_data).datainfo.last_change=datestr(now);
         end
         status=true;
