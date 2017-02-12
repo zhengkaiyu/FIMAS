@@ -308,7 +308,7 @@ clicktype=get(handles.MAIN_GUI,'SelectionType');
 switch clicktype
     case 'normal'
         % single left click
-        if ~isempty(hDATA.data(hDATA.current_data).datainfo.operator)
+        if ~isempty(hDATA.data(hDATA.current_data(1)).datainfo.operator)
             % found operator update MENU_USEROP
             contents = cellstr(get(handles.MENU_USEROP,'String'));
             opidx=find(cellfun(@(x)~isempty(x),(strfind(contents,hDATA.data(hDATA.current_data).datainfo.operator))));

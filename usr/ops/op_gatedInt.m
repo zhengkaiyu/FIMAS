@@ -1,5 +1,5 @@
 function [ status, message ] = op_gatedInt( data_handle, option, varargin )
-%OP_NTC Calculate Normalised Total Count from traces or images
+%op_gatedInt Calculate Normalised Total Count from traces or images
 %
 
 parameters=struct('note','',...
