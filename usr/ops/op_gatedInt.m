@@ -1,13 +1,14 @@
 function [ status, message ] = op_gatedInt( data_handle, option, varargin )
-%op_gatedInt Calculate Normalised Total Count from traces or images
+%op_gatedInt Calculate Normalised Total Count from traces or images by
+%gate2/gate1 values.  This can be used for
 %
 
 parameters=struct('note','',...
     'operator','op_gatedInt',...
-    'parameter_space','',...
-    'fit_t0',0,...
-    'fit_t1',9,... %ns after peak
-    'normalise',true); %background threshold
+    'parameter_space','gInt',...
+    'gate1',[0,1],...
+    'gate2',[5,10],...
+    'normalise',0); %background threshold
 
 status=false;message='';
 
@@ -53,11 +54,12 @@ try
                                 data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
                                 % combine the parameter fields
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
-                                data_handle.data(new_data).datainfo.parameter_space={'gInt'};
+                                % pass on metadata info
+                                data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
                                 message=sprintf('%s added\n',data_handle.data(new_data).dataname);
                                 status=true;
                             otherwise
-                                message=sprintf('only take XT or XYT data type\n');
+                                message=sprintf('only take tXY, tXT, tT, tXYZ data type\n');
                                 return;
                         end
                 end
@@ -75,28 +77,30 @@ try
                     case 'operator'
                         message=sprintf('%sUnauthorised to change %s\n',message,parameters);
                         status=false;
-                    case 'fit_t0'
-                        val=str2double(val);
-                        if val>=data_handle.data(current_data).datainfo.fit_t1;
-                            message=sprintf('%sfit_t0 must be strictly < fit_t1\n',message);
+                    case 'gate1'
+                        val=str2num(val);
+                        if numel(val)~=2
+                            message=sprintf('%s\ngate1 must have two elements.\n',message);
                             status=false;
                         else
-                            data_handle.data(current_data).datainfo.fit_t0=val;
+                            data_handle.data(current_data).datainfo.gate1=val;
                             status=true;
                         end
-                        
-                    case 'fit_t1'
-                        val=str2double(val);
-                        if val<=data_handle.data(current_data).datainfo.fit_t0;
-                            message=sprintf('%sfit_t1 must be strictly > fit_t0\n',message);
+                    case 'gate2'
+                        val=str2num(val);
+                        if numel(val)~=2
+                            message=sprintf('%s\ngate2 must have two elements.\n',message);
                             status=false;
                         else
-                            data_handle.data(current_data).datainfo.fit_t1=val;
+                            data_handle.data(current_data).datainfo.gate2=val;
                             status=true;
                         end
                     case 'normalise'
-                        val=str2double(val);
-                        data_handle.data(current_data).datainfo.normalise=(val>0);
+                        if str2double(val)
+                            data_handle.data(current_data).datainfo.normalise=true;
+                        else
+                            data_handle.data(current_data).datainfo.normalise=false;
+                        end
                         status=true;
                     case 'parameter_space'
                         data_handle.data(current_data).datainfo.parameter_space=val;
@@ -128,127 +132,63 @@ try
                         % get dt dimension information
                         t=data_handle.data(parent_data).datainfo.t;
                         
-                        %initialise data size
-                        p_total=pX_lim*pY_lim*pZ_lim*pT_lim;
-                        
-                        I=nansum(data_handle.data(parent_data).dataval(1:end,:),2);%get max position from total data
-                        [~,max_idx]=max(I);% get max position
-                        
-                        % get fit range
-                        t_fit=(t>=data_handle.data(current_data).datainfo.fit_t0)&(t<=(data_handle.data(current_data).datainfo.fit_t1+t(max_idx)));
-                        t_duration=data_handle.data(current_data).datainfo.fit_t1;
-                        % get min_threshold
-                        min_threshold=data_handle.data(current_data).datainfo.bg_threshold;
-                        
-                        %initialise waitbar
-                        waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
-                            'CreateCancelBtn',...
-                            'setappdata(gcbf,''canceling'',1)',...
-                            'WindowStyle','normal',...
-                            'Color',[0.2,0.2,0.2]);
-                        setappdata(waitbar_handle,'canceling',0);
-                        % get total calculation step
-                        N_steps=p_total;
+                        if data_handle.data(current_data).datainfo.normalise
+                            I=nansum(data_handle.data(parent_data).dataval(1:end,:),2);%get max position from total data
+                            [~,max_idx]=max(I);% get max position
+                        else
+                            max_idx=[];
+                        end
                         windowsize=[Xbin,Ybin,Zbin,Tbin];
+                        % get gate range
+                        t_gate1=(t>=data_handle.data(current_data).datainfo.gate1(1))&(t<=data_handle.data(current_data).datainfo.gate1(2));
+                        t_gate2=(t>=data_handle.data(current_data).datainfo.gate2(1))&(t<=data_handle.data(current_data).datainfo.gate2(2));
                         
                         fval=convn(data_handle.data(parent_data).dataval,ones(windowsize),'same');
-                        for p_idx=1:p_total
-                            % check waitbar
-                            if getappdata(waitbar_handle,'canceling')
-                                message=sprintf('NTC calculation cancelled\n');
-                                delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
-                                return;
-                            end
-                            % Report current estimate in the waitbar's message field
-                            done=p_idx/N_steps;
-                            if mod(100*done,0.1)==0
-                                % update waitbar
-                                waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
-                            end
-                            raw=nansum(fval(t_fit,p_idx),2);
-                            %val(p_idx)=calculate_ntc(t(t_fit),raw,max_idx,min_threshold);
-                            if (max_idx>2)
-                                max_val=(nanmean(raw(max_idx-1:max_idx+1)));
-                            else
-                                max_val=(raw(max_idx));
-                            end
-                            t_end=find(t<=(t(max_idx)+t_duration),1,'last');
-                            if max_val>min_threshold
-                                %raw(isnan(raw))=0;
-                                %baseline=0;
-                                raw=raw./max_val;
-                                fval(1,p_idx)=nanmean(raw(max_idx:t_end),1);
-                            else
-                                fval(1,p_idx)=nan;
-                            end
-                        end
+                        fval=calculate_gateratio(fval,t_gate1,t_gate2,data_handle.data(current_data).datainfo.normalise,max_idx);
+                        
                         data_handle.data(current_data).dataval=reshape(fval(1,:),[1,pX_lim,pY_lim,pZ_lim,pT_lim]);
                         data_handle.data(current_data).datainfo.data_dim=[1,pX_lim,pY_lim,pZ_lim,pT_lim];
-                        data_handle.data(current_data).datatype=data_handle.get_datatype;
+                        data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
                         data_handle.data(current_data).datainfo.dt=0;
                         data_handle.data(current_data).datainfo.t=0;
-                        delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
+                        
+                        data_handle.data(current_data).datainfo.last_change=datestr(now);
                         status=true;
                     case {'DATA_TRACE'}
-                        min_threshold=data_handle.data(current_data).datainfo.bg_threshold;
                         t=data_handle.data(current_data).datainfo.t;
-                        t_fit=(t>=data_handle.data(current_data).datainfo.fit_t0);
-                        val=calculate_ntc(t(t_fit),data_handle.data(parent_data).dataval(t_fit),[],min_threshold,data_handle.data(current_data).datainfo.fit_t1);
-                        data_handle.update_data('dataval',val);
-                        message=sprintf('NTC = %g\n',val);
-                        status=1;
+                        % get gate range
+                        t_gate1=(t>=data_handle.data(current_data).datainfo.gate1(1))&(t<=data_handle.data(current_data).datainfo.gate1(2));
+                        t_gate2=(t>=data_handle.data(current_data).datainfo.gate2(1))&(t<=data_handle.data(current_data).datainfo.gate2(2));
+                        if data_handle.data(current_data).datainfo.normalise
+                            I=nansum(data_handle.data(parent_data).dataval(1:end,:),2);%get max position from total data
+                            [~,max_idx]=max(I);% get max position
+                        else
+                            max_idx=[];
+                        end
+                        fval=calculate_gateratio(data_handle.data(parent_data).dataval,t_gate1,t_gate2,data_handle.data(current_data).datainfo.normalise,max_idx);
+                        data_handle.update_data('dataval',fval);
+                        data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
+                        data_handle.data(current_data).datainfo.dt=0;
+                        data_handle.data(current_data).datainfo.t=0;
+                        data_handle.data(current_data).datainfo.last_change=datestr(now);
+                        message=sprintf('NTC = %g\n',fval);
+                        status=true;
                 end
             end
     end
 catch exception
-     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end
     message=exception.message;
 end
 
-    function val=calculate_ntc(t,data,max_idx,min_threshold,t_duration)
-        if nanmax(data)>min_threshold
-            data(isnan(data))=0;
-            if max_idx>0
-                %peak position provided
-                max_val=(mean(data(max_idx-2:max_idx+2)));
-            else
-                %interpolate the data to get smoother trace for max search
-                endidx=ceil(length(t)/2);
-                xx=linspace(t(1),t(endidx),endidx);
-                l=ceil(length(xx)/64);
-                yy=spline(t(1:l:endidx),data(1:l:endidx),xx);
-                %find maximum
-                [max_val,max_idx]=max(yy);
-                max_idx=max_idx(1);
-                if (max_idx<(length(yy)-2))
-                    if (max_idx>2)
-                        max_val=(mean(data(max_idx-2:max_idx+2)));
-                    else
-                        max_val=(data(max_idx));
-                    end
-                else
-                    max_val=nan;
-                end
-            end
-            t_end=find(t<=(t(max_idx)+t_duration),1,'last');
-            %find baseline
-            %baseline=mean(data(ceil(max_idx*0.01):ceil(max_idx*0.5)));%baseline
-            %data=data-baseline;
-            baseline=0;
-            %baseline=obj.parameters(obj.current_data).tail_threshold;
-            %baseline=min(data(ceil(max_idx*0.01):ceil(max_idx*0.5)));%base
-            %line
-            
-            %normalise
-            data=(data-baseline)./(max_val-baseline);
-            
-            %calculate area
-            val=mean(data(max_idx:t_end),1);
-            plot(t,data);
-        else
-            val=nan;
+    function val=calculate_gateratio(data,gate1,gate2,normalise,maxidx)
+        if normalise
+            data=data./data(maxidx);
         end
+        %calculate area
+        val=nanmean(data(gate2,:,:,:,:),1)./nanmean(data(gate1,:,:,:,:),1);
+        val(isinf(val))=nan;
     end
 end

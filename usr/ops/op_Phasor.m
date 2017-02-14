@@ -69,6 +69,8 @@ try
                                 end
                                 data_handle.data(new_data).datainfo.t=[1,2];% only two parameters
                                 data_handle.data(new_data).datainfo.data_dim(1)=2;
+                                % pass on metadata info
+                                data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
                                 message=sprintf('%s%s added\n',message, data_handle.data(new_data).dataname);
                                 status=true;
                             otherwise

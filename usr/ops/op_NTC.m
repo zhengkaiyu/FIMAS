@@ -60,6 +60,8 @@ try
                                 if isempty(data_handle.data(new_data).datainfo.bin_dim)
                                     data_handle.data(new_data).datainfo.bin_dim=[1,1,1,1,1];
                                 end
+                                % pass on metadata info
+                                data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
                                 message=sprintf('%s added\n',data_handle.data(new_data).dataname);
                                 status=true;
                             otherwise

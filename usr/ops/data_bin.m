@@ -123,7 +123,9 @@ try
                 obj.data_add(cat(2,'data_bin|',obj.data(parent_data).dataname),[],[]);
                 % get new data index
                 current_data=obj.current_data;
-                % set parent data index
+                % pass on metadata info
+                obj.data(current_data).metainfo=obj.data(parent_data).metainfo;
+                % pass on datainfo
                 obj.data(current_data).datainfo=obj.data(parent_data).datainfo;
                 % set data index
                 obj.data(current_data).datainfo.data_idx=current_data;

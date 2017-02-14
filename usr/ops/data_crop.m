@@ -128,6 +128,8 @@ try
                         % correct data type and size
                         obj.data(new_data).datatype=obj.data(parent_data).datatype;
                         obj.data(new_data).datainfo.data_dim=newdatasize;
+                        % pass on metadata info
+                        obj.data(new_data).metainfo=obj.data(parent_data).metainfo;
                         obj.data(new_data).datainfo.last_change=datestr(now);
                         status=true;
                         message=sprintf('data cropped\n%s',message);
@@ -175,6 +177,8 @@ try
                         if ~isempty(obj.data(parent_data).datainfo.T)
                             obj.data(new_data).datainfo.T=obj.data(parent_data).datainfo.T(crop_index{5});
                         end
+                        % pass on metadata info
+                        obj.data(new_data).metainfo=obj.data(parent_data).metainfo;
                         obj.data(new_data).datainfo.last_change=datestr(now);
                         status=true;
                         message=sprintf('data cropped\n%s',message);

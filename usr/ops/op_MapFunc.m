@@ -81,6 +81,8 @@ try
                                 % combine the parameter fields
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
                                 data_handle.data(new_data).datainfo.parameter_space={'[Ca2+]'};
+                                % pass on metadata info
+                                data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
                                 message=sprintf('%s added\n',data_handle.data(new_data).dataname);
                                 status=true;
                             otherwise

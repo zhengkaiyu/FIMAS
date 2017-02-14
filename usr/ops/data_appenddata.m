@@ -54,6 +54,8 @@ try
             obj.data_add(cat(2,'data_append|',obj.data(parent_data).dataname),[],[]);
             % get new data index
             current_data=obj.current_data;
+            % pass on metadata info
+            obj.data(current_data).metainfo=obj.data(parent_data).metainfo;
             % set parent data index
             obj.data(current_data).datainfo.parent_data_idx=selected_data;
             obj.data(current_data).datainfo.operator='data_append';

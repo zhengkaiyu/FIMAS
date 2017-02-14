@@ -31,6 +31,7 @@ if data_idx>=1
                     o_idx=o_idx+1;
                 else
                     if islogical(f_val)
+                        content{o_idx,1}=f_name{f_idx};%field name
                         content{o_idx,2}=f_val;
                     else
                         content{o_idx,1}=f_name{f_idx};%field name
