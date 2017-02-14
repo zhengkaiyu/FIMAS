@@ -124,9 +124,9 @@ try
             
             %% essential data dimension information
             % optical zoom
-            obj.data(data_end_pos).datainfo.op_zoom=info.LENS_MAGNIFICATION;
+            obj.data(data_end_pos).datainfo.optical_zoom=info.LENS_MAGNIFICATION;
             % digital zoom
-            obj.data(data_end_pos).datainfo.dig_zoom=info.INFO_OBJECTIVE_ZOOM;
+            obj.data(data_end_pos).datainfo.digital_zoom=info.INFO_OBJECTIVE_ZOOM;
             % no lifetime info for this type of data
             obj.data(data_end_pos).datainfo.dt=[];
             obj.data(data_end_pos).datainfo.t=1;

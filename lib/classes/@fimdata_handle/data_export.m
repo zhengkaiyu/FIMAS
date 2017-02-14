@@ -11,13 +11,13 @@ try
         'Select Exported Data Analysis File',obj.path.export);
     if pathname~=0     %if files selected
         filename=cat(2,pathname,filename);
-        dataitem=obj.data(index); %#ok<NASGU>
+        dataitem=obj.data(index);
         % clear handles
-        for dataidx=2:numel(dataitem)
+        for dataidx=1:numel(dataitem)
             dataitem(dataidx).datainfo.panel=[];
-            if numel(dataitem(dataidx).roi)>1
-                dataitem(dataidx).roi(2:end).panel=[];
-                dataitem(dataidx).roi(2:end).handle=[];
+            for roiidx=2:numel(dataitem(dataidx).roi)
+                dataitem(dataidx).roi(roiidx).panel=[];
+                dataitem(dataidx).roi(roiidx).handle=[];
             end
         end
         %to cope with large file size

@@ -1053,7 +1053,7 @@ populate_list(handles.LIST_ROI,{hDATA.data(1).roi.name},1); %#ok<NODEF>
 % update info window
 update_info(sprintf('%s\n','New Session Initialised'),1,handles.EDIT_INFO);
 
-function fieldsearch(hObject, eventdata, handles)
+function fieldsearch(hObject, eventdata, ~)
 global SETTING;
 persistent combkey;%for combination keys
 switch eventdata.Key
