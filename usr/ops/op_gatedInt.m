@@ -1,8 +1,7 @@
 function [ status, message ] = op_gatedInt( data_handle, option, varargin )
 %op_gatedInt Calculate Normalised Total Count from traces or images by
-%gate2/gate1 values.  This can be used for
+%gate2/gate1 values.  This can be used for G/R
 %
-
 parameters=struct('note','',...
     'operator','op_gatedInt',...
     'parameter_space','gInt',...
@@ -185,7 +184,7 @@ end
 
     function val=calculate_gateratio(data,gate1,gate2,normalise,maxidx)
         if normalise
-            data=data./data(maxidx);
+            data=data./repmat(data(maxidx,:,:,:,:),size(data,1),1,1,1,1);
         end
         %calculate area
         val=nanmean(data(gate2,:,:,:,:),1)./nanmean(data(gate1,:,:,:,:),1);

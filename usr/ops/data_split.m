@@ -128,7 +128,7 @@ try
             %redefine data type
             obj.data(new_data).datatype=obj.get_datatype(new_data);
             % pass on metadata info
-            obj.data(new_data).metainfo=obj.data(parent_data).metainfo;
+            obj.data(new_data).metainfo=obj.data(current_data).metainfo;
             obj.data(new_data).datainfo.parameter_space=[];
             obj.data(new_data).datainfo.last_change=datestr(now);
         end

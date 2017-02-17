@@ -1,5 +1,5 @@
 function [ status, message ] = op_dF_R( data_handle, option, varargin )
-%OP_DFOVERR calculate delta fluorescence over reference channel
+%op_dF_R calculate delta fluorescence over reference channel (dG/R)
 %
 %=======================================
 %options     values    explanation
@@ -34,7 +34,6 @@ try
             end
         end
     end
-    
     switch option
         case 'add_data'
             for current_data=data_idx
@@ -86,15 +85,6 @@ try
                     case 'operator'
                         message=sprintf('%sUnauthorised to change %s\n',message,parameters);
                         status=false;
-                    case 'op_func'
-                        val=num2str(val);
-                        data_handle.data(current_data).datainfo.op_func=val;
-                        data_handle.data(current_data).datainfo.parameter_space=regexp(val,'\w*(?=func)','match');
-                        status=true;
-                    case 'op_arg'
-                        val=num2str(val);
-                        data_handle.data(current_data).datainfo.op_arg=val;
-                        status=true;
                     case {'windowspan','basespan','F_CH','R_CH','f0_t_int','bg_t_int'}
                         val=str2num(val);
                         data_handle.data(current_data).datainfo.(parameters)=val;
@@ -127,9 +117,7 @@ try
                         windowsize=[1,Xbin,Ybin,Zbin,Tbin];
                         fval=data_handle.data(parent_data).dataval([data_handle.data(current_data).datainfo.F_CH,data_handle.data(current_data).datainfo.R_CH],:,:,:,:);
                         fval=convn(fval,ones(windowsize),'same');
-                        
                         datasize=[2,data_handle.data(parent_data).datainfo.data_dim(2:end)];
-                        
                         % reshape to CST
                         temp=reshape(fval,[datasize(1),prod(datasize(2:4)),datasize(5)]);
                         % calculate background for each channel in each
