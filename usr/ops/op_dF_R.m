@@ -4,7 +4,14 @@ function [ status, message ] = op_dF_R( data_handle, option, varargin )
 %=======================================
 %options     values    explanation
 %=======================================
-
+%F_CH        1          usually channel 1, check which channel reprensent
+%the functional signal
+%R_CH        2          usually channel 2, check which channel is the
+%reference channel
+%f0_t_int    [20,100]   time interval for the f0 value in df/f0
+%bg_t_int    [0,20]     time interval for the background values
+%R_bin       [1,1,1,1,10]         binning for the reference signal,
+%1x5vector specify binning for each dimension
 
 %table contents must all have default values
 parameters=struct('note','',...
@@ -13,8 +20,7 @@ parameters=struct('note','',...
     'R_CH',2,...
     'f0_t_int',[20,100],...
     'bg_t_int',[0,20],...
-    'windowspan',0.01,...
-    'basespan',0.01);
+    'R_bin',[1,1,1,1,10]);
 
 status=false;message='';
 try
@@ -85,8 +91,8 @@ try
                     case 'operator'
                         message=sprintf('%sUnauthorised to change %s\n',message,parameters);
                         status=false;
-                    case {'windowspan','basespan','F_CH','R_CH','f0_t_int','bg_t_int'}
-                        val=str2num(val);
+                    case {'R_bin','F_CH','R_CH','f0_t_int','bg_t_int'}
+                        val=str2num(val); %#ok<*ST2NM>
                         data_handle.data(current_data).datainfo.(parameters)=val;
                         status=true;
                     otherwise
@@ -99,16 +105,11 @@ try
             end
             % ---------------------
         case 'calculate_data'
-            askforparam=true;
             for current_data=data_idx
                 parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
                 switch data_handle.data(parent_data).datatype
                     case 'DATA_IMAGE'
                         % get pixel binnin information
-                        pX_lim=numel(data_handle.data(parent_data).datainfo.X);
-                        pY_lim=numel(data_handle.data(parent_data).datainfo.Y);
-                        pZ_lim=numel(data_handle.data(parent_data).datainfo.Z);
-                        pT_lim=numel(data_handle.data(parent_data).datainfo.T);
                         Xbin=data_handle.data(current_data).datainfo.bin_dim(2);
                         Ybin=data_handle.data(current_data).datainfo.bin_dim(3);
                         Zbin=data_handle.data(current_data).datainfo.bin_dim(4);
@@ -116,14 +117,16 @@ try
                         % binning
                         windowsize=[1,Xbin,Ybin,Zbin,Tbin];
                         fval=data_handle.data(parent_data).dataval([data_handle.data(current_data).datainfo.F_CH,data_handle.data(current_data).datainfo.R_CH],:,:,:,:);
-                        fval=convn(fval,ones(windowsize),'same');
+                        fval(1,:,:,:,:)=convn(fval(1,:,:,:,:),ones(windowsize),'same');
+                        windowsize=data_handle.data(current_data).datainfo.R_bin;
+                        fval(2,:,:,:,:)=convn(fval(2,:,:,:,:),ones(windowsize),'same');
                         datasize=[2,data_handle.data(parent_data).datainfo.data_dim(2:end)];
                         % reshape to CST
                         temp=reshape(fval,[datasize(1),prod(datasize(2:4)),datasize(5)]);
                         % calculate background for each channel in each
                         T_int=(data_handle.data(parent_data).datainfo.T>=data_handle.data(current_data).datainfo.bg_t_int(1)&data_handle.data(parent_data).datainfo.T<=data_handle.data(current_data).datainfo.bg_t_int(2));
                         % time frame
-                        if isempty(find(T_int))
+                        if isempty(find(T_int, 1))
                             bg_val=zeros(2,1);
                         else
                             bg_val=nanmean(nanmean(temp(:,:,T_int),3),2);
@@ -160,13 +163,14 @@ try
                         Ybin=data_handle.data(current_data).datainfo.bin_dim(3);
                         Zbin=data_handle.data(current_data).datainfo.bin_dim(4);
                         Tbin=data_handle.data(current_data).datainfo.bin_dim(5);
-                        windowsize=[1,Xbin,Ybin,Zbin,Tbin];
                         fval=data_handle.data(parent_data).dataval([data_handle.data(current_data).datainfo.F_CH,data_handle.data(current_data).datainfo.R_CH],:,:,:,:);
-                        fval=convn(fval,ones(windowsize),'same');
+                        fval(1,:,:,:,:)=convn(fval(1,:,:,:,:),ones(windowsize),'same');
+                        windowsize=data_handle.data(current_data).datainfo.R_bin;
+                        fval(2,:,:,:,:)=convn(fval(2,:,:,:,:),ones(windowsize),'same');
                         % calculate background for each channel in each
                         T_int=(data_handle.data(parent_data).datainfo.T>=data_handle.data(current_data).datainfo.bg_t_int(1)&data_handle.data(parent_data).datainfo.T<=data_handle.data(current_data).datainfo.bg_t_int(2));
                         % time frame
-                        if isempty(find(T_int))
+                        if isempty(find(T_int, 1))
                             bg_val=zeros(2,1);
                         else
                             bg_val=nanmean(nanmean(fval(:,:,T_int),3),2);
