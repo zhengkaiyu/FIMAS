@@ -5,6 +5,8 @@ classdef ( ConstructOnLoad = true ) gui_option < handle
         PANEL_NAME_LIST={'PANEL_DATA_dt','PANEL_DATA_MAP','PANEL_DATA_gT',...
             'PANEL_RESULT_param','PANEL_RESULT_MAP','PANEL_RESULT_gT',...
             'PANEL_aux'};
+        COLOR_MAP_LIST={'jet','gray','colorcube','hsv','parula','hot','prism',...
+            'cool','spring','summer','autumn','winter','bone','copper','pink','lines','flag'};
     end
     
     properties ( SetAccess = public, GetAccess = public )
@@ -49,6 +51,7 @@ classdef ( ConstructOnLoad = true ) gui_option < handle
                 obj.panel(panel_idx).zbound=[0,1,2,128];%[min,max,minlevel,maxlevel]
                 obj.panel(panel_idx).cscale=[0,1,0,0];%[min,max,islog,isfix]
                 obj.panel(panel_idx).cbound=[0,1,2,128];%[min,max,minlevel,maxlevel]
+                obj.panel(panel_idx).colormap=obj.COLOR_MAP_LIST{panel_idx};     %panel handel
             end
             
             temp=load(cat(2,'.',filesep,'lib',filesep,'color_order.mat'),'-mat');

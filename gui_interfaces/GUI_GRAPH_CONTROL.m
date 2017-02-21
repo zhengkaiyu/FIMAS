@@ -3,7 +3,7 @@ function varargout = GUI_GRAPH_CONTROL(varargin)
 
 % Edit the above text to modify the response to help GUI_GRAPH_CONTROL
 
-% Last Modified by GUIDE v2.5 09-Dec-2014 16:38:41
+% Last Modified by GUIDE v2.5 21-Feb-2017 16:27:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -220,7 +220,7 @@ val=str2double(get(hObject,'String'));
 if valid
     set(handles.SLIDER_MINC,'Value',val);
 else
-    set(hObject,'Value',get(handles.SLIDER_MIN,'Value'));
+    set(hObject,'Value',get(handles.SLIDER_MINC,'Value'));
 end
 
 function VAL_MAXC_Callback(hObject, ~, handles)
@@ -270,6 +270,21 @@ else
     set(hObject,'String','Auto');
 end
 SETTING.update_panel_control('set','zfix',val);
+
+% --- Executes during object creation, after setting all properties.
+function MENU_COLORMAP_CreateFcn(hObject, ~, ~)
+global  SETTING;
+set(hObject,'String',SETTING.COLOR_MAP_LIST);
+set(hObject,'Value',1);
+
+% --- Executes on selection change in MENU_COLORMAP.
+function MENU_COLORMAP_Callback(hObject, ~, ~)
+global SETTING;
+val=get(hObject,'Value');
+[valid,~]=SETTING.update_panel_control('set','colormap',val);
+if valid
+    set(hObject,'Value',val);
+end
 
 %----------buttons------------------
 function TOGGLE_HOLD_Callback(hObject, ~, ~)

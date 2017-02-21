@@ -71,9 +71,9 @@ try
                     
                     figure(2351+m);colormap('gray');
                     subplot(numseg,5,(ptidx-1)*5+1);
-                    imagesc(px_lim,py_lim,org_img/255);hold all;plot(xys(ptidx:ptidx+1,1),xys(ptidx:ptidx+1,2),'w','LineWidth',ceil(hw*2));hold off;axis('image');
-                    subplot(numseg,5,(ptidx-1)*5+2);imagesc(loc_img/255);axis('image');
-                    subplot(numseg,5,(ptidx-1)*5+3);imagesc(rotimg/255);axis('image');
+                    imagesc(px_lim,py_lim,org_img/max(org_img(:)));hold all;plot(xys(ptidx:ptidx+1,1),xys(ptidx:ptidx+1,2),'w','LineWidth',ceil(hw*2));hold off;axis('image');
+                    subplot(numseg,5,(ptidx-1)*5+2);imagesc(loc_img/max(loc_img(:)));axis('image');
+                    subplot(numseg,5,(ptidx-1)*5+3);imagesc(rotimg/max(rotimg(:)));axis('image');
                     xoff=floor(xoffset/(2*xoffset+len(ptidx))*size(rotimg,2));
                     if isnan(xoff)
                         %in case vertical
@@ -82,7 +82,7 @@ try
                     yoff=floor(yoffset/(2*(yoffset+hw))*size(rotimg,1));
                     %crop rotated image
                     rotimg=rotimg(yoff+1:end-yoff,xoff+1:end-xoff);%map axis is inverted
-                    subplot(numseg,5,(ptidx-1)*5+4);imagesc(rotimg/255);axis('image');
+                    subplot(numseg,5,(ptidx-1)*5+4);imagesc(rotimg/max(rotimg(:)));axis('image');
                     lp=nanmean(rotimg,1);
                     dist_lp=linspace(0,len(ptidx),numel(lp));
                     dist{m}=[dist{m},dist{m}(end)+dist_lp];

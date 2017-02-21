@@ -86,10 +86,13 @@ try
         obj.data(end).dataval=zeros(t_size,X_size,Y_size,Z_size,T_size);
         for probe_id=1:t_size
             % go through probe individually
-            currentprobeidx=find(val(valid,6)==probes(probe_id));            
+            currentprobeidx=find(val(valid,6)==probes(probe_id));
+            %[xgrid,ygrid,zgrid]=ndgrid(X_scale,Y_scale,linspace(min(Z_pos),max(Z_pos),X_size));
+            %[a,b,c]=griddata(X_pos(currentprobeidx),Y_pos(currentprobeidx),Z_pos(currentprobeidx),val(valid(currentprobeidx),20),xgrid,ygrid,zgrid);
             for zslice=1:Z_size
                 % go through each z slices
                 currentzidx=currentprobeidx(Z_pos(currentprobeidx)>(Z_scale(zslice)-Z_res/2)&Z_pos(currentprobeidx)<=(Z_scale(zslice)+Z_res/2));
+                %temp=hist3([X_pos(currentzidx),Y_pos(currentzidx)],{X_scale,Y_scale});
                 [temp,~,~,binx,biny]=histcounts2(X_pos(currentzidx),Y_pos(currentzidx),[X_scale-X_res/2,X_scale(end)+X_res/2],[Y_scale-Y_res/2,Y_scale(end)+Y_res/2]);
                 if scaled
                     for idx=1:numel(currentzidx)

@@ -114,6 +114,7 @@ if ishandle(panel_handle)
                     set(ui_handle.VAL_CMAXBOUND,'String',obj.panel(panel_idx).zbound(2));
                     set(ui_handle.TOGGLE_LOGC,'Value',obj.panel(panel_idx).zscale(3));
                     
+                    
                     % hold toggle control
                     set(ui_handle.TOGGLE_HOLD,'Value',obj.panel(panel_idx).hold);
                     if obj.panel(panel_idx).hold
@@ -131,6 +132,10 @@ if ishandle(panel_handle)
                         iconimg=imread(cat(2,obj.rootpath.icon_path,'normoff_icon.png'));
                     end
                     set(ui_handle.TOGGLE_NORM,'CData',iconimg);
+                    
+                    % colormap menu
+                    colormapidx=find(strcmp(obj.COLOR_MAP_LIST,obj.panel(panel_idx).colormap));
+                    set(ui_handle.MENU_COLORMAP,'Value',colormapidx);
                     
                     status=true;
                 else
@@ -402,6 +407,10 @@ if ishandle(panel_handle)
                             status=true;
                         case 'hControl'
                             
+                        case 'colormap'
+                            obj.panel(panel_idx).colormap=obj.COLOR_MAP_LIST{val};
+                            colormap(obj.panel(panel_idx).handle,obj.panel(panel_idx).colormap);
+                            status=true;
                         otherwise
                             message=sprintf('%sInvalid field to change\n',message);
                     end

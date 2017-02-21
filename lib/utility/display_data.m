@@ -56,7 +56,7 @@ if ~isempty(data)
     switch plot_type
         % ----------------------
         case 'surf' % 2D surface plot for scalar maps
-            colormap(axeshandle,'gray');
+            colormap(axeshandle,SETTING.panel(SETTING.current_panel).colormap);
             surf_plot=findobj(axeshandle,'Tag','surf');
             data=squeeze(data);
             if tonorm
@@ -95,7 +95,7 @@ if ~isempty(data)
             end
             % ----------------------
         case 'mod_surf' % 2D surface map with modulated colour scalar map
-            colormap(axeshandle,'jet');
+            colormap(axeshandle,SETTING.panel(SETTING.current_panel).colormap);
             surf_plot=findobj(axeshandle,'Tag','mod_surf');
             cmap=squeeze(data{2});
             data=squeeze(data{1});
@@ -230,6 +230,7 @@ if ~isempty(data)
             end
             % ----------------------
         case 'histmap' % 2D surface plot histogram map
+            colormap(axeshandle,SETTING.panel(SETTING.current_panel).colormap);
             histmap_plot=findobj(axeshandle,'Tag','surf');
             data=squeeze(data);
             if tonorm
@@ -349,6 +350,7 @@ if ~isempty(data)
             % ----------------------
         case 'phasor_map'
             %plot data
+            colormap(axeshandle,SETTING.panel(SETTING.current_panel).colormap);
             phasor_plot=findobj(axeshandle,'Tag','phasor_map');
             data=squeeze(data);
             if tonorm
