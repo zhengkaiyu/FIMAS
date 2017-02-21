@@ -237,6 +237,8 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         [ status, message ] = load_aimg_file( obj, filename);
         %import exported ascii files (trace)
         [ status, message ] = load_atrc_file( obj, filename);
+        %import exported csv ascii files from bruker localisation
+        [ status, message ] = obj.load_bruker_srf_file( obj, filename)
         % older version data file format
         [ status, message ] = load_old_dataformat( obj, filename );
         %------------
