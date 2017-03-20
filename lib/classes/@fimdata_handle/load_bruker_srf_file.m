@@ -44,10 +44,10 @@ try
         Z_pos=val(valid,18)/1000;%convert nm to um
         
         t_res=1;
-        X_res=0.05;
-        Y_res=0.05;
+        X_res=0.02;
+        Y_res=0.02;
         Z_res=0.05;
-        scaled=true;
+        scaled=false;
         % ask for dimension resolution
         % get binning information
         prompt = {'X_res','Y_res','Z_res','scaled'};
@@ -86,7 +86,7 @@ try
         obj.data(end).dataval=zeros(t_size,X_size,Y_size,Z_size,T_size);
         for probe_id=1:t_size
             % go through probe individually
-            currentprobeidx=find(val(valid,6)==probes(probe_id));            
+            currentprobeidx=find(val(valid,6)==probes(probe_id));
             for zslice=1:Z_size
                 % go through each z slices
                 currentzidx=currentprobeidx(Z_pos(currentprobeidx)>(Z_scale(zslice)-Z_res/2)&Z_pos(currentprobeidx)<=(Z_scale(zslice)+Z_res/2));

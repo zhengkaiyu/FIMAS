@@ -3,7 +3,7 @@ function [ status, message ] = load_femtonic_mes_file( obj, filename )
 %   each channel is assigned in dt space
 
 %% function check
-status=false;
+status=false;message='start loading femtonic mes file';
 try
     % load mes file from matlab format
     raw_data=load(filename,'-mat');
@@ -122,7 +122,11 @@ try
                             nimg=numel(ifname);
                             nZSlice=nimg/nCh;
                             if isfield(metainfo,'info_Posinfo')
-                                nZSlice=metainfo.info_Posinfo.znum;
+                                if metainfo.info_Posinfo.znum~=nZSlice;
+                                   message=sprintf('%s\nZ slice number inconsistencies\n',message);
+                                else
+                                    nZSlice=metainfo.info_Posinfo.znum;
+                                end
                             else
                                 message=sprintf('Z Slice number missing\n');
                                 datainfo.Z=datainfo.Z(1:nZSlice);

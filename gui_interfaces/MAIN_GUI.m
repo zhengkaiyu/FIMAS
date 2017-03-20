@@ -777,11 +777,13 @@ for p_idx=[1,2,3]
             % found line plot
             % get userdata
             slice_data=get(SETTING.panel(p_idx).handle,'UserData');
-            ydata=slice_data(:,slice_idx,:);
-            if numel(ydata)==numel(get(curplot,'XData'))
-                set(curplot,'YData',squeeze(ydata(:,:,:)));
-            else
-                set(curplot,'YData',squeeze(ydata(:,:,page_idx)));
+            if ~isempty(slice_data)
+                ydata=slice_data(:,slice_idx,:);
+                if numel(ydata)==numel(get(curplot,'XData'))
+                    set(curplot,'YData',squeeze(ydata(:,:,:)));
+                else
+                    set(curplot,'YData',squeeze(ydata(:,:,page_idx)));
+                end
             end
         end
     end

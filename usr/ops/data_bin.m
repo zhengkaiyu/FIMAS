@@ -58,10 +58,11 @@ try
                 'Enter Y bin size',...
                 'Enter Z bin size',...
                 'Enter T bin size',...
-                'Calculation Mode (reduce/same)'};
+                'Calculation Mode (reduce/same)',...
+                'New Data'};
             dlg_title = cat(2,'Data bin sizes for',obj.data(current_data).dataname);
             num_lines = 1;
-            def = {opmode,num2str(binsize(1)),num2str(binsize(2)),num2str(binsize(3)),num2str(binsize(4)),num2str(binsize(5)),calcmode};
+            def = {opmode,num2str(binsize(1)),num2str(binsize(2)),num2str(binsize(3)),num2str(binsize(4)),num2str(binsize(5)),calcmode,num2str(newdata)};
             set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
             set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
@@ -76,6 +77,7 @@ try
                 % calculation mode
                 opmode=answer{1};
                 calcmode=answer{7};
+                newdata=str2double(answer{8})==1;
                 switch opmode
                     case {'mean','nanmean','sum','nansum','max','nanmax','min','nanmin','median','nanmedian'}
                         obj.data(current_data).datainfo.operator_mode=opmode;

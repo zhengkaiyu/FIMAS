@@ -31,7 +31,7 @@ else
             end
         otherwise
             switch type_id
-                case {28,29,25,12,10,6,3,9,5,13,14,15,17,30,11,31}
+                case {27,28,29,25,12,10,6,3,9,5,13,14,15,17,19,30,11,31}
                     switch optype
                         case 'op'
                             datatype='RESULT_IMAGE';

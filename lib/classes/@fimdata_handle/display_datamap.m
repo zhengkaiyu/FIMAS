@@ -188,6 +188,7 @@ try
                         % set current data output panel handle
                         obj.data(data_idx).datainfo.panel=fig_handle.PANEL_DATA_MAP;
                     otherwise
+                        
                 end
                 status=true;
             case 'DATA_IMAGE'    %nD image data
@@ -215,7 +216,7 @@ try
                 % find dimension with more than one point
                 pos_dim_idx=obj.data(data_idx).datainfo.data_dim>1;
                 switch bin2dec(num2str(pos_dim_idx))%display decide on data dimension
-                    case {12,9,17,5}
+                    case {12,9,17,5,3}
                         % 2D data
                         % XY(01100)/XT(01001)/tT(10001)/YT(00101)
                         display_dim=pos_dim_idx;% plot 2D
@@ -234,6 +235,14 @@ try
                         display_dim=[true,true,false,false,false]; % plot tX
                         % get 3D value
                         val=reshape(obj.data(data_idx).dataval,[data_size(1),data_size(2),data_size(4),data_size(5)]);
+                    case 19
+                        % tZT(10011)
+                        % most likly CXT data
+                        display_dim=[true,false,false,false,true]; % plot tT
+                        % get 3D value
+                        val=permute(squeeze(obj.data(data_idx).dataval),[1,3,2]);
+                        % plot XT
+                        data_size(5)=1; % we are plot T, Tseq is false
                     case 11
                         % XZT(01011)
                         % most likely XCT
@@ -252,6 +261,11 @@ try
                         display_dim=[false,true,true,false,false];% plot XY
                         % select the right T Pages
                         val=reshape(obj.data(data_idx).dataval,[data_size(2),data_size(3),data_size(4),data_size(5)]);
+                    case 27
+                        % tXZT
+                        display_dim=[true,true,false,false,false];% plot tX
+                        % get 3D value
+                        val=reshape(obj.data(data_idx).dataval,[data_size(1),data_size(2),data_size(4),data_size(5)]);
                     case 29
                         % tXYT(11101)
                         display_dim=[false,true,true,false,false];% plot XY
