@@ -1,5 +1,5 @@
 function [ status, message ] = op_Spiral2Img( data_handle, option, varargin )
-%op_Spiral2Img converts spiral/tornado linescan into standard images
+%op_Spiral2Img converts spiral/tornado linescan into standard XY images
 % --- Function Library ---
 
 parameters=struct('note','',...

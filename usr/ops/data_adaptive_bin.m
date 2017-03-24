@@ -43,10 +43,15 @@ try
             else
                 calcmode='reduce';% default bin mode
             end
-            if isfield(obj.data(current_data).datainfo,'min_threshold')
-                min_threshold=obj.data(current_data).datainfo.min_threshold;% default threshold
+            if isfield(obj.data(current_data).datainfo,'tail_threshold')
+                tail_threshold=obj.data(current_data).datainfo.tail_threshold;% default threshold
             else
                 min_threshold=5;
+            end
+            if isfield(obj.data(current_data).datainfo,'cv_threshold')
+                cv_threshold=obj.data(current_data).datainfo.cv_threshold;% default threshold
+            else
+                cv_threshold=1.1;
             end
             if isfield(obj.data(current_data).datainfo,'t_tail')
                 t_tail=obj.data(current_data).datainfo.t_tail;% default threshold
@@ -63,12 +68,13 @@ try
             % need user input/confirm bin size
             % get binning information
             prompt = {'This is based on the current data (mean/sum/max/min/median and nan mode)',...
-                'min threshold',...
+                'tail threshold',...
                 't_tail',...
+                'cv threshold',...
                 'Calculation Mode (reduce/same)'};
             dlg_title = cat(2,'Data bin option for',obj.data(current_data).dataname);
             num_lines = 1;
-            def = {opmode,num2str(min_threshold),num2str(t_tail),calcmode};
+            def = {opmode,num2str(tail_threshold),num2str(t_tail),num2str(cv_threshold),calcmode};
             set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
             set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
@@ -77,9 +83,10 @@ try
             if ~isempty(answer)
                 % calculation mode
                 opmode=answer{1};
-                min_threshold=str2double(answer{2});
+                tail_threshold=str2double(answer{2});
                 t_tail=str2double(answer{3});
-                calcmode=answer{4};
+                cv_threshold=str2double(answer{4});
+                calcmode=answer{5};
                 switch opmode
                     case {'mean','nanmean','sum','nansum','max','nanmax','min','nanmin','median','nanmedian'}
                         
@@ -137,8 +144,9 @@ try
             obj.data(current_data).datainfo.binsize=binsize;
             obj.data(current_data).datainfo.operator_mode=opmode;
             obj.data(current_data).datainfo.calculator_mode=calcmode;
-            obj.data(current_data).datainfo.min_threshold=min_threshold;
+            obj.data(current_data).datainfo.tail_threshold=tail_threshold;
             obj.data(current_data).datainfo.t_tail=t_tail;
+            obj.data(current_data).datainfo.cv_threshold=cv_threshold;
             dim_size=obj.data(parent_data).datainfo.data_dim;
             rawdata=obj.data(parent_data).dataval;
             % work out new data size
@@ -149,7 +157,7 @@ try
             while T_idx<dim_size(5)
                 Tbin=0;
                 tailval=0;
-                while tailval<min_threshold
+                while tailval<tail_threshold
                     if Tbin>0
                         switch opmode
                             case {'sum','nansum','mean','nanmean','median','nanmedian'}
@@ -160,7 +168,12 @@ try
                     else
                         tempval=rawdata(:,T_idx);
                     end
-                    tailval=tempval(t_end);
+                    tailval=mean(tempval(t_end:end));
+                    intensity=sum(rawdata(:,T_idx:T_idx+Tbin),1);
+                    cv=var(intensity)/mean(intensity);
+                    if cv>=cv_threshold
+                       break; 
+                    end
                     Tbin=Tbin+1;
                     if T_idx+Tbin>dim_size(5)
                         T_idx=dim_size(5);
