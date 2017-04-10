@@ -85,9 +85,9 @@ if ~isempty(data)
             yminmax=[dim{1}(1),dim{1}(end)];
             if gui
                 % update control
-                SETTING.update_panel_control('set','xmin',xminmax(1),'xmax',xminmax(2),...
-                    'ymin',yminmax(1),'ymax',yminmax(2),...
-                    'zmin',zbound(1),'zmax',zbound(2));
+                SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
+                    'ylim',[yminmax(1),yminmax(2)],...
+                    'zlim',[zbound(1),zbound(2)]);
                 %caxis(axeshandle,'auto');
             else
                 xlim(axeshandle,xminmax);ylim(axeshandle,yminmax);
@@ -119,8 +119,8 @@ if ~isempty(data)
             xminmax=[dim{2}(1),dim{2}(end)];
             yminmax=[dim{1}(1),dim{1}(end)];
             if gui
-                SETTING.update_panel_control('set','xmin',xminmax(1),'xmax',xminmax(2),...
-                    'ymin',yminmax(1),'ymax',yminmax(2),...
+                SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
+                    'ylim',[yminmax(1),yminmax(2)],...
                     'cmin',cbound(1),'cmax',cbound(2));
             else
                 xlim(axeshandle,xminmax);
@@ -155,8 +155,8 @@ if ~isempty(data)
             xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+1e-12];
             yminmax=[0.99*min(data(:)),1.01*max(data(:))+1e-12];
             if gui
-                SETTING.update_panel_control('set','xmin',xminmax(1),'xmax',xminmax(2),...
-                    'ymin',yminmax(1),'ymax',yminmax(2));
+                SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
+                    'ylim',[yminmax(1),yminmax(2)]);
             else
                 xlim(axeshandle,xminmax);
                 ylim(axeshandle,yminmax);
@@ -188,8 +188,8 @@ if ~isempty(data)
             xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+1e-12];
             yminmax=[0.99*min(data(:)),1.01*max(data(:))+1e-12];
             if gui
-                SETTING.update_panel_control('set','xmin',xminmax(1),'xmax',xminmax(2),...
-                    'ymin',yminmax(1),'ymax',yminmax(2));
+                SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
+                    'ylim',[yminmax(1),yminmax(2)]);
             else
                 xlim(axeshandle,xminmax);
                 ylim(axeshandle,yminmax);
@@ -222,8 +222,8 @@ if ~isempty(data)
             xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+1e-12];
             yminmax=[0.99*min(data(:)),1.01*max(data(:))+1e-12];
             if gui
-                SETTING.update_panel_control('set','xmin',xminmax(1),'xmax',xminmax(2),...
-                    'ymin',yminmax(1),'ymax',yminmax(2));
+                SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
+                    'ylim',[yminmax(1),yminmax(2)]);
             else
                 xlim(axeshandle,xminmax);
                 ylim(axeshandle,yminmax);
@@ -259,9 +259,9 @@ if ~isempty(data)
             yminmax=[dim{1}(1),dim{1}(end)];
             if gui
                 % update control
-                SETTING.update_panel_control('set','xmin',xminmax(1),'xmax',xminmax(2),...
-                    'ymin',yminmax(1),'ymax',yminmax(2),...
-                    'zmin',zbound(1),'zmax',zbound(2));
+                SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
+                    'ylim',[yminmax(1),yminmax(2)],...
+                    'zlim',[zbound(1),zbound(2)]);
                 caxis(axeshandle,'auto');
             else
                 xlim(axeshandle,xminmax);ylim(axeshandle,yminmax);
@@ -286,8 +286,8 @@ if ~isempty(data)
             xlabel(axeshandle,axis_label{2},'Color','w');
             ylabel(axeshandle,axis_label{1},'Color','w');
             if gui
-                SETTING.update_panel_control('set','xmin',dim{2}(1),'xmax',dim{2}(end),...
-                    'ymin',dim{1}(1),'ymax',dim{1}(end));
+                SETTING.update_panel_control('set','xlim',[dim{2}(1),dim{2}(end)],...
+                    'ylim',[dim{1}(1),dim{1}(end)]);
             else
                 xlim(axeshandle,[dim{2}(1),dim{2}(end)]);
                 ylim(axeshandle,[dim{1}(1),dim{1}(end)]);
@@ -341,8 +341,8 @@ if ~isempty(data)
             xminmax=[0.99* min(min(dim{2}(1,:,:))),1.02* max(max(dim{2}(1,:,:)))+1e-12];
             yminmax=[1* min(min(dim{2}(2,:,:))),1.02* max(max(dim{2}(2,:,:)))+1e-12];
             if gui
-                SETTING.update_panel_control('set','xmin',xminmax(1),'xmax',xminmax(2),...
-                    'ymin',yminmax(1),'ymax',yminmax(2));
+                SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
+                    'ylim',[yminmax(1),yminmax(2)]);
             else
                 xlim(axeshandle,xminmax);
                 ylim(axeshandle,yminmax);
@@ -394,9 +394,9 @@ if ~isempty(data)
             yminmax=[dim{2}{2}(1),dim{2}{2}(end)];
             if gui
                 % update control
-                SETTING.update_panel_control('set','xmin',xminmax(1),'xmax',xminmax(2),...
-                    'ymin',yminmax(1),'ymax',yminmax(2),...
-                    'zmin',zbound(1),'zmax',zbound(2));
+                SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
+                    'ylim',[yminmax(1),yminmax(2)],...
+                    'zlim',[zbound(1),zbound(2)]);
                 %caxis(axeshandle,'auto');
             else
                 xlim(axeshandle,xminmax);ylim(axeshandle,yminmax);

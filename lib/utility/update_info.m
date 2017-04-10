@@ -17,4 +17,4 @@ else
 end
 
 % pause so we can see the update
-pause(0.001);
+%pause(0.001);

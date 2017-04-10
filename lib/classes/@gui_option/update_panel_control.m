@@ -154,6 +154,52 @@ if ishandle(panel_handle)
                 if ~isnan(val)
                     % valid values
                     switch field
+                        case 'xlim'
+                            if obj.panel(panel_idx).xscale(4)
+                                % scaled fixed do nothing
+                                
+                            else
+                                if sum(isinf(val))==0
+                                    val=sort(val);
+                                    set(panel_handle,'XLim',val);
+                                    obj.panel(panel_idx).xscale(1:2)=val;
+                                    % update minimum bound
+                                    obj.panel(panel_idx).xbound(1)=min(val(1),obj.panel(panel_idx).xbound(1));
+                                    % update maximum bound
+                                    obj.panel(panel_idx).xbound(2)=max(val(2),obj.panel(panel_idx).xbound(2));
+                                end
+                            end
+                            status=true;
+                        case 'ylim'
+                            if obj.panel(panel_idx).yscale(4)
+                                % scaled fixed do nothing
+                                
+                            else
+                                if sum(isinf(val))==0
+                                    val=sort(val);
+                                    set(panel_handle,'YLim',val);
+                                    obj.panel(panel_idx).yscale(1:2)=val;
+                                    % update minimum bound
+                                    obj.panel(panel_idx).ybound(1)=min(val(1),obj.panel(panel_idx).ybound(1));
+                                    % update maximum bound
+                                    obj.panel(panel_idx).ybound(2)=max(val(2),obj.panel(panel_idx).ybound(2));
+                                end
+                            end
+                        case 'zlim'
+                            if obj.panel(panel_idx).zscale(4)
+                                % scaled fixed do nothing
+                                
+                            else
+                                if sum(isinf(val))==0
+                                    val=sort(val);
+                                    set(panel_handle,'CLim',val);
+                                    obj.panel(panel_idx).zscale(1:2)=val;
+                                    % update minimum bound
+                                    obj.panel(panel_idx).zbound(1)=min(val(1),obj.panel(panel_idx).zbound(1));
+                                    % update maximum bound
+                                    obj.panel(panel_idx).zbound(2)=max(val(2),obj.panel(panel_idx).zbound(2));
+                                end
+                            end
                         case 'xmin'
                             if obj.panel(panel_idx).xscale(4)
                                 % scaled fixed do nothing
