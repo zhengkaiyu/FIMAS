@@ -72,16 +72,19 @@ try
             for dim_idx=1:numel(obj.DIM_TAG)
                 dim=obj.DIM_TAG{dim_idx};
                 if dim_idx==append_dim
-                    if obj.data(parent_data).datainfo.(cat(2,'d',dim))~=0
-                        obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
-                        if obj.data(selected_data(2)).datainfo.(dim)(1)>obj.data(selected_data(1)).datainfo.(dim)(end)
-                            obj.data(current_data).datainfo.(dim)=[obj.data(selected_data(1)).datainfo.(dim);obj.data(selected_data(2)).datainfo.(dim)];
+                    obj.data(current_data).datainfo.(dim)=obj.data(selected_data(1)).datainfo.(dim);
+                    for item_idx=2:numel(selected_data)
+                        if obj.data(parent_data).datainfo.(cat(2,'d',dim))~=0
+                            obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
+                            if obj.data(selected_data(2)).datainfo.(dim)(1)>obj.data(selected_data(1)).datainfo.(dim)(end)
+                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)];
+                            else
+                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)+obj.data(current_data).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
+                            end
                         else
-                            obj.data(current_data).datainfo.(dim)=[obj.data(selected_data(1)).datainfo.(dim);obj.data(selected_data(2)).datainfo.(dim)+obj.data(selected_data(1)).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
+                            obj.data(current_data).datainfo.(cat(2,'d',dim))=1;
+                            obj.data(current_data).datainfo.(dim)=linspace(0,new_dim_size-1,new_dim_size);
                         end
-                    else
-                        obj.data(current_data).datainfo.(cat(2,'d',dim))=1;                    
-                        obj.data(current_data).datainfo.(dim)=linspace(0,new_dim_size-1,new_dim_size);
                     end
                 else
                     obj.data(current_data).datainfo.(dim)=obj.data(parent_data).datainfo.(dim);
