@@ -54,7 +54,8 @@ try
             newname=sprintf('%s+',obj.data(selected_data).dataname);
             obj.data_add(cat(2,'data_append|(',newname(1:end-1),')'),[],[]);
             % get new data index
-            current_data=obj.current_data;
+            current_data=numel(obj.data);
+            obj.current_data=current_data;
             % pass on metadata info
             obj.data(current_data).metainfo=obj.data(parent_data).metainfo;
             % set parent data index
@@ -77,9 +78,9 @@ try
                         if obj.data(parent_data).datainfo.(cat(2,'d',dim))~=0
                             obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
                             if obj.data(selected_data(2)).datainfo.(dim)(1)>obj.data(selected_data(1)).datainfo.(dim)(end)
-                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)];
+                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim),obj.data(selected_data(item_idx)).datainfo.(dim)];
                             else
-                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)+obj.data(current_data).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
+                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim),obj.data(selected_data(item_idx)).datainfo.(dim)+obj.data(current_data).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
                             end
                         else
                             obj.data(current_data).datainfo.(cat(2,'d',dim))=1;

@@ -83,7 +83,7 @@ try
                     %assign y
                     obj.data(data_end_pos).datainfo.Y=1:obj.data(data_end_pos).datainfo.dY:Y_size;
                     %get data Dimension
-                    obj.data(data_end_pos).datainfo.data_dim=[1,X_size>1,Y_size>1,1,1];
+                    obj.data(data_end_pos).datainfo.data_dim=[1,X_size,Y_size,1,1];
                     obj.data(data_end_pos).datatype=obj.get_datatype;
                     obj.data(data_end_pos).metainfo=dir(filename);
                     %assign data name
