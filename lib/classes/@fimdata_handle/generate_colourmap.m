@@ -21,7 +21,7 @@ if ~isempty(ancester_index)
         % current data size so that colourmap size matches
         data_size=obj.data(index).datainfo.data_dim;
         scalemap_f=zeros([data_size,3]);%RGB
-        intensity_map=reshape(nansum(obj.data(ancester_index).dataval,1),data_size);% intensity excludes t dim
+        intensity_map=repmat(nansum(obj.data(ancester_index).dataval,1),[data_size(1),1,1,1,1]);% intensity excludes t dim
         intensity_scale=repmat(intensity_map./max(intensity_map(:)),[ones(size(data_size)),3]);
         % check data size
         if isempty(find((size(intensity_scale)==[data_size,3])==0, 1))

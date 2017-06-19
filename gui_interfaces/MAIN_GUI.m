@@ -936,7 +936,7 @@ end
 
 % --- Executes on selection change in MENU_RESULT_T.
 function MENU_RESULT_T_Callback(hObject, eventdata, handles)
-global SETTING;
+global hDATA SETTING;
 % get T page index
 page_idx=get(hObject,'Value');
 % get Z slice index
@@ -956,7 +956,18 @@ for p_idx=[4,5]
                 % no line plot try find surf plot
                 curplot=findobj(SETTING.panel(p_idx).handle,'Tag','surf');
                 if isempty(curplot)
-                    % nothing plotted
+                    % no surf plot try find phasormap plot
+                    curplot=findobj(SETTING.panel(p_idx).handle,'Tag','phasor_map');
+                    if isempty(curplot)
+                    %not thing to plot    
+                    else
+                        data_idx=hDATA.current_data(1);
+                        slice_data=get(SETTING.panel(p_idx).handle,'UserData');
+                        display_dim=[];
+                        [ axis_label, disp_axis ] = hDATA.get_displaydata( data_idx, display_dim );
+                        display_data(slice_data(:,:,:,slice_idx,page_idx),SETTING.panel(p_idx).handle,'phasor_map',...
+                            disp_axis,axis_label,[size(slice_data,4)>1,size(slice_data,5)>1],data_idx);
+                    end
                 else
                     % surf plot
                     % get user data

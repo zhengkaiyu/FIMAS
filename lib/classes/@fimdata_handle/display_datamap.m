@@ -343,7 +343,7 @@ try
                 pos_dim_idx=obj.data(data_idx).datainfo.data_dim>1;
                 val_scalemap=[];
                 % get display options
-                [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, pos_dim_idx );
                 switch bin2dec(num2str(pos_dim_idx))%display decide on data dimension
                     
                     case 12
@@ -355,21 +355,36 @@ try
                         % no Z or T seq
                         data_size(4)=1;
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data({val(:,:,:,Slices(1),Pages(1)),val_scalemap(1,:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
+                    case 17
+                        % 2D data    %pT(10001)
+                        display_dim=[true,false,false,false,true];%  plot XY
+                        val=obj.data(data_idx).dataval;
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data(val(:,:,:,Slices(1),:),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
                     case {12,9,17,5}
-                        % 2D data    %tT(10001)
                         % XT(01001)/YT(00101)
                         display_dim=pos_dim_idx;% plot 2D
                         % shrink data to 2D
-                        val=squeeze(obj.data(data_idx).dataval);
+                        val=obj.data(data_idx).dataval;
                         % no Z or T seq
                         data_size(4)=1;data_size(5)=1;
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data(val(:,:,:,Slices(1),Pages(1)),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
                     case 28
-                        % tXY(11100)
+                        % pXY(11100)
                         display_dim=[false,true,true,false,false];%  plot XY
                         % reduce t dim to get intensity XY data
-                        val=(sum(obj.data(data_idx).dataval,1));
+                        val=obj.data(data_idx).dataval;
                         % colour scale map from ancester
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(1,:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
                     case 25
                         % tXT(11001)
                         % most likly CXT data
@@ -378,6 +393,9 @@ try
                         val=reshape(obj.data(data_idx).dataval,[data_size(1),data_size(2),data_size(4),data_size(5)]);
                         % colour scale map from ancester
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(1,:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
                     case 11
                         % XZT(01011)
                         % most likely XCT
@@ -386,16 +404,25 @@ try
                         val=permute(squeeze(obj.data(data_idx).dataval),[1,3,2]);
                         % plot XT
                         data_size(5)=1; % we are plot T, Tseq is false
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data(val(:,:,:,Slices(1),Pages(1)),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
                     case 14
                         % XYZ(01110)
                         display_dim=[false,true,true,false,false];% plot XY
                         % select the right Z slice
                         val=(obj.data(data_idx).dataval);
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data(val(:,:,:,Slices(1),Pages(1)),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
                     case 13
                         % XYT(01101)
                         display_dim=[false,true,true,false,false];% plot XY
                         % select the right T Pages
                         val=reshape(obj.data(data_idx).dataval,[data_size(1),data_size(2),data_size(3),data_size(4),data_size(5)]);
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data(val(:,:,:,Slices(1),Pages(1)),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
                     case 29
                         % tXYT(11101)
                         display_dim=[false,true,true,false,false];% plot XY
@@ -403,32 +430,29 @@ try
                         val=reshape(sum(obj.data(data_idx).dataval,1),[data_size(1),data_size(2),data_size(3),data_size(4),data_size(5)]);
                         % colour scale map from ancester
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(1,:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
                     case 30
-                        % tXYZ(11110)
+                        % pXYZ(11110)
                         % most likely CXYZ data
                         display_dim=[false,true,true,false,false];% plot XY
                         % shrink data to XYZ
                         val=(sum(obj.data(data_idx).dataval,1));
                         % colour scale map from ancester
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(1,:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
                     case 15
                         % XYZT(01111)
                         display_dim=[false,true,true,false,false];% plot XY
                         % select the right Z slices and T Pages
                         val=(obj.data(data_idx).dataval);
+                        [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
+                        display_data(val(:,:,:,Slices(1),Pages(1)),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
+                        set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
                 end
-                [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
-                
-                % plot selected slices and pages
-                % check for mod_surf or surf
-                if isempty(val_scalemap)
-                    display_data(val(:,:,:,Slices(1),Pages(1)),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
-                    set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
-                else
-                    display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(1,:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
-                    set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
-                end
-                
                 % set Z and T options
                 if notify
                     %set Z slice options

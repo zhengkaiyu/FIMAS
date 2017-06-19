@@ -137,7 +137,7 @@ try
                         else
                             max_idx=[];
                         end
-                        windowsize=[Xbin,Ybin,Zbin,Tbin];
+                        windowsize=[1,Xbin,Ybin,Zbin,Tbin];
                         % get gate range
                         t_gate1=(t>=data_handle.data(current_data).datainfo.gate1(1))&(t<=data_handle.data(current_data).datainfo.gate1(2));
                         t_gate2=(t>=data_handle.data(current_data).datainfo.gate2(1))&(t<=data_handle.data(current_data).datainfo.gate2(2));

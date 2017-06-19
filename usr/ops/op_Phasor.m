@@ -59,8 +59,8 @@ try
                                 data_handle.data(new_data).datainfo.data_idx=new_data;
                                 % set parent data index
                                 data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
-                                data_handle.data(new_data).datainfo.X_disp_bound=[0,1,256];
-                                data_handle.data(new_data).datainfo.Y_disp_bound=[0,0.5,128];
+                                data_handle.data(new_data).datainfo.X_disp_bound=[0,1,64];
+                                data_handle.data(new_data).datainfo.Y_disp_bound=[0,0.5,32];
                                 % combine the parameter fields
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
                                 data_handle.data(new_data).datainfo.bin_dim=data_handle.data(current_data).datainfo.bin_dim;

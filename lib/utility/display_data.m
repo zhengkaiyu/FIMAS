@@ -152,8 +152,8 @@ if ~isempty(data)
             xlabel(axeshandle,axis_label{1},'Color','w');
             ylabel(axeshandle,axis_label{2},'Color','w');
             %set x and y limits
-            xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+1e-12];
-            yminmax=[0.99*min(data(:)),1.01*max(data(:))+1e-12];
+            xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+eps];
+            yminmax=[0.99*min(data(:)),1.01*max(data(:))+eps];
             if gui
                 SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
                     'ylim',[yminmax(1),yminmax(2)]);
@@ -185,8 +185,8 @@ if ~isempty(data)
             xlabel(axeshandle,axis_label{1},'Color','w');
             ylabel(axeshandle,axis_label{2},'Color','w');
             %set x and y limits
-            xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+1e-12];
-            yminmax=[0.99*min(data(:)),1.01*max(data(:))+1e-12];
+            xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+eps];
+            yminmax=[0.99*min(data(:)),1.01*max(data(:))+eps];
             if gui
                 SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
                     'ylim',[yminmax(1),yminmax(2)]);
@@ -219,8 +219,8 @@ if ~isempty(data)
             xlabel(axeshandle,axis_label{1},'Color','w');
             ylabel(axeshandle,axis_label{2},'Color','w');
             %set x and y limits
-            xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+1e-12];
-            yminmax=[0.99*min(data(:)),1.01*max(data(:))+1e-12];
+            xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+eps];
+            yminmax=[0.99*min(data(:)),1.01*max(data(:))+eps];
             if gui
                 SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
                     'ylim',[yminmax(1),yminmax(2)]);
@@ -338,8 +338,8 @@ if ~isempty(data)
             xlabel(axeshandle,axis_label{1},'Color','w');
             ylabel(axeshandle,axis_label{2},'Color','w');
             %set x and y limits
-            xminmax=[0.99* min(min(dim{2}(1,:,:))),1.02* max(max(dim{2}(1,:,:)))+1e-12];
-            yminmax=[1* min(min(dim{2}(2,:,:))),1.02* max(max(dim{2}(2,:,:)))+1e-12];
+            xminmax=[0.99* min(min(dim{2}(1,:,:))),1.02* max(max(dim{2}(1,:,:)))+eps];
+            yminmax=[1* min(min(dim{2}(2,:,:))),1.02* max(max(dim{2}(2,:,:)))+eps];
             if gui
                 SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
                     'ylim',[yminmax(1),yminmax(2)]);
