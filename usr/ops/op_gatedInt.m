@@ -78,7 +78,10 @@ try
                         status=false;
                     case 'gate1'
                         val=str2num(val);
-                        if numel(val)~=2
+                        if isempty(val)
+                            data_handle.data(current_data).datainfo.gate1=val;
+                            status=true;
+                        elseif numel(val)~=2
                             message=sprintf('%s\ngate1 must have two elements.\n',message);
                             status=false;
                         else
@@ -139,7 +142,11 @@ try
                         end
                         windowsize=[1,Xbin,Ybin,Zbin,Tbin];
                         % get gate range
-                        t_gate1=(t>=data_handle.data(current_data).datainfo.gate1(1))&(t<=data_handle.data(current_data).datainfo.gate1(2));
+                        if isempty(data_handle.data(current_data).datainfo.gate1)
+                            t_gate1=[];
+                        else
+                            t_gate1=(t>=data_handle.data(current_data).datainfo.gate1(1))&(t<=data_handle.data(current_data).datainfo.gate1(2));
+                        end
                         t_gate2=(t>=data_handle.data(current_data).datainfo.gate2(1))&(t<=data_handle.data(current_data).datainfo.gate2(2));
                         
                         fval=convn(data_handle.data(parent_data).dataval,ones(windowsize),'same');
@@ -156,7 +163,11 @@ try
                     case {'DATA_TRACE'}
                         t=data_handle.data(current_data).datainfo.t;
                         % get gate range
-                        t_gate1=(t>=data_handle.data(current_data).datainfo.gate1(1))&(t<=data_handle.data(current_data).datainfo.gate1(2));
+                        if isempty(data_handle.data(current_data).datainfo.gate1)
+                            t_gate1=[];
+                        else
+                            t_gate1=(t>=data_handle.data(current_data).datainfo.gate1(1))&(t<=data_handle.data(current_data).datainfo.gate1(2));
+                        end
                         t_gate2=(t>=data_handle.data(current_data).datainfo.gate2(1))&(t<=data_handle.data(current_data).datainfo.gate2(2));
                         if data_handle.data(current_data).datainfo.normalise
                             I=nansum(data_handle.data(parent_data).dataval(1:end,:),2);%get max position from total data
@@ -184,10 +195,22 @@ end
 
     function val=calculate_gateratio(data,gate1,gate2,normalise,maxidx)
         if normalise
-            data=data./repmat(data(maxidx,:,:,:,:),size(data,1),1,1,1,1);
+            normdata=data(maxidx,:,:,:,:);
+        else
+            normdata=nansum(data,1);
         end
+        data=data./repmat(normdata,size(data,1),1,1,1,1);
         %calculate area
-        val=nanmean(data(gate2,:,:,:,:),1)./nanmean(data(gate1,:,:,:,:),1);
+        if isempty(gate1)
+            val=nanmean(data(gate2,:,:,:,:),1);
+        else
+            val=nanmean(data(gate2,:,:,:,:),1)./nanmean(data(gate1,:,:,:,:),1);
+        end
         val(isinf(val))=nan;
+        if normalise
+            
+        else
+            val=val.*normdata;
+        end
     end
 end

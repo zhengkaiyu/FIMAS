@@ -365,7 +365,7 @@ try
                         [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
                         display_data(val(:,:,:,Slices(1),:),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
                         set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
-                    case {12,9,17,5}
+                    case {9,5}
                         % XT(01001)/YT(00101)
                         display_dim=pos_dim_idx;% plot 2D
                         % shrink data to 2D
@@ -383,7 +383,7 @@ try
                         % colour scale map from ancester
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
                         [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
-                        display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(1,:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
+                        display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(Parameters(1),:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
                         set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
                     case 25
                         % tXT(11001)

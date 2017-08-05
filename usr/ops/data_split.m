@@ -49,7 +49,7 @@ try
             prompt=sprintf('Splitting format \n(e.g. 1;2;3;4;5 or [1:1:3];[4,5];[6:2:10]}:');
             dlg_title=sprintf('Splitting Format');
             num_lines=1;
-            def={'1;2;3;4;5'};
+            def={'1;2;3'};
             options.WindowStyle='modal';
             answer = inputdlg(prompt,dlg_title,num_lines,def,options);
             set(0,'DefaultUicontrolBackgroundColor','k');
@@ -89,7 +89,7 @@ try
             % set parent data index
             obj.data(new_data).datainfo=obj.data(current_data).datainfo;
             % set data index
-            obj.data(new_data).datainfo.data_idx=current_data;
+            obj.data(new_data).datainfo.data_idx=new_data;
             % set parent data index
             obj.data(new_data).datainfo.parent_data_idx=current_data;
             obj.data(new_data).datainfo.operator='data_split';

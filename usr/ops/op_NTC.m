@@ -9,7 +9,7 @@ parameters=struct('note','',...
     'fit_t0',3e-10,...
     'fit_t1',9e-9,... %ns after peak
     'bg_threshold',10,... %background threshold
-    't_disp_ubound',[0.05,0.5,64]);
+    't_disp_bound',[0.05,0.5,64]);
 
 status=false;message='';
 

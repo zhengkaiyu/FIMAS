@@ -291,11 +291,11 @@ end
                 %data=data(max_idx:t_end);
                 data=circshift(data,-max_idx);
                 %data=data./max_val;
-                
-                t_end=find(t<=t_duration,1,'last');
+                t=circshift(t',-max_idx);
+                t_end=find(t>=t_duration+t(1),1,'first');
                 t=t(1:t_end);
                 data=data(1:t_end);
-                t=t(:);
+                t=t(:)-t(1);
                 data=data(:);
             end
             
