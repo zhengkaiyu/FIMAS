@@ -78,9 +78,9 @@ try
                         if obj.data(parent_data).datainfo.(cat(2,'d',dim))~=0
                             obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
                             if obj.data(selected_data(2)).datainfo.(dim)(1)>obj.data(selected_data(1)).datainfo.(dim)(end)
-                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim),obj.data(selected_data(item_idx)).datainfo.(dim)];
+                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)];
                             else
-                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim),obj.data(selected_data(item_idx)).datainfo.(dim)+obj.data(current_data).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
+                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)+obj.data(current_data).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
                             end
                         else
                             obj.data(current_data).datainfo.(cat(2,'d',dim))=1;
