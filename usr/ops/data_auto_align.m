@@ -15,9 +15,10 @@ function [ status, message ] = data_auto_align( obj, selected_data )
 %% function complete
 status=false;message='';
 try
+    isnew=1;
+    parent_data=selected_data(1);
     if numel(selected_data)>1
         % Only select the first one
-        obj.current_data=selected_data(1);
         warndlg(sprintf('This operation will only be apply to a single data item at one time.\nThe first selected item will be used.\nSaved xyshift.data can be applied to other data.'),...
             'Attention','modal');
     end
@@ -25,7 +26,7 @@ try
         'Calculation Mode','Existing','New','New');
     switch answer
         case 'New'
-            axeshandle=obj.data(obj.current_data).datainfo.panel;
+            axeshandle=obj.data(parent_data).datainfo.panel;
             %find surface plot
             surface=findobj(axeshandle,'Type','surface');
             if ~isempty(surface)
@@ -57,7 +58,7 @@ try
                     
                     %get the 3D XYZT image inside roi
                     %sum over t if exist
-                    val=squeeze(nansum(obj.data(obj.current_data).dataval(:,row(1):row(end),col(1):col(end),:),1));
+                    val=squeeze(nansum(obj.data(parent_data).dataval(:,row(1):row(end),col(1):col(end),:),1));
                     
                     %------------- ECC algorithm ---------------
                     %initialise alignment process parameters
@@ -146,9 +147,9 @@ try
             shift_size=load(cat(2,PathName,filesep,FileName),'-ascii');
             %check size consistency
             if size(shift_size,2)==2
-                n_slices=size(obj.data(obj.current_data).dataval,5);
+                n_slices=size(obj.data(parent_data).dataval,5);
                 if size(shift_size,1)==n_slices
-                    
+                    isnew=0;
                 else
                     %row number inconsisten with data
                     message=sprintf('number of rows in xyshift data inconsisten with image data\n');
@@ -183,12 +184,12 @@ try
     switch answer
         case 'Interp'
             %add new data holder
-            obj.data_add(cat(2,'auto_align|',obj.data(obj.current_data).dataname),obj.data(obj.current_data),[]);
+            obj.data_add(cat(2,'auto_align|',obj.data(parent_data).dataname),obj.data(parent_data),[]);
             %interpolate new image according to drift parameter
             %This is fine for intensity based images
-            nx = 1:size(obj.data(obj.current_data).dataval,3);
-            ny = 1:size(obj.data(obj.current_data).dataval,2);
-            
+            nx = 1:size(obj.data(parent_data).dataval,3);
+            ny = 1:size(obj.data(parent_data).dataval,2);
+            current_data=obj.current_data;
             %create waitbar for user attention
             waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
                 'CreateCancelBtn',...
@@ -198,7 +199,7 @@ try
             setappdata(waitbar_handle,'canceling',0);
             
             for slice_idx=2:n_slices
-                obj.data(obj.current_data).dataval(1,:,:,slice_idx) = spatial_interp(squeeze(obj.data(obj.current_data).dataval(1,:,:,slice_idx)),shift_size(slice_idx,:)', 'cubic','translation', nx, ny);
+                obj.data(current_data).dataval(1,:,:,slice_idx) = spatial_interp(squeeze(obj.data(parent_data).dataval(1,:,:,slice_idx)),shift_size(slice_idx,:)', 'cubic','translation', nx, ny);
                 
                 %output some progress so we know it is doing things
                 if getappdata(waitbar_handle,'canceling')
@@ -221,12 +222,15 @@ try
             message=sprintf('data auto-aligned interpolated for %g slices\n x-y shift data is saved in xyshift.dat\n',n_slices);
         case 'Discrete(SPC)'
             %add new data holder
-            obj.data_add(cat(2,'auto_align|',obj.data(obj.current_data).dataname),obj.data(obj.current_data),[]);
+            obj.data_add(cat(2,'auto_align|',obj.data(parent_data).dataname),obj.data(parent_data),[]);
             %round up the pixel size shift
             %This is needed for lifetime images
-            shift_size=-shift_size;
-            shift_size=fliplr(round(shift_size));
-            
+             %save shift information
+            save('./xyshift.dat','shift_size','-ascii');
+            %if isnew
+                shift_size=-fliplr(round(shift_size));
+            %end
+            current_data=obj.current_data;
             %create waitbar for user attention
             waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
                 'CreateCancelBtn',...
@@ -234,9 +238,8 @@ try
                 'WindowStyle','modal',...
                 'Color',[0.2,0.2,0.2]);
             setappdata(waitbar_handle,'canceling',0);
-            
             for slice_idx=2:n_slices
-                obj.data(obj.current_data).dataval(:,:,:,slice_idx) = circshift(obj.data(obj.current_data).dataval(:,:,:,slice_idx),[0,shift_size(slice_idx,:),0]);
+                obj.data(current_data).dataval(:,:,:,slice_idx) = circshift(obj.data(parent_data).dataval(:,:,:,slice_idx),[0,shift_size(slice_idx,:),0]);
                 
                 %output some progress so we know it is doing things
                 if getappdata(waitbar_handle,'canceling')
@@ -252,8 +255,7 @@ try
                 fprintf('%g/%g calculated\n',slice_idx,n_slices);
             end
             delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
-            %save shift information
-            save('./xyshift.dat','shift_size','-ascii');
+           
             % pass on metadata info
             obj.data(current_data).metainfo=obj.data(parent_data).metainfo;
             obj.data(current_data).datainfo.last_change=datestr(now);
