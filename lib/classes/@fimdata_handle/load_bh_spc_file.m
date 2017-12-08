@@ -427,7 +427,7 @@ try
         % ------------------------
         switch button
             case 'Proceed'
-                button = questdlg('Use spc to minimise memory usage','Storage Format','ndim','spc','ndim');
+                button = questdlg('Use spc to minimise memory usage','Storage Format','ndim','spc','spc');
                 switch button
                     case 'spc'
                         %assign data

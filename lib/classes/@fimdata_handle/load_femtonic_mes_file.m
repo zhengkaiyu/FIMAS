@@ -16,10 +16,10 @@ try
     commentstr=cellfun(@(x)char(x(1).Comment),temp_data,'UniformOutput',false);
     [~,measure_order]=sortrows(timestr,[1 2 3 4 5 6]);
     timestr=datestr(timestr(measure_order,:),'yyyy-mm-dd|HH:MM:SS');
-    datalist=[char(data_name(isdata(measure_order))),repmat('|',numel(isdata),1),timestr,repmat('|',numel(isdata),1),char(commentstr(measure_order))];
+    datalist=[char(data_name(isdata(measure_order))),repmat('|',numel(measure_order),1),timestr,repmat('|',numel(measure_order),1),char(commentstr(measure_order))];
     set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
     set(0,'DefaultUicontrolForegroundColor','k');
-    [selected,answer]=listdlg('Name','Select Data Item','PromptString','Which data items?','OKString','Load','ListString',datalist,'ListSize',[400,500],'InitialValue',1:1:numel(isdata));
+    [selected,answer]=listdlg('Name','Select Data Item','PromptString','Which data items?','OKString','Load','ListString',datalist,'ListSize',[400,500],'InitialValue',1:1:numel(measure_order));
     set(0,'DefaultUicontrolBackgroundColor','k');
     set(0,'DefaultUicontrolForegroundColor','w');
     if answer
@@ -123,7 +123,7 @@ try
                             nZSlice=nimg/nCh;
                             if isfield(metainfo,'info_Posinfo')
                                 if metainfo.info_Posinfo.znum~=nZSlice;
-                                   message=sprintf('%s\nZ slice number inconsistencies\n',message);
+                                    message=sprintf('%s\nZ slice number inconsistencies\n',message);
                                 else
                                     nZSlice=metainfo.info_Posinfo.znum;
                                 end
@@ -181,7 +181,8 @@ try
                     status=true;
                 case 'Line2'%line scans
                     % XT
-                    Channels=metainfo.viewline2refs.dgprstate.channellist';
+                    Channels=unique({dataitem.Channel});
+                    %Channels=metainfo.viewline2refs.dgprstate.channellist';
                     nCh=numel(Channels);
                     nitem=numel(dataitem);
                     ifname={dataitem.IMAGE};
@@ -256,9 +257,15 @@ try
                     % T info
                     datainfo.T=0;
                     datainfo.dT=0;
-                    temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:2*nCh),'UniformOutput',false);
+                    if numel(ifname)<2*nCh
+                        temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:end),'UniformOutput',false);
+                        datainfo.t=1:1:numel(ifname)-nCh;
+                        nCh=numel(ifname)-nCh;
+                    else
+                        temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:2*nCh),'UniformOutput',false);
+                    end
                     % add data
-                    obj.data(data_end_pos).dataval(:,:,:,1,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels)]),[3,1,2]);
+                    obj.data(data_end_pos).dataval(:,:,:,1,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,nCh]),[3,1,2]);
                     % work out dimension size
                     datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,1,1];
                     obj.data(data_end_pos).datainfo.dt=datainfo.dt;
@@ -310,7 +317,7 @@ try
                     % get data
                     temp=cellfun(@(x)raw_data.(x)(:,framecropstart:framecropend),ifname(1:nCh),'UniformOutput',false);
                     % add data
-                    obj.data(data_end_pos).dataval(:,:,:,1,:)=permute(reshape(cell2mat(temp),[metainfo.Width,nLines,nFrames,numel(Channels)]),[4,1,2,3]);
+                    obj.data(data_end_pos).dataval(:,:,:,1,:)=permute(reshape(cell2mat(temp),[metainfo.Width,nLines,nFrames,nCh]),[4,1,2,3]);
                     % work out dimension size
                     datainfo.data_dim=[nCh,metainfo.Width,nLines,1,nFrames];
                     obj.data(data_end_pos).datainfo.dt=datainfo.dt;
@@ -362,7 +369,13 @@ try
                     % T info
                     datainfo.T=0;
                     datainfo.dT=0;
-                    temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:2*nCh),'UniformOutput',false);
+                    if numel(ifname)<2*nCh
+                        temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:end),'UniformOutput',false);
+                        datainfo.t=1:1:numel(ifname)-nCh;
+                        nCh=numel(ifname)-nCh;
+                    else
+                        temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:2*nCh),'UniformOutput',false);
+                    end
                     % add data
                     obj.data(data_end_pos).dataval(:,:,:,1,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels)]),[3,1,2]);
                     % work out dimension size
