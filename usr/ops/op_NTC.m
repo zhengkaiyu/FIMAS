@@ -183,6 +183,8 @@ try
                                 barstep=barstep+1;
                             end
                             raw=nansum(fval(t_fit,p_idx),2);
+                            fval(1,p_idx)=calculate_ntc(t,raw,[],min_threshold,data_handle.data(current_data).datainfo.fit_t1);
+                            %{
                             if (max_idx<(length(t_fit)-2))
                                 %max_val=mean(raw(max_idx-1:max_idx+1));
                                 max_val=raw(max_idx);
@@ -196,6 +198,7 @@ try
                             else
                                 fval(1,p_idx)=nan;
                             end
+                            %}
                         end
                         data_handle.data(current_data).dataval=reshape(fval(1,:),[1,pX_lim,pY_lim,pZ_lim,pT_lim]);
                         data_handle.data(current_data).datainfo.data_dim=[1,pX_lim,pY_lim,pZ_lim,pT_lim];

@@ -61,6 +61,31 @@ try
                                 message=sprintf('only take tXY, tXT, tT, tXYZ data type\n');
                                 return;
                         end
+                    case {'DATA_TRACE'}
+                        switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
+                            case {16}
+                                % t (10000)
+                                parent_data=current_data;
+                                % add new data
+                                data_handle.data_add(cat(2,'op_gatedInt|',data_handle.data(current_data).dataname),[],[]);
+                                % get new data index
+                                new_data=data_handle.current_data;
+                                % copy over datainfo
+                                data_handle.data(new_data).datainfo=data_handle.data(parent_data).datainfo;
+                                % set data index
+                                data_handle.data(new_data).datainfo.data_idx=new_data;
+                                % set parent data index
+                                data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
+                                % combine the parameter fields
+                                data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
+                                % pass on metadata info
+                                data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
+                                message=sprintf('%s added\n',data_handle.data(new_data).dataname);
+                                status=true;
+                            otherwise
+                                message=sprintf('only take tXY, tXT, tT, tXYZ data type\n');
+                                return;
+                        end
                 end
             end
         case 'modify_parameters'
@@ -161,7 +186,7 @@ try
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
                         status=true;
                     case {'DATA_TRACE'}
-                        t=data_handle.data(current_data).datainfo.t;
+                        t=data_handle.data(parent_data).datainfo.t;
                         % get gate range
                         if isempty(data_handle.data(current_data).datainfo.gate1)
                             t_gate1=[];
@@ -176,12 +201,13 @@ try
                             max_idx=[];
                         end
                         fval=calculate_gateratio(data_handle.data(parent_data).dataval,t_gate1,t_gate2,data_handle.data(current_data).datainfo.normalise,max_idx);
-                        data_handle.update_data('dataval',fval);
+                        data_handle.data(current_data).dataval=fval;
+                        data_handle.data(current_data).datainfo.data_dim=[1,1,1,1,1];
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
                         data_handle.data(current_data).datainfo.dt=0;
                         data_handle.data(current_data).datainfo.t=0;
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
-                        message=sprintf('NTC = %g\n',fval);
+                        message=sprintf('gatedInt = %g\n',fval);
                         status=true;
                 end
             end
