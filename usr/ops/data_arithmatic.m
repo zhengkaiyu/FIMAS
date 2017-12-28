@@ -22,11 +22,11 @@ try
             prompt = {sprintf('Operation string \nUse $d as substitute variable\ne.g. 10*$d)')};
             dlg_title = cat(2,'Data arithmatic for',obj.data(current_data).dataname);
             num_lines = 1;
-            if isfield(obj.data(selected_data).datainfo,'operation_string')
-                def = {obj.data(selected_data).datainfo.operation_string};
+            if isfield(obj.data(current_data).datainfo,'operation_string')
+                def = {obj.data(current_data).datainfo.operation_string};
                 newdata=false;
             else
-                def = {'$d/255'};
+                def = {'bsxfun(@minus,$d,mean($d(1:10,:,:,:,:),1))'};
                 newdata=true;
             end
             set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
@@ -62,8 +62,26 @@ try
         % ---- Calculation ----
         if isempty(operation)
             %action cancelled
-            message=sprintf('action cancelled\n');
-            return;
+            % for multiple data ask for apply to all option
+            if numel(selected_data)>1
+                % ask if want to cancel for the rest of the data items
+                button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
+                switch button
+                    case 'Apply to Rest'
+                        askforparam=false;
+                    case 'Just this one'
+                        askforparam=true;
+                    otherwise
+                        % action cancellation
+                        askforparam=false;
+                end
+                if askforparam==false
+                    message=sprintf('Action cancelled!');
+                    return;
+                end
+            else
+                message=sprintf('Action cancelled!');
+            end
         else
             %circular shift data around the specified dimension
             opstr=regexprep(operation,'\$d','obj.data(parent_data).dataval');

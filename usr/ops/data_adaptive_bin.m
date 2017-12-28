@@ -118,7 +118,26 @@ try
                 status=true;
             else
                 % cancel clicked don't do anything to this data item
-                
+                % for multiple data ask for apply to all option
+                if numel(selected_data)>1
+                    % ask if want to cancel for the rest of the data items
+                    button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
+                    switch button
+                        case 'Apply to Rest'
+                            askforparam=false;
+                        case 'Just this one'
+                            askforparam=true;
+                        otherwise
+                            % action cancellation
+                            askforparam=false;
+                    end
+                    if askforparam==false
+                        message=sprintf('Action cancelled!');
+                        return;
+                    end
+                else
+                    message=sprintf('Action cancelled!');
+                end
             end
         else
             % user decided to apply same settings to rest

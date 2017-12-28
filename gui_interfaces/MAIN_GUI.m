@@ -335,6 +335,7 @@ switch clicktype
         % populate roi list
         populate_list(handles.LIST_ROI,{hDATA.data(data_idx).roi.name},hDATA.data(data_idx).current_roi);
         set(handles.MAIN_GUI,'SelectionType','normal');
+        hDATA.current_data=data_idx;
 end
 
 % --- Executes on key press with focus on LIST_DATA and none of its controls.

@@ -40,8 +40,25 @@ try
                     dim=5;
                 otherwise
                     %action cancelled
-                    message=sprintf('action cancelled\n');
-                    return;
+                    if numel(selected_data)>1
+                        % ask if want to cancel for the rest of the data items
+                        button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
+                        switch button
+                            case 'Apply to Rest'
+                                askforparam=false;
+                            case 'Just this one'
+                                askforparam=true;
+                            otherwise
+                                % action cancellation
+                                askforparam=false;
+                        end
+                        if askforparam==false
+                            message=sprintf('Action cancelled!');
+                            return;
+                        end
+                    else
+                        message=sprintf('Action cancelled!');
+                    end
             end
             % ask for split instruction string
             set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
@@ -56,8 +73,25 @@ try
             set(0,'DefaultUicontrolForegroundColor','w');
             if isempty(answer)
                 %action cancelled
-                message=sprintf('action cancelled\n');
-                return;
+                if numel(selected_data)>1
+                    % ask if want to cancel for the rest of the data items
+                    button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
+                    switch button
+                        case 'Apply to Rest'
+                            askforparam=false;
+                        case 'Just this one'
+                            askforparam=true;
+                        otherwise
+                            % action cancellation
+                            askforparam=false;
+                    end
+                    if askforparam==false
+                        message=sprintf('Action cancelled!');
+                        return;
+                    end
+                else
+                    message=sprintf('Action cancelled!');
+                end
             else
                 % for multiple data ask for apply to all option
                 if numel(selected_data)>1
