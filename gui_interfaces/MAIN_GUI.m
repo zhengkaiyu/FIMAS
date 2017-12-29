@@ -860,7 +860,18 @@ for p_idx=[4,5,6]
             % no line plot try find surf plot
             curplot=findobj(SETTING.panel(p_idx).handle,'Tag','surf');
             if isempty(curplot)
-                % nothing plotted
+                curplot=findobj(SETTING.panel(p_idx).handle,'Tag','mod_surf');
+                if isempty(curplot)
+                    % nothing plotted
+                else
+                    %mod surf
+                    % get user data
+                    slice_data=get(SETTING.panel(p_idx).handle,'UserData');
+                    if ndims(slice_data{1})>2
+                        set(curplot,'ZData',squeeze(slice_data{1}(param_idx,:,:,slice_idx,page_idx)));
+                        set(curplot,'CData',squeeze(slice_data{2}(param_idx,:,:,slice_idx,page_idx)));
+                    end
+                end
             else
                 % surf plot
                 % get user data
@@ -907,8 +918,8 @@ for p_idx=[4,5]
                     % get user data
                     slice_data=get(SETTING.panel(p_idx).handle,'UserData');
                     if ndims(slice_data{1})>2
-                        set(curplot,'ZData',squeeze(slice_data{1}(1,:,:,slice_idx,page_idx)));
-                        set(curplot,'CData',squeeze(slice_data{2}(1,:,:,slice_idx,:)));
+                        set(curplot,'ZData',squeeze(slice_data{1}(param_idx,:,:,slice_idx,page_idx)));
+                        set(curplot,'CData',squeeze(slice_data{2}(param_idx,:,:,slice_idx,page_idx)));
                     end
                 end
             else
@@ -957,17 +968,28 @@ for p_idx=[4,5]
                 % no line plot try find surf plot
                 curplot=findobj(SETTING.panel(p_idx).handle,'Tag','surf');
                 if isempty(curplot)
-                    % no surf plot try find phasormap plot
-                    curplot=findobj(SETTING.panel(p_idx).handle,'Tag','phasor_map');
+                    curplot=findobj(SETTING.panel(p_idx).handle,'Tag','mod_surf');
                     if isempty(curplot)
-                    %not thing to plot    
+                        % no surf plot try find phasormap plot
+                        curplot=findobj(SETTING.panel(p_idx).handle,'Tag','phasor_map');
+                        if isempty(curplot)
+                            %not thing to plot
+                        else
+                            data_idx=hDATA.current_data(1);
+                            slice_data=get(SETTING.panel(p_idx).handle,'UserData');
+                            display_dim=[];
+                            [ axis_label, disp_axis ] = hDATA.get_displaydata( data_idx, display_dim );
+                            display_data(slice_data(:,:,:,slice_idx,page_idx),SETTING.panel(p_idx).handle,'phasor_map',...
+                                disp_axis,axis_label,[size(slice_data,4)>1,size(slice_data,5)>1],data_idx);
+                        end
                     else
-                        data_idx=hDATA.current_data(1);
+                        %mod surf
+                        % get user data
                         slice_data=get(SETTING.panel(p_idx).handle,'UserData');
-                        display_dim=[];
-                        [ axis_label, disp_axis ] = hDATA.get_displaydata( data_idx, display_dim );
-                        display_data(slice_data(:,:,:,slice_idx,page_idx),SETTING.panel(p_idx).handle,'phasor_map',...
-                            disp_axis,axis_label,[size(slice_data,4)>1,size(slice_data,5)>1],data_idx);
+                        if ndims(slice_data{1})>2
+                            set(curplot,'ZData',squeeze(slice_data{1}(param_idx,:,:,slice_idx,page_idx)));
+                            set(curplot,'CData',squeeze(slice_data{2}(param_idx,:,:,slice_idx,page_idx)));
+                        end
                     end
                 else
                     % surf plot

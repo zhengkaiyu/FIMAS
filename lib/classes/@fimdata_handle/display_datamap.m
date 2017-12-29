@@ -383,8 +383,13 @@ try
                         % colour scale map from ancester
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
                         [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
-                        display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(Parameters(1),:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
-                        set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
+                        if isempty(val_scalemap)
+                            display_data(val(Parameters(1),:,:,Slices(1),Pages(1)),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
+                            set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
+                        else
+                            display_data({val(Parameters(1),:,:,Slices(1),Pages(1)),val_scalemap(Parameters(1),:,:,Slices(1),Pages(1),1:3)},fig_handle.PANEL_RESULT_MAP,'mod_surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1|data_size(1)>1],[]);
+                            set(fig_handle.PANEL_RESULT_MAP,'UserData',{val,val_scalemap});
+                        end
                     case 25
                         % tXT(11001)
                         % most likly CXT data
@@ -424,10 +429,10 @@ try
                         display_data(val(:,:,:,Slices(1),Pages(1)),fig_handle.PANEL_RESULT_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
                         set(fig_handle.PANEL_RESULT_MAP,'UserData',val);
                     case 29
-                        % tXYT(11101)
+                        % pXYT(11101)
                         display_dim=[false,true,true,false,false];% plot XY
                         % shrink data to XYT
-                        val=reshape(sum(obj.data(data_idx).dataval,1),[data_size(1),data_size(2),data_size(3),data_size(4),data_size(5)]);
+                        val=obj.data(data_idx).dataval;
                         % colour scale map from ancester
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
                         [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
@@ -438,7 +443,7 @@ try
                         % most likely CXYZ data
                         display_dim=[false,true,true,false,false];% plot XY
                         % shrink data to XYZ
-                        val=(sum(obj.data(data_idx).dataval,1));
+                        val=obj.data(data_idx).dataval;
                         % colour scale map from ancester
                         val_scalemap=obj.generate_colourmap(fig_handle.PANEL_RESULT_MAP);
                         [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
