@@ -180,8 +180,12 @@ try
                     obj.data(data_end_pos).datainfo.last_change=datestr(now);
                     status=true;
                 case 'Line2'%line scans
+                    % separate out line scan and bg image
+                    subsetidx=find(cellfun(@(x)~isempty(x),{dataitem.Type}));
+                    linescanidx=subsetidx(1):1:subsetidx(2)-1;
+                    bgscanidx=subsetidx(2):1:numel(dataitem);
                     % XT
-                    Channels=unique({dataitem.Channel});
+                    Channels=unique({dataitem(linescanidx).Channel});
                     %Channels=metainfo.viewline2refs.dgprstate.channellist';
                     nCh=numel(Channels);
                     nitem=numel(dataitem);
@@ -203,7 +207,7 @@ try
                     datainfo.T=linspace(metainfo.HeightOrigin,metainfo.HeightOrigin+metainfo.Height*metainfo.HeightStep,metainfo.Height);
                     datainfo.dT=metainfo.HeightStep;
                     % get data
-                    temp=cellfun(@(x)raw_data.(x),ifname(1:nCh),'UniformOutput',false);
+                    temp=cellfun(@(x)raw_data.(x),ifname(linescanidx),'UniformOutput',false);
                     % add data
                     obj.data(data_end_pos).dataval(:,:,1,1,:)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels)]),[3,1,2]);
                     % work out dimension size
@@ -235,13 +239,15 @@ try
                     % set data index
                     obj.data(data_end_pos).datainfo.data_idx=data_end_pos;
                     % go through selected dataset
-                    dataitem=temp_data{data_idx};
+                    %dataitem=temp_data{data_idx};
                     % get metainfo from dataitem(1)
-                    metainfo=getmetainfo(dataitem(nCh+1));
+                    metainfo=getmetainfo(dataitem(bgscanidx(1)));
                     % copy over metainfo
                     obj.data(data_end_pos).metainfo=metainfo;
                     % set data name format filename_dataname_channelname
                     obj.data(data_end_pos).dataname=cat(2,data_name{data_idx},'_bg_',name);
+                    Channels=unique({dataitem(bgscanidx).Channel});
+                    nCh=numel(Channels);
                     % t/Ch info
                     datainfo.t=1:1:nCh;
                     datainfo.dt=1;
@@ -257,13 +263,7 @@ try
                     % T info
                     datainfo.T=0;
                     datainfo.dT=0;
-                    if numel(ifname)<2*nCh
-                        temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:end),'UniformOutput',false);
-                        datainfo.t=1:1:numel(ifname)-nCh;
-                        nCh=numel(ifname)-nCh;
-                    else
-                        temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:2*nCh),'UniformOutput',false);
-                    end
+                    temp=cellfun(@(x)raw_data.(x),ifname(bgscanidx),'UniformOutput',false);
                     % add data
                     obj.data(data_end_pos).dataval(:,:,:,1,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,nCh]),[3,1,2]);
                     % work out dimension size

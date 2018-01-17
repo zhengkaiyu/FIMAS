@@ -2,6 +2,7 @@ function [ status, message ] = op_MapFunc( data_handle, option, varargin )
 %OP_MAPFUNC converts input scalar value to output scalar value according to
 %the function specified
 % --- Function Library ---
+%----------------------------------------------------------------------
 %---OGB1---
 %------- BH NCPCA test ------
 %1det_32C: '@(x)121.58582.*((1.14801-x)./(x-11.02362)).^(1/1.3827)'
@@ -21,14 +22,21 @@ function [ status, message ] = op_MapFunc( data_handle, option, varargin )
 %1det_33C_9ns:
 %'@(x)181.39721.*((0.08885-x)./(x-0.38816)).^(1/1.25546)'(UCL)
 %------- BH femtonics 9ns NTC interval ------
-%1det_34C_UG_9ns: '@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)'
+%1det_33C_UG_9ns: '@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)'
 %------------Olga T--------------------------
 %------- BH femtonics 9ns NTC interval ------
 %1det_34C_UG_9ns: '@(x)146.58*((0.09048-x)./(x-0.32)).^(1/1.03059)'
 %1det_34C_UG_9ns: '@(x)139.06885*((0.08921-x)./(x-0.37016)).^(1/0.99636)'(KAI)
+%----------------------------------------------------------------------
 % --- OGB2 ---
 %------- PQ 9ns NTC interval ------
 %1det_32C_9ns: '@(x)335.85038.*((0.09304-x)./(x-0.34433)).^(1/1.08089)'
+%----------------------------------------------------------------------
+% --- Cal590 @910nm excitation ---
+%------- BH femtonics 9ns NTC interval ------
+%1det_33C_UR_9ns: '@(x)46.55257*((0.05829-x)./(x-0.2305)).^(1/1.88335)'
+%------- BH femtonics 3ns NTC interval ------
+%1det_33C_UR_3ns_bgcorr: '@(x)46.65768*((0.14742-x)./(x-0.53825)).^(1/1.95332)'
 %--------------------------------------------
 
 
@@ -38,7 +46,7 @@ parameters=struct('note','',...
     't_disp_bound',[0,200,128],...
     'disp_lb',20,...
     'disp_ub',100,...
-    'calib_func','@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)');
+    'calib_func','@(x)46.65768*((0.14742-x)./(x-0.53825)).^(1/1.95332)');
 
 %inverse logistic x=x0*((a1-y)/(y-a2))^(1/p))
 

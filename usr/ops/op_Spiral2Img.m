@@ -6,8 +6,8 @@ parameters=struct('note','',...
     'operator','op_Spiral2Img',...
     'ref_scanline',[],...
     'bin_dim',[1,1,1,1,1],...
-    'grid_interp_size',2,...
-    'grid_interp','spline');
+    'grid_interp_size',1,...
+    'grid_interp','linear');
 
 status=false;message='';
 
@@ -140,7 +140,7 @@ try
                             scaninfo=data_handle.data(current_data).datainfo.ref_scanline;
                             nscanpts=size(scaninfo.Data1,2);%get scanline info size
                             linescan_size=data_handle.data(parent_data).datainfo.data_dim(2);%get line scan X size
-                            dwellpoint=downsample(scaninfo.Data1(1:2,:)',max(floor(nscanpts/linescan_size),1));%downsize
+                            dwellpoint=downsample(scaninfo.Data1(1:2,:)',max(round(nscanpts/linescan_size),1));%downsize
                             dwellpoint=dwellpoint(1:linescan_size,:);%match size to linescan data
                             unit_len=data_handle.data(parent_data).datainfo.dX;
                             xlim=min(dwellpoint(:,1)):unit_len:max(dwellpoint(:,1));%get new x grid
