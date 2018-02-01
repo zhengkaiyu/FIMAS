@@ -163,6 +163,8 @@ try
                         Ybin=data_handle.data(current_data).datainfo.bin_dim(3);
                         Zbin=data_handle.data(current_data).datainfo.bin_dim(4);
                         Tbin=data_handle.data(current_data).datainfo.bin_dim(5);
+                         % binning
+                        windowsize=[1,Xbin,Ybin,Zbin,Tbin];
                         fval=data_handle.data(parent_data).dataval([data_handle.data(current_data).datainfo.F_CH,data_handle.data(current_data).datainfo.R_CH],:,:,:,:);
                         fval(1,:,:,:,:)=convn(fval(1,:,:,:,:),ones(windowsize),'same');
                         windowsize=data_handle.data(current_data).datainfo.R_bin;
