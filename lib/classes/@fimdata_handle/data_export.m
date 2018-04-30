@@ -1,4 +1,4 @@
-function [ status, message ] = data_export( obj, index )
+function [ status, message ] = data_export( obj, index, filename )
 %DATA_EXPORT export selected data from a session
 %  only export selected data for future import
 
@@ -6,11 +6,15 @@ function [ status, message ] = data_export( obj, index )
 
 status=false;
 try
-    [filename,pathname,~]=uiputfile({'*.edf','exported data file (*.edf)';...
-        '*.*','All Files (*.*)'},...
-        'Select Exported Data Analysis File',obj.path.export);
-    if pathname~=0     %if files selected
+    if isempty(filename)
+        [filename,pathname,~]=uiputfile({'*.edf','exported data file (*.edf)';...
+            '*.*','All Files (*.*)'},...
+            'Select Exported Data Analysis File',obj.path.export);
         filename=cat(2,pathname,filename);
+    else
+        [pathname,~,~]=fileparts(filename);
+    end
+    if pathname~=0     %if files selected
         dataitem=obj.data(index);
         % clear handles
         for dataidx=1:numel(dataitem)

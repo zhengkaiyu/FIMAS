@@ -156,7 +156,7 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         % auto import multiple data files
         [ status, message ] = data_import( obj, varargin );
         %export selected data
-        [ status, message ] = data_export( obj, data_idx );
+        [ status, message ] = data_export( obj, data_idx, filename );
         %add new calculated data
         [ status, message ] = data_add( obj, name, val, selected );
         %remove imported data

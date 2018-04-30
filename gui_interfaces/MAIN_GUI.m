@@ -419,7 +419,7 @@ update_info(sprintf('%s\n','Exporting Data ... '),1,handles.EDIT_INFO);
 % get current selected data
 data_idx=get(handles.LIST_DATA,'Value');
 % export data
-[ ~, message ] = hDATA.data_export(data_idx);
+[ ~, message ] = hDATA.data_export(data_idx, []);
 % update info window
 update_info(sprintf('%s\n',message),1,handles.EDIT_INFO);
 

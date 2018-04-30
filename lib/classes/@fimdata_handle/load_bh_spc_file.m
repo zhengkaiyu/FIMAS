@@ -289,6 +289,21 @@ try
         % remove data to save space
         clear data;
         
+        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
+        set(0,'DefaultUicontrolForegroundColor','k');
+        % ask if want auto load
+        button=questdlg(sprintf('Loading %s by: ?',filename),'Loading procedure','manual','auto','auto');
+        switch button
+            case 'auto'
+                manualload=false;
+            case 'manual'
+                manualload=true;
+            otherwise
+                return;
+        end
+        set(0,'DefaultUicontrolBackgroundColor','k');
+        set(0,'DefaultUicontrolForegroundColor','w');
+        dsformat='spc';
         if marker_file==1
             %imaging frame signals
             frame_pos=find(marker_frame==1);  % frame stop mark
@@ -310,46 +325,59 @@ try
             [pixelnum,~]=histc(pixel_pos,line_pos);
             validframe=[];failed_guess=0;
             % validate line per frame and pixel per line
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
+            
             while isempty(validframe)
                 invalidframe=unique(find(linenum~=line_per_frame));
                 validframe=setxor(1:1:framenum,invalidframe);
                 if isempty(validframe)
                     possibleln=unique(linenum);
                     possibleln=possibleln(possibleln>0);
-                    % ask for input
-                    answer=inputdlg(sprintf('Image line per frame seemed wrong.\nTry %s\n If unsure press cancel.',num2str(possibleln')),...
-                        'Input required',1,{num2str(max(possibleln))});
-                    if isempty(answer)
-                        % cancel and went back to check
-                        return;
+                    if manualload
+                        % ask for input
+                        answer=inputdlg(sprintf('Image line per frame seemed wrong.\nTry %s\n If unsure press cancel.',num2str(possibleln')),...
+                            'Input required',1,{num2str(max(possibleln))});
+                        if isempty(answer)
+                            % cancel and went back to check
+                            return;
+                        else
+                            temp=str2double(answer);
+                            if temp==pixel_per_line
+                                % we got xy swapped over
+                                pixel_per_line=line_per_frame;
+                            end
+                            line_per_frame=temp;
+                            failed_guess=failed_guess+1;
+                            if failed_guess>2
+                                % assume user don't know the line number or that there was no line clock
+                                h=warndlg(sprintf('It seems there was no line clock or your guess was wrong.\nWe will try to proceed with your guess of %s lines per frame.',num2str(line_per_frame)),'Line Per Frame Error','modal');
+                                uiwait(h);
+                                break;
+                            end
+                        end
                     else
-                        temp=str2double(answer);
-                        if temp==pixel_per_line
-                            % we got xy swapped over
-                            pixel_per_line=line_per_frame;
-                        end
-                        line_per_frame=temp;
-                        failed_guess=failed_guess+1;
-                        if failed_guess>2
-                            % assume user don't know the line number or that there was no line clock
-                            h=warndlg(sprintf('It seems there was no line clock or your guess was wrong.\nWe will try to proceed with your guess of %s lines per frame.',num2str(line_per_frame)),'Line Per Frame Error','modal');
-                            uiwait(h);
-                            break;
-                        end
+                        line_per_frame=num2str(max(possibleln));
                     end
                 end
             end
             possiblepn=unique(pixelnum);
-            answer=inputdlg(sprintf('Image pixel per line seemed wrong.\nTry %s',num2str(possiblepn')),...
-                'Input required',1,{num2str(max(possiblepn))});
-            if isempty(answer)
-                % cancel and went back to check
-                return;
+            if manualload
+                answer=inputdlg(sprintf('Image pixel per line seemed wrong.\nTry %s',num2str(possiblepn')),...
+                    'Input required',1,{num2str(max(possiblepn))});
+                if isempty(answer)
+                    % cancel and went back to check
+                    return;
+                else
+                    temp=str2double(answer);
+                    pixel_per_line=temp;
+                    % ask if wish to autoload for the rest of the data
+                    button = questdlg('Autoload for the rest of the import?','Auto Load?','No','Yes','Yes') ;
+                    switch button
+                        case 'Yes'
+                            manualload=false;
+                    end
+                end
             else
-                temp=str2double(answer);
-                pixel_per_line=temp;
+                pixel_per_line=num2str(possiblepn');
             end
             set(0,'DefaultUicontrolBackgroundColor','k');
             set(0,'DefaultUicontrolForegroundColor','w');
@@ -384,51 +412,56 @@ try
                 heightstep=temp(4);
                 nFrame=temp(5);
                 framestep=temp(6);
-                
             end
         end
         % ------------
-        % --- provide info to confirm loading ---
-        temp = figure(...
-            'WindowStyle','normal',...% able to use
-            'MenuBar','none',...% no menu
-            'Position',[100,100,1000,500],...% fixed size
-            'Name',cat(2,'Raw DATA meta info: ',filename));% use data name
-        % change metainfo window icon
-        global SETTING;
-        javaFrame = get(temp,'JavaFrame');
-        javaFrame.setFigureIcon(javax.swing.ImageIcon(cat(2,SETTING.rootpath.icon_path,'main_icon.png')));
-        % get new figure position
-        pos=get(temp,'Position');
-        % create table to display meta information
-        obj.data(1).metainfo=info;
-        [~,infomess]=obj.display_metainfo(1,1,[]);
-        uitable(...
-            'Parent',temp,...
-            'Data',infomess,...% output metainfo
-            'ColumnName',{'Field','Value'},...
-            'Position',[0 0 pos(3)/2 pos(4)],...% maximise table
-            'ColumnWidth',{floor(pos(3)/6) floor(1.5*pos(3)/6)-10},...
-            'ColumnEditable',[false false]);% no editing required
-        % create table to display data information
-        infomess={'pixel/line',num2str(pixel_per_line);...
-            'line/frame',num2str(line_per_frame);...
-            '# of valid frame',num2str(numel(validframe));...
-            '# of invalid frame',num2str(numel(invalidframe));...
-            'dtime bin',num2str(dtime_bin)};
-        uitable(...
-            'Parent',temp,...
-            'Data',infomess,...% output metainfo
-            'ColumnName',{'Field','Value'},...
-            'Position',[pos(3)/2 0 3*pos(3)/2 pos(4)],...% maximise table
-            'ColumnWidth',{floor(pos(3)/8) floor(1.5*pos(3)/8)},...
-            'ColumnEditable',[false false]);% no editing required
-        button = questdlg('Check data info is correct','Proceed Further?','Cancel','Proceed','Proceed') ;
+        if manualload
+            % --- provide info to confirm loading ---
+            temp = figure(...
+                'WindowStyle','normal',...% able to use
+                'MenuBar','none',...% no menu
+                'Position',[100,100,1000,500],...% fixed size
+                'Name',cat(2,'Raw DATA meta info: ',filename));% use data name
+            % change metainfo window icon
+            global SETTING;
+            javaFrame = get(temp,'JavaFrame');
+            javaFrame.setFigureIcon(javax.swing.ImageIcon(cat(2,SETTING.rootpath.icon_path,'main_icon.png')));
+            % get new figure position
+            pos=get(temp,'Position');
+            % create table to display meta information
+            obj.data(1).metainfo=info;
+            [~,infomess]=obj.display_metainfo(1,1,[]);
+            uitable(...
+                'Parent',temp,...
+                'Data',infomess,...% output metainfo
+                'ColumnName',{'Field','Value'},...
+                'Position',[0 0 pos(3)/2 pos(4)],...% maximise table
+                'ColumnWidth',{floor(pos(3)/6) floor(1.5*pos(3)/6)-10},...
+                'ColumnEditable',[false false]);% no editing required
+            % create table to display data information
+            infomess={'pixel/line',num2str(pixel_per_line);...
+                'line/frame',num2str(line_per_frame);...
+                '# of valid frame',num2str(numel(validframe));...
+                '# of invalid frame',num2str(numel(invalidframe));...
+                'dtime bin',num2str(dtime_bin)};
+            uitable(...
+                'Parent',temp,...
+                'Data',infomess,...% output metainfo
+                'ColumnName',{'Field','Value'},...
+                'Position',[pos(3)/2 0 3*pos(3)/2 pos(4)],...% maximise table
+                'ColumnWidth',{floor(pos(3)/8) floor(1.5*pos(3)/8)},...
+                'ColumnEditable',[false false]);% no editing required
+            button = questdlg('Check data info is correct','Proceed Further?','Cancel','Proceed','Proceed');
+        else
+            button='Proceed';
+        end
         % ------------------------
         switch button
             case 'Proceed'
-                button = questdlg('Use spc to minimise memory usage','Storage Format','ndim','spc','spc');
-                switch button
+                if manualload
+                    dsformat = questdlg('Use spc to minimise memory usage','Storage Format','ndim','spc','spc');
+                end
+                switch dsformat
                     case 'spc'
                         %assign data
                         data_end_pos=numel(obj.data);
