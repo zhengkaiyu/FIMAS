@@ -204,7 +204,7 @@ try
                     datainfo.dZ=1;
                     % T info
                     % T info
-                    datainfo.T=linspace(metainfo.HeightOrigin,metainfo.HeightOrigin+metainfo.Height*metainfo.HeightStep,metainfo.Height);
+                    datainfo.T=linspace(metainfo.HeightOrigin,metainfo.HeightOrigin+(metainfo.Height-1)*metainfo.HeightStep,metainfo.Height);
                     datainfo.dT=metainfo.HeightStep;
                     % get data
                     temp=cellfun(@(x)raw_data.(x),ifname(linescanidx),'UniformOutput',false);
