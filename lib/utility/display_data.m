@@ -58,7 +58,11 @@ if ~isempty(data)
         case 'surf' % 2D surface plot for scalar maps
             colormap(axeshandle,SETTING.panel(SETTING.current_panel).colormap);
             surf_plot=findobj(axeshandle,'Tag','surf');
-            data=squeeze(data);
+            if islogical(data)
+                data=double(squeeze(data));
+            else
+                data=squeeze(data);
+            end
             if tonorm
                 data=data./max(data(:));
             end

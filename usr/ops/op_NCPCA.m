@@ -311,17 +311,17 @@ end
             plot(Eigenvectors);
             legend({'PC1','PC2','PC3','PC4','PC5','PC6'});
             %{
-        %Filtering
-        DF=D;
-        DF(MaxDims+1:end,MaxDims+1:end)=0;
-        % Forces all "unwanted" Eigenvalues to be zero and the others to be one.
-        %Thus only a projection onto the subspace is performed.
-        for n=1:MaxDims
-            DF(n,n)=1;
-        end
-        Filtered = (U*(DF*(transpose(V)*data_norm)));
-        FiltImg=bsxfun(@times,reshape(Filtered,[size(Filtered,1) datasize(2) datasize(3) datasize(4) datasize(5)]),NoiseCorrection);
-        figure;mesh(squeeze(sum(FiltImg,1)),'FaceColor','interp','EdgeColor','none');view([0 -90]);
+            %Filtering
+            DF=D;
+            DF(MaxDims+1:end,MaxDims+1:end)=0;
+            % Forces all "unwanted" Eigenvalues to be zero and the others to be one.
+            %Thus only a projection onto the subspace is performed.
+            for n=1:MaxDims
+                DF(n,n)=1;
+            end
+            Filtered = (U*(DF*(transpose(V)*data_norm)));
+            FiltImg=bsxfun(@times,reshape(Filtered,[size(Filtered,1) datasize(2) datasize(3) datasize(4) datasize(5)]),NoiseCorrection);
+            figure(randi([2,1000]));mesh(squeeze(sum(FiltImg,1)),'FaceColor','interp','EdgeColor','none');view([0 -90]);axis('tight');
             %}
             vec=mybasis;
             val=permute(Scores,[5,1,2,3,4]);

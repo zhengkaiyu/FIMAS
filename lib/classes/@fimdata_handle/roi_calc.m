@@ -164,6 +164,9 @@ try
                         %colourlabel=current_roi*(255/numel(obj.data(current_data).roi));
                         display_data(temp,SETTING.panel(7).handle,'surf', disp_axis, axis_label,[datasize(4)>1,datasize(5)>1],current_roi);
                         %display_data(temp,[],'surf', disp_axis, axis_label,[datasize(4)>1,datasize(5)>1],[]);
+                        data{1}=false(1,datasize(2),datasize(3));
+                        data{1}(ind)=true;
+                        message='mask';
                         status=true;
                     end
                 else

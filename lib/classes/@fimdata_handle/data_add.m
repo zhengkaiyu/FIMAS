@@ -27,7 +27,7 @@ try
         %return information and success status
         message=sprintf('%g of fluorescent data added\n',num_data);
         status=true;
-    elseif isnumeric(data)
+    elseif isnumeric(data)||islogical(data)
         %create new data and add values including placeholder with data=[]
         
         %add a new data using template

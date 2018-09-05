@@ -105,7 +105,7 @@ try
             current_data=data_handle.current_data;
             parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
             op=str2func(data_handle.data(current_data).datainfo.op_func);
-            evalc(cat(2,'data_handle.data(current_data).dataval = op(data_handle.data(parent_data).dataval,));
+            evalc(cat(2,'data_handle.data(current_data).dataval = op(data_handle.data(parent_data).dataval')));
             Fluo_bg=1;
             Ref_bg=1;
             T_baseline=(data_handle.data(parent_data).datainfo.T>=0)&(data_handle.data(parent_data).datainfo.T<=10);

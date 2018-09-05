@@ -216,9 +216,9 @@ try
                 % find dimension with more than one point
                 pos_dim_idx=obj.data(data_idx).datainfo.data_dim>1;
                 switch bin2dec(num2str(pos_dim_idx))%display decide on data dimension
-                    case {12,9,17,5,3}
+                    case {12,9,17,5,3,24}
                         % 2D data
-                        % XY(01100)/XT(01001)/tT(10001)/YT(00101)
+                        % XY(01100)/XT(01001)/tT(10001)/YT(00101)/tX(11000)
                         display_dim=pos_dim_idx;% plot 2D
                         % shrink data to 2D
                         val=squeeze(obj.data(data_idx).dataval);

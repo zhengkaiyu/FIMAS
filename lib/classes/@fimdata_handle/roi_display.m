@@ -70,6 +70,7 @@ try
                             else
                                 display_data(plotdata{2,1},fig_handle.PANEL_RESULT_gT,'line',plotdata{2,2},plotdata{2,3},[data_size(4)>1,data_size(5)>1],current_roi);
                             end
+                        case 'RESULT_PHASOR_MAP'
                             
                     end
                     message=sprintf('%s trace plotted\n',roi_name);

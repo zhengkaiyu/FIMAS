@@ -36,8 +36,8 @@ try
                     case {'DATA_IMAGE','RESULT_IMAGE'}
                         % check data dimension, we only take tXT
                         switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
-                            case {9,25}
-                                %XT (01001), tXT (11001)
+                            case {9,25,24}
+                                %XT (01001), tXT (11001), tX (11000)
                                 parent_data=current_data;
                                 % add new data
                                 data_handle.data_add(cat(2,'op_Spiral2Img|',data_handle.data(current_data).dataname),[],[]);
@@ -56,7 +56,7 @@ try
                                 message=sprintf('%s added\n',data_handle.data(new_data).dataname);
                                 status=true;
                             otherwise
-                                message=sprintf('only take tXT, XT NON-SPC format data type\n');
+                                message=sprintf('only take tXT, XT, tX NON-SPC format data type\n');
                                 errordlg(message,'Check selection','modal');
                                 return;
                         end
@@ -147,11 +147,10 @@ try
                             xsize=numel(xlim);
                             ylim=min(dwellpoint(:,2)):unit_len:max(dwellpoint(:,2));%get new y grid
                             ysize=numel(ylim);
+                            % parent dimension size
+                            dim_size=data_handle.data(parent_data).datainfo.data_dim;
                             %initialise new 5D data
-                            temp=zeros(data_handle.data(parent_data).datainfo.data_dim(1),...
-                                xsize,ysize,...
-                                data_handle.data(parent_data).datainfo.data_dim(4),...
-                                data_handle.data(parent_data).datainfo.data_dim(5));
+                            temp=zeros(dim_size(1),xsize,ysize,dim_size(4),dim_size(5));
                             [~,~,~,xbin,ybin]=histcounts2(dwellpoint(:,1),dwellpoint(:,2),[xsize,ysize]);
                             for pt_idx=1:linescan_size
                                 temp(:,xbin(pt_idx),ybin(pt_idx),1,:)=temp(:,xbin(pt_idx),ybin(pt_idx),1,:)+data_handle.data(parent_data).dataval(:,pt_idx,:,1,:);
@@ -178,15 +177,26 @@ try
                                             ylim=min(dwellpoint(:,2)):unit_len/div:max(dwellpoint(:,2));%get new y grid
                                             data_handle.data(current_data).dataval(:,:,:,1,:)=F({tlim,xlim,ylim,Tlim});
                                             data_handle.data(current_data).datainfo.t=tlim;
+                                        case 24
+                                            %tX (11000)
+                                            tlim=data_handle.data(parent_data).datainfo.t;
+                                            F = griddedInterpolant({tlim,xlim,ylim},squeeze(temp(:,:,:,1,1)),'spline');
+                                            xlim=min(dwellpoint(:,1)):unit_len/div:max(dwellpoint(:,1));%get new x grid
+                                            ylim=min(dwellpoint(:,2)):unit_len/div:max(dwellpoint(:,2));%get new y grid
+                                            data_handle.data(current_data).dataval(:,:,:,1,1)=F({tlim,xlim,ylim});
+                                            data_handle.data(current_data).datainfo.t=tlim;
                                     end
                                     %figure(10);mesh(X1,Y1,squeeze(mean(temp,5)),'FaceColor','interp','EdgeColor','none');view([0 90]);
                                     %figure(11);mesh(X2,Y2,squeeze(mean(V,3)),'FaceColor','interp','EdgeColor','none');view([0 90]);
                             end
+                            % work out new data size
+                            new_dim_size=size(data_handle.data(current_data).dataval);
+                            dim_size(2:3)=new_dim_size(2:3);%only change x and y size
                             data_handle.data(current_data).datainfo.X=xlim;
                             data_handle.data(current_data).datainfo.dX=xlim(2)-xlim(1);
                             data_handle.data(current_data).datainfo.Y=ylim;
                             data_handle.data(current_data).datainfo.dY=ylim(2)-ylim(1);
-                            data_handle.data(current_data).datainfo.data_dim=size(data_handle.data(current_data).dataval);
+                            data_handle.data(current_data).datainfo.data_dim=dim_size;
                             data_handle.data(current_data).datatype='DATA_IMAGE';
                             data_handle.data(current_data).datainfo.last_change=datestr(now);
                             status=true;

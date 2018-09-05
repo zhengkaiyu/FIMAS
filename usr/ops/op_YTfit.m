@@ -72,7 +72,6 @@ try
             end
         end
     end
-    
     switch option
         case 'add_data'
             for current_data=data_idx
@@ -182,36 +181,31 @@ try
                         end
                         status=true;
                     case 'electrophys_ref'
-                        %{
-                        if isempty(data_handle.data(current_data).datainfo.eigenvec)
-                            % load eigenvector from text mat
-                            [filename,pathname,~]=uigetfile({'*.dat','Exported ascii eigenvectors (*.dat)'},'Select Raw Data File','MultiSelect','off',data_handle.path.export);
-                            if pathname~=0
-                                temp=load(cat(2,pathname,filename),'-ascii');
-                                data_handle.data(current_data).datainfo.eigenvec=temp([1,2:2:end],:)';
-                                data_handle.data(current_data).datainfo.max_component=size(temp,1)/2;
-                                status=true;
+                        status=false;
+                        % ask for ref .mat file or ref data item
+                        orig_ref= data_handle.data(current_data).datainfo.electrophys_ref;
+                        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
+                        set(0,'DefaultUicontrolForegroundColor','k');
+                        % ask to select dataitem
+                        [s,v]=listdlg('ListString',{data_handle.data.dataname},...
+                            'SelectionMode','single',...
+                            'Name','op_YTfit',...
+                            'PromptString','Select electrophysiology ref data item',...
+                            'ListSize',[400,300]);
+                        set(0,'DefaultUicontrolBackgroundColor','k');
+                        set(0,'DefaultUicontrolForegroundColor','w');
+                        if v
+                            % check if size is T 
+                            if data_handle.data(s).datainfo.data_dim(5)>1
+                                data_handle.data(current_data).datainfo.electrophys_ref=data_handle.data(s).dataval;
+                                message=sprintf('Electrophysiology information loaded from %s\n',data_handle.data(s).dataname);
                             else
-                                
+                                errordlg('Selected dataitem has now ScanLine information','Check selection','modal');
                             end
-                        elseif isempty(val)
-                            % remove current eigenvectors
-                            data_handle.data(current_data).datainfo.eigenvec=[];
-                            status=true;
                         else
-                            % plot+export eigenvector
-                            %Display NC-PCA results
-                            figure('Name',sprintf('NC-PCA Principal Components for %s',data_handle.data(current_data).dataname),...
-                                'NumberTitle','off',...
-                                'MenuBar','none',...
-                                'ToolBar','figure',...
-                                'Keypressfcn',@export_panel);
-                            plot(data_handle.data(current_data).datainfo.eigenvec(:,1),data_handle.data(current_data).datainfo.eigenvec(:,2:end));
-                            title('Press F3 to export');
-                            legend({'PC1','PC2','PC3','PC4','PC5','PC6'});
-                            status=true;
+                            % didn't change
+                            data_handle.data(current_data).datainfo.electrophys_ref=orig_ref;
                         end
-                        %}
                     otherwise
                         message=sprintf('%sUnauthorised to change %s\n',message,parameters);
                         status=false;
