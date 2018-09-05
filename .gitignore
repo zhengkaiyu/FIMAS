@@ -215,7 +215,12 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
-##################
-## SyncToy files
-##################
+##############
+## SyncToy
+##############
 SyncToy_*.dat
+
+##############
+## Dropbox
+##############
+.dropbox
