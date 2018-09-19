@@ -27,6 +27,7 @@ try
         % get proper index
         isdata=isdata(measure_order(selected))';
         % go through each data
+        newdataidx=1;
         for data_idx=isdata
             % add new data object
             data_end_pos=numel(obj.data);
@@ -36,7 +37,7 @@ try
             % set data index
             obj.data(data_end_pos).datainfo.data_idx=data_end_pos;
             % go through selected dataset
-            dataitem=temp_data{data_idx};
+            dataitem=temp_data{newdataidx};
             % get metainfo from dataitem(1)
             metainfo=getmetainfo(dataitem(1));
             % copy over metainfo
@@ -313,7 +314,7 @@ try
                     datainfo.dT=metainfo.FoldedFrameInfo.frameTimeLength;%ms
                     datainfo.T=tstart:datainfo.dT:datainfo.dT*nFrames;
                     framecropstart=metainfo.FoldedFrameInfo.firstFramePos;
-                    framecropend=nLines*nFrames;
+                    framecropend=framecropstart+nLines*nFrames-1;
                     % get data
                     temp=cellfun(@(x)raw_data.(x)(:,framecropstart:framecropend),ifname(1:nCh),'UniformOutput',false);
                     % add data
@@ -347,7 +348,7 @@ try
                     % set data index
                     obj.data(data_end_pos).datainfo.data_idx=data_end_pos;
                     % go through selected dataset
-                    dataitem=temp_data{data_idx};
+                    dataitem=temp_data{newdataidx};
                     % get metainfo from dataitem(1)
                     metainfo=getmetainfo(dataitem(nCh+1));
                     % copy over metainfo
@@ -403,6 +404,7 @@ try
                 otherwise
                     message=sprintf('Unable t process image type %s yet',imgtype);
             end
+            newdataidx=newdataidx+1;
         end
         message=sprintf('data loaded from %s\n',filename);
         

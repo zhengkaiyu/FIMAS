@@ -34,7 +34,7 @@ try
                 h.XLabel.String='Time (s)';
                 h.YLabel.String='Scan Line Name';
                 h.YTickLabel=sl_names;
-                h.YTick=sl_idx;
+                h.YTick=sortrows(sl_idx);% create monotonically increasing vector
                 textinfo=cellfun(@(x,y)sprintf('%s %0.2Gs',x,y),sl_names(sl_order(1:2:end-2)),num2cell(diff(time(1:2:end)))','UniformOutput',false);
                 text(0.001,1.1,textinfo,'VerticalAlignment','bottom');
                 status=true;
