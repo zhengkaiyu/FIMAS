@@ -25,9 +25,9 @@ try
     if answer
         % ok pressed
         % get proper index
-        isdata=isdata(measure_order(selected))';
+        data_name=data_name(isdata);
+        isdata=measure_order(selected)';
         % go through each data
-        newdataidx=1;
         for data_idx=isdata
             % add new data object
             data_end_pos=numel(obj.data);
@@ -37,7 +37,7 @@ try
             % set data index
             obj.data(data_end_pos).datainfo.data_idx=data_end_pos;
             % go through selected dataset
-            dataitem=temp_data{newdataidx};
+            dataitem=temp_data{data_idx};
             % get metainfo from dataitem(1)
             metainfo=getmetainfo(dataitem(1));
             % copy over metainfo
@@ -348,7 +348,7 @@ try
                     % set data index
                     obj.data(data_end_pos).datainfo.data_idx=data_end_pos;
                     % go through selected dataset
-                    dataitem=temp_data{newdataidx};
+                    dataitem=temp_data{data_idx};
                     % get metainfo from dataitem(1)
                     metainfo=getmetainfo(dataitem(nCh+1));
                     % copy over metainfo
@@ -404,10 +404,8 @@ try
                 otherwise
                     message=sprintf('Unable t process image type %s yet',imgtype);
             end
-            newdataidx=newdataidx+1;
         end
         message=sprintf('data loaded from %s\n',filename);
-        
     else
         message=sprintf('data load from %s cancelled\n',filename);
     end

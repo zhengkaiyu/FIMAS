@@ -1,5 +1,5 @@
 function varargout = MAIN_GUI(varargin)
-% Fluorescence Imaging Microscopy Analysis Software Ver 1.2.3b
+% Fluorescence Imaging Microscopy Analysis Software Ver 1.2.5
 % Author: Kaiyu Zheng
 % Email: k.zheng@ucl.ac.uk
 % -------------------------------
