@@ -1,8 +1,13 @@
 function [ status, message ] = data_bin( obj, selected_data )
 % DATA_BIN bin currently selected data in provided dimensions
-%   The process is irreversible, therefore new data holder will be created.
-%   Data which does not fit into whole bins at the end will be discarded
-%   Default mode is sum. nan* mode should be used if data contain nan
+%   1. The process is irreversible, therefore new data holder will be created.
+%
+%   2. Data which does not fit into whole bins at the end will be discarded
+%
+%   3. Default mode is sum. nan* mode should be used if data contain nan
+%
+%   4. To collapse various dataitem of different size in binning dimension use
+%   Inf in that binning dimension
 
 %% function complete
 
@@ -26,10 +31,10 @@ try
             % check for bin dimension
             if isempty(obj.data(current_data).datainfo.bin_dim)
                 % bin dimension don't exist need to get set it to full size
-                binsize=obj.data(current_data).datainfo.data_dim;
+                setbinsize=obj.data(current_data).datainfo.data_dim;
             else
                 % use current bin dimension
-                binsize=obj.data(current_data).datainfo.bin_dim;
+                setbinsize=obj.data(current_data).datainfo.bin_dim;
             end
             % check for bin calculation mode
             if isfield(obj.data(current_data).datainfo,'operator_mode')
@@ -62,7 +67,7 @@ try
                 'New Data'};
             dlg_title = cat(2,'Data bin sizes for',obj.data(current_data).dataname);
             num_lines = 1;
-            def = {opmode,num2str(binsize(1)),num2str(binsize(2)),num2str(binsize(3)),num2str(binsize(4)),num2str(binsize(5)),calcmode,num2str(newdata)};
+            def = {opmode,num2str(setbinsize(1)),num2str(setbinsize(2)),num2str(setbinsize(3)),num2str(setbinsize(4)),num2str(setbinsize(5)),calcmode,num2str(newdata)};
             set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
             set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
@@ -70,9 +75,9 @@ try
             set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 % get bin sizes
-                binsize=cellfun(@(x)str2double(x),answer(2:6))';
+                setbinsize=cellfun(@(x)str2double(x),answer(2:6))';
                 if ~newdata
-                    obj.data(current_data).datainfo.bin_dim=binsize;
+                    obj.data(current_data).datainfo.bin_dim=setbinsize;
                 end
                 % calculation mode
                 opmode=answer{1};
@@ -110,14 +115,14 @@ try
                 end
             else
                 % cancel clicked don't do anything to this data item
-                binsize=[];
+                setbinsize=[];
             end
         else
             % user decided to apply same settings to rest
             
         end
         % ---- Calculation Part ----
-        if ~isempty(binsize)
+        if ~isempty(setbinsize)
             % decided to process
             if newdata
                 parent_data=current_data;
@@ -134,7 +139,6 @@ try
                 % set parent data index
                 obj.data(current_data).datainfo.parent_data_idx=parent_data;
                 obj.data(current_data).datainfo.operator='data_bin';
-                obj.data(current_data).datainfo.bin_dim=binsize;
                 obj.data(current_data).datainfo.operator_mode=opmode;
                 obj.data(current_data).datainfo.calculator_mode=calcmode;
             else
@@ -143,7 +147,8 @@ try
             end
             dim_size=obj.data(parent_data).datainfo.data_dim;
             % work out new data size
-            binsize(binsize>dim_size)=dim_size(binsize>dim_size); % make sure bin<=dim
+            binsize=setbinsize;
+            binsize(setbinsize>dim_size)=dim_size(setbinsize>dim_size); % make sure bin<=dim
             newsize=floor(dim_size./binsize);% can only have full number bins
             switch obj.data(parent_data).datatype
                 case 'DATA_SPC'
@@ -265,6 +270,7 @@ try
                         end
                         
                         obj.data(current_data).dataval=reshape(obj.data(current_data).dataval,newsize);
+                        obj.data(current_data).datainfo.bin_dim=binsize;
                         status=true;
                         
                         % recalculate dimension data

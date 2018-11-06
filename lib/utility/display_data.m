@@ -81,8 +81,8 @@ if ~isempty(data)
             set(axeshandle,'Color',[0,0,0],...
                 'XColor',[1,1,1],'YColor',[1,1,1],'ZColor',[1,1,1],...
                 'YAxisLocation','right');
-            xlabel(axeshandle,axis_label{2},'Color','w');
-            ylabel(axeshandle,axis_label{1},'Color','w');
+            axeshandle.XLabel.String=axis_label{2};
+            axeshandle.YLabel.String=axis_label{1};
             view(axeshandle,[0,0,-1]);
             %set x and y limits
             xminmax=[dim{2}(1),dim{2}(end)];
@@ -116,8 +116,8 @@ if ~isempty(data)
             cbound=[min(data(:)),max(data(:))];
             set(axeshandle,'Color',[0,0,0],'XColor',[1,1,1],'YColor',[1,1,1],'ZColor',[1,1,1],...
                 'YAxisLocation','right');
-            xlabel(axeshandle,axis_label{2},'Color','w');
-            ylabel(axeshandle,axis_label{1},'Color','w');
+            axeshandle.XLabel.String=axis_label{2};
+            axeshandle.YLabel.String=axis_label{1};
             view(axeshandle,[0,0,-1]);
             %set x and y limits
             xminmax=[dim{2}(1),dim{2}(end)];
@@ -153,8 +153,8 @@ if ~isempty(data)
             set(axeshandle,'Color',[0,0,0],...
                 'XColor',[1,1,1],'YColor',[1,1,1],'ZColor',[1,1,1],...
                 'YAxisLocation','right');
-            xlabel(axeshandle,axis_label{1},'Color','w');
-            ylabel(axeshandle,axis_label{2},'Color','w');
+            axeshandle.XLabel.String=axis_label{1};
+            axeshandle.YLabel.String=axis_label{2};
             %set x and y limits
             xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+eps];
             yminmax=[0.99*min(data(:)),1.01*max(data(:))+eps];
@@ -186,8 +186,8 @@ if ~isempty(data)
             set(axeshandle,'Color',[0,0,0],...
                 'XColor',[1,1,1],'YColor',[1,1,1],'ZColor',[1,1,1],...
                 'YAxisLocation','right');
-            xlabel(axeshandle,axis_label{1},'Color','w');
-            ylabel(axeshandle,axis_label{2},'Color','w');
+            axeshandle.XLabel.String=axis_label{1};
+            axeshandle.YLabel.String=axis_label{2};
             %set x and y limits
             xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+eps];
             yminmax=[0.99*min(data(:)),1.01*max(data(:))+eps];
@@ -220,8 +220,8 @@ if ~isempty(data)
             set(axeshandle,'Color',[0,0,0],...
                 'XColor',[1,1,1],'YColor',[1,1,1],'ZColor',[1,1,1],...
                 'YAxisLocation','right');
-            xlabel(axeshandle,axis_label{1},'Color','w');
-            ylabel(axeshandle,axis_label{2},'Color','w');
+            axeshandle.XLabel.String=axis_label{1};
+            axeshandle.YLabel.String=axis_label{2};
             %set x and y limits
             xminmax=[0.99*min(dim{1}),1.01*max(dim{1})+eps];
             yminmax=[0.99*min(data(:)),1.01*max(data(:))+eps];
@@ -255,8 +255,8 @@ if ~isempty(data)
             set(axeshandle,'Color',[0,0,0],...
                 'XColor',[1,1,1],'YColor',[1,1,1],'ZColor',[1,1,1],...
                 'YAxisLocation','right');
-            xlabel(axeshandle,axis_label{2},'Color','w');
-            ylabel(axeshandle,axis_label{1},'Color','w');
+            axeshandle.XLabel.String=axis_label{2};
+            axeshandle.YLabel.String=axis_label{1};
             view(axeshandle,[0,0,1]);
             %set x and y limits
             xminmax=[dim{2}(1),dim{2}(end)];
@@ -287,7 +287,8 @@ if ~isempty(data)
             set(axeshandle,'Color',[0,0,0],'XColor',[1,1,1],'YColor',[1,1,1],'ZColor',[1,1,1],...
                 'YAxisLocation','right');
             view(axeshandle,[0,0,-1]);
-            xlabel(axeshandle,axis_label{2},'Color','w');
+            axeshandle.XLabel.String=axis_label{2};
+            axeshandle.YLabel.String=axis_label{1};
             ylabel(axeshandle,axis_label{1},'Color','w');
             if gui
                 SETTING.update_panel_control('set','xlim',[dim{2}(1),dim{2}(end)],...
@@ -339,8 +340,8 @@ if ~isempty(data)
             set(axeshandle,'Color',[0,0,0],...
                 'XColor',[1,1,1],'YColor',[1,1,1],'ZColor',[1,1,1],...
                 'YAxisLocation','right');
-            xlabel(axeshandle,axis_label{1},'Color','w');
-            ylabel(axeshandle,axis_label{2},'Color','w');
+            axeshandle.XLabel.String=axis_label{1};
+            axeshandle.YLabel.String=axis_label{2};
             %set x and y limits
             xminmax=[0.99* min(min(dim{2}(1,:,:))),1.02* max(max(dim{2}(1,:,:)))+eps];
             yminmax=[1* min(min(dim{2}(2,:,:))),1.02* max(max(dim{2}(2,:,:)))+eps];

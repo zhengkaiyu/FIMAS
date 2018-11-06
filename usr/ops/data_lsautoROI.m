@@ -24,10 +24,11 @@ try
                 'min_Peak Width',...
                 'max_Peak Width',...
                 'int Dimension (t/X/Y/Z/T)',...
-                'int_interval'};
+                'int_interval',...
+                'reverse'};
             dlg_title = cat(2,'Line Scan Auto ROI info',obj.data(current_data).dataname);
             num_lines = 1;
-            peak_width_min=10*obj.data(current_data).datainfo.(cat(2,'d',profile_dim));
+            peak_width_min=obj.data(current_data).datainfo.(cat(2,'d',profile_dim));
             peak_distance_min=peak_width_min*2;
             peak_width_max=(obj.data(current_data).datainfo.(profile_dim)(end)-obj.data(current_data).datainfo.(profile_dim)(1))/5;
             peak_height_min=1;
@@ -37,7 +38,8 @@ try
                 num2str(peak_height_min),...
                 num2str(peak_width_min),...
                 num2str(peak_width_max),...
-                int_dim,num2str(int_interval)};
+                int_dim,num2str(int_interval),...
+                '0'};
             set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
             set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
@@ -66,6 +68,7 @@ try
                         int_dim='T';
                 end
                 int_interval=str2num(answer{7}); %#ok<ST2NM>
+                reversal=boolean(str2double(answer{8}));
                 int_interval=find(obj.data(current_data).datainfo.(int_dim)>=int_interval(1)&obj.data(current_data).datainfo.(int_dim)<=int_interval(end));
                 % for multiple data ask for apply to all option
                 if numel(selected_data)>1
@@ -129,7 +132,15 @@ try
             end
             temp=smooth(x,temp,0.01,'rloess');
             temp=temp-mode(temp(:));
-            temp=temp./max(temp);
+            switch reversal
+                case true
+                    % find trough
+                    temp=1./(temp+min(temp)+1);
+                    temp=temp./max(temp);
+                case false
+                    % find peak
+                    temp=temp./max(temp);
+            end
             baseline=median(temp);
             min_peakh=peak_height_min*baseline;
             min_peakd=ceil(peak_distance_min/obj.data(current_data).datainfo.(cat(2,'d',profile_dim)));

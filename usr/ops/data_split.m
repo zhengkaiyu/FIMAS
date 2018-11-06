@@ -22,6 +22,7 @@ try
             button = questdlg('Flip which dimension?','Flip Data','t','Spatial','T','Spatial');
             switch button
                 case 't'
+                    % channel or lifetime dimension
                     dim=1;
                 case 'Spatial'
                     button = questdlg('Flip which dimension?','Flip Data','X','Y','Z','X');
@@ -37,6 +38,7 @@ try
                             dim=[];
                     end
                 case 'T'
+                    % time dimension
                     dim=5;
                 otherwise
                     %action cancelled
