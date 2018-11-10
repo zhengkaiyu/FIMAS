@@ -56,27 +56,36 @@ end
     function val = exhaust_disp(var)
         val=[];
         if isstruct(var)
-            for n=1:size(var,2)
-                f_name=fieldnames(var(n));
-                %content{row_idx,2}='------';
-                %row_idx=row_idx+1;
-                for k=1:length(f_name)
-                    f_val=exhaust_disp(var(n).(f_name{k}));
+            if isempty(var)
+                f_name=fieldnames(var);
+                 for k=1:length(f_name)
                     content{row_idx,1}=f_name{k};
-                    % put *void* into empty fields
-                    if isempty(f_val)
-                        f_val='*empty*';
-                    end
-                    %convert cell to matrix format
-                    if iscell(f_val)
-                        f_val=data2clip(f_val);
-                    end
-                    %don't display field that is too large
-                    if (isnumeric(f_val))&&(numel(f_val)>10)
-                        f_val=sprintf('matrix of size %d x %d',size(f_val,1),size(f_val,2));
-                    end
-                    content{row_idx,2}=f_val;
+                    content{row_idx,2}=[];
                     row_idx=row_idx+1;
+                end
+            else
+                for n=1:size(var,2)
+                    f_name=fieldnames(var(n));
+                    %content{row_idx,2}='------';
+                    %row_idx=row_idx+1;
+                    for k=1:length(f_name)
+                        f_val=exhaust_disp(var(n).(f_name{k}));
+                        content{row_idx,1}=f_name{k};
+                        % put *void* into empty fields
+                        if isempty(f_val)
+                            f_val='*empty*';
+                        end
+                        %convert cell to matrix format
+                        if iscell(f_val)
+                            f_val=data2clip(f_val);
+                        end
+                        %don't display field that is too large
+                        if (isnumeric(f_val))&&(numel(f_val)>10)
+                            f_val=sprintf('matrix of size %d x %d',size(f_val,1),size(f_val,2));
+                        end
+                        content{row_idx,2}=f_val;
+                        row_idx=row_idx+1;
+                    end
                 end
             end
         else

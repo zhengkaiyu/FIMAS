@@ -106,10 +106,13 @@ try
         %===================================
         if (set_fid>=3)
             nosetfile=false;
+            status=true;
             %============================
             %==Read File Header Section==
             %============================
+            % get field names from the header format
             f_name=fieldnames(BH_File_Header);
+            % fill in file header info
             for n=1:length(BH_File_Header_format)
                 info.file_header.(f_name{n})=fread(set_fid,1,BH_File_Header_format{n});
             end
@@ -122,7 +125,8 @@ try
                 case '25'%SPC830
                     info.hwmodule='SPC830';
                 otherwise
-                    fprintf('%s\n','unknown hardware module type');
+                    error_msg='!unknown hardware module type!';
+                    fprintf('%s\n',error_msg);
             end
             %check file header is valid
             switch dec2hex(info.file_header.header_valid)
@@ -133,7 +137,6 @@ try
                     fprintf('%s\n',error_msg);
                     return;
             end
-            
             %============================
             %===Read File Information====
             %============================
@@ -281,10 +284,10 @@ try
         
         % --- image parameters info ---
         if marker_file==1
-            marker_pixel=logical((bitand(data,P_MARK32)-MARKER_FRAME)/2^12);         %pixel marker
+            marker_pixel=logical((bitand(data,P_MARK32)-MARKER_FRAME)/2^12);        %pixel marker
             marker_line=logical((bitand(data,L_MARK32)-MARKER_FRAME)/2^13);         %line marker
-            marker_frame=logical((bitand(data,F_MARK32)-MARKER_FRAME)/2^14);           %frame marker
-            marker_hw=logical((bitand(data,HW_MARK32)-MARKER_FRAME)/2^15);                  %hardware marker
+            marker_frame=logical((bitand(data,F_MARK32)-MARKER_FRAME)/2^14);        %frame marker
+            marker_hw=logical((bitand(data,HW_MARK32)-MARKER_FRAME)/2^15);          %hardware marker
         end
         % remove data to save space
         clear data;
@@ -296,125 +299,137 @@ try
         switch button
             case 'auto'
                 manualload=false;
+                forcemanualinput=false;
             case 'manual'
                 manualload=true;
+                forcemanualinput=true;
             otherwise
                 return;
         end
-        set(0,'DefaultUicontrolBackgroundColor','k');
-        set(0,'DefaultUicontrolForegroundColor','w');
+        
         dsformat='spc';
         if marker_file==1
             %imaging frame signals
-            frame_pos=find(marker_frame==1);  % frame stop mark
-            line_pos=find(marker_line==1);    % line stop mark
             pixel_pos=find(marker_pixel==1);  % pixel stop mark
-            hwmarker_pos=find(marker_hw==1);  % hardware mark
-            clear marker_frame marker_line marker_pixel marker_hw;
-            % --- start getting data into clock data format ---
-            framenum=numel(frame_pos);
-            if framenum==0
-                % linescan potentially has no frame marker
-                frame_pos=1;
-                framenum=numel(frame_pos);
-            end
-            [linenum,linestop_framenum]=histc(line_pos,frame_pos);
-            if linenum==0
-                linenum=numel(line_pos);
-            end
-            [pixelnum,~]=histc(pixel_pos,line_pos);
-            validframe=[];failed_guess=0;
-            % validate line per frame and pixel per line
-            
-            while isempty(validframe)
-                invalidframe=unique(find(linenum~=line_per_frame));
-                validframe=setxor(1:1:framenum,invalidframe);
-                if isempty(validframe)
-                    possibleln=unique(linenum);
-                    possibleln=possibleln(possibleln>0);
-                    if manualload
-                        % ask for input
-                        answer=inputdlg(sprintf('Image line per frame seemed wrong.\nTry %s\n If unsure press cancel.',num2str(possibleln')),...
-                            'Input required',1,{num2str(max(possibleln))});
-                        if isempty(answer)
-                            % cancel and went back to check
-                            return;
-                        else
-                            temp=str2double(answer);
-                            if temp==pixel_per_line
-                                % we got xy swapped over
-                                pixel_per_line=line_per_frame;
-                            end
-                            line_per_frame=temp;
-                            failed_guess=failed_guess+1;
-                            if failed_guess>2
-                                % assume user don't know the line number or that there was no line clock
-                                h=warndlg(sprintf('It seems there was no line clock or your guess was wrong.\nWe will try to proceed with your guess of %s lines per frame.',num2str(line_per_frame)),'Line Per Frame Error','modal');
-                                uiwait(h);
-                                break;
-                            end
-                        end
-                    else
-                        line_per_frame=num2str(max(possibleln));
-                    end
-                end
-            end
-            possiblepn=unique(pixelnum);
-            if manualload
-                answer=inputdlg(sprintf('Image pixel per line seemed wrong.\nTry %s',num2str(possiblepn')),...
-                    'Input required',1,{num2str(max(possiblepn))});
-                if isempty(answer)
-                    % cancel and went back to check
-                    return;
-                else
-                    temp=str2double(answer);
-                    pixel_per_line=temp;
-                    % ask if wish to autoload for the rest of the data
-                    button = questdlg('Autoload for the rest of the import?','Auto Load?','No','Yes','Yes') ;
-                    switch button
-                        case 'Yes'
-                            manualload=false;
-                    end
-                end
+            if isempty(pixel_pos)
+                % cannot find any pixel clock data
+                forcemanualinput=true;
+                marker_file=false;% as if there was no marker
+                error_msg='!no pixel clock data!';
+                fprintf('%s\n',error_msg);
             else
-                pixel_per_line=num2str(possiblepn');
+                line_pos=find(marker_line==1);    % line stop mark
+                frame_pos=find(marker_frame==1);  % frame stop mark
+                hwmarker_pos=find(marker_hw==1);  % hardware mark
+                clear marker_frame marker_line marker_pixel marker_hw;
+                % --- start getting data into clock data format ---
+                framenum=numel(frame_pos);
+                if framenum==0
+                    % single frame linescan potentially has no frame marker
+                    frame_pos=1;
+                    framenum=numel(frame_pos);
+                    [linenum,linestop_framenum]=histcounts(line_pos,frame_pos);
+                    validline=(line_pos>=linestop_framenum(1)&line_pos<=linestop_framenum(end));
+                    validpixel=(pixel_pos>=linestop_framenum(1)&pixel_pos<=linestop_framenum(end));
+                    line_pos=line_pos(validline);
+                    pixel_pos=pixel_pos(validpixel);
+                    [pixelnum,~]=histcounts(pixel_pos,[1;line_pos]);
+                else
+                    % multi-frame time lapse
+                    [linenum,linestop_framenum]=histcounts(line_pos,frame_pos);
+                    validline=(line_pos>=linestop_framenum(1)&line_pos<=linestop_framenum(end));
+                    validpixel=(pixel_pos>=linestop_framenum(1)&pixel_pos<=linestop_framenum(end));
+                    line_pos=line_pos(validline);
+                    pixel_pos=pixel_pos(validpixel);
+                    [pixelnum,~]=histcounts(pixel_pos,line_pos);
+                end
+                validframe=[];failed_guess=0;
+                % validate line per frame and pixel per line
+                while isempty(validframe)
+                    invalidframe=unique(find(linenum~=line_per_frame));
+                    validframe=setxor(1:1:framenum,invalidframe);
+                    if isempty(validframe)
+                        possibleln=unique(linenum);
+                        possibleln=possibleln(possibleln>0);
+                        if manualload
+                            % ask for input
+                            answer=inputdlg(sprintf('Image line per frame seemed wrong.\nTry %s\n If unsure press cancel.',num2str(possibleln')),...
+                                'Input required',1,{num2str(max(possibleln))});
+                            if isempty(answer)
+                                % cancel and went back to check
+                                return;
+                            else
+                                temp=str2double(answer);
+                                if temp==pixel_per_line
+                                    % we got xy swapped over
+                                    pixel_per_line=line_per_frame;
+                                end
+                                line_per_frame=temp;
+                                failed_guess=failed_guess+1;
+                                if failed_guess>2
+                                    % assume user don't know the line number or that there was no line clock
+                                    h=warndlg(sprintf('It seems there was no line clock or your guess was wrong.\nWe will try to proceed with your guess of %s lines per frame.',num2str(line_per_frame)),'Line Per Frame Error','modal');
+                                    uiwait(h);
+                                    break;
+                                end
+                            end
+                        else
+                            line_per_frame=num2str(max(possibleln));
+                        end
+                    end
+                end
+                possiblepn=unique(pixelnum);
+                if manualload
+                    answer=inputdlg(sprintf('Image pixel per line seemed wrong.\nTry %s',num2str(possiblepn')),...
+                        'Input required',1,{num2str(max(possiblepn))});
+                    if isempty(answer)
+                        % cancel and went back to check
+                        return;
+                    else
+                        temp=str2double(answer);
+                        pixel_per_line=temp;
+                        % ask if wish to autoload for the rest of the data
+                        button = questdlg('Autoload for the rest of the import?','Auto Load?','No','Yes','Yes') ;
+                        switch button
+                            case 'Yes'
+                                manualload=false;
+                        end
+                    end
+                else
+                    pixel_per_line=num2str(possiblepn');
+                end
             end
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
         else
-            % no marker file we need to know width x height x nframe
+            % no marker need manual input
+            forcemanualinput=true;
+        end
+        % when clock signals or markers are absent
+        if forcemanualinput
+            % no marker file we need to know width x height x nframe and
+            % pixel dwell time
             validframe=1;
             invalidframe=0;
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
+            pixeldwell=4;%us
             %ask for pixel/line/frame info
             % get binning information
-            prompt = {'X size',...
-                'dX',...
-                'Y size',...
-                'dY',...
-                'T size',...
-                'dT'};
+            prompt = {'pixel number','line number','frame number','pixel dwell time(ms)'};
             dlg_title = cat(2,'Data size information',obj.data(obj.current_data).dataname);
             num_lines = 1;
-            def = {'256','1','256','1','1','1'};
+            def = {'256','256','1','4'};
             answer = inputdlg(prompt,dlg_title,num_lines,def);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if isempty(answer)
                 % cancel and went back to check
                 return;
             else
                 temp=str2double(answer);
                 pixel_per_line=temp(1);
-                widthstep=temp(2);
-                line_per_frame=temp(3);
-                heightstep=temp(4);
-                nFrame=temp(5);
-                framestep=temp(6);
+                line_per_frame=temp(2);
+                nFrame=temp(3);
+                pixeldwell=temp(4)*1e-3;
             end
         end
         % ------------
+        % display info
         if manualload
             % --- provide info to confirm loading ---
             temp = figure(...
@@ -455,6 +470,7 @@ try
         else
             button='Proceed';
         end
+        
         % ------------------------
         switch button
             case 'Proceed'
@@ -493,8 +509,10 @@ try
                                 end
                             end
                             clock_data(line_pos,2)=1;
-                            clock_data(frame_pos(2:end),2)=-linenum(1:end-1)+1;
-                            clock_data(:,2)=cumsum(clock_data(:,2));
+                            clock_data(frame_pos(2:end),2)=-linenum(1:end);
+                            clock_overlap=intersect(frame_pos,line_pos);
+                            clock_data(clock_overlap,2)=clock_data(clock_overlap,2)+1;
+                            clock_data(:,2)=cumsum(clock_data(:,2))+1;
                             % get pixel clock
                             if isempty(pixel_pos)
                                 % in case no pixel clock was registered
@@ -502,10 +520,16 @@ try
                                 clock_data(2:end,3)=cell2mat(pixel_idx);
                             else
                                 clock_data(pixel_pos,3)=1;
-                                clock_data(line_pos(2:end),3)=-pixelnum(1:end-1);
+                                if framenum==1
+                                    % single frame line scans
+                                    clock_data(line_pos(1:end),3)=-pixelnum(1:end);
+                                else
+                                    % multi-frame time lapse
+                                    clock_data(line_pos(2:end),3)=-pixelnum(1:end);
+                                end
                                 clock_overlap=intersect(line_pos,pixel_pos);
                                 clock_data(clock_overlap,3)=clock_data(clock_overlap,3)+1;
-                                clock_data(:,3)=cumsum(clock_data(:,3));
+                                clock_data(:,3)=cumsum(clock_data(:,3))+1;
                             end
                             clear pixel_pos line_pos frame_pos linestop_framenum pixelnum clock_overlap;
                             % get rid of clock data
@@ -538,16 +562,18 @@ try
                             % get frame clock
                             frame_time=linspace(gtime(1),gtime(end)+gtime_step,nFrame+1);
                             [~,fidx]=histc(gtime,frame_time);
-                            T=frame_time(1:end-1);
+                            T=frame_time(2:end);
                             clock_data(:,1)=fidx;
                             % get line clock
                             nLine=line_per_frame*nFrame;
-                            line_time=0:heightstep:gtime(end)+gtime_step;
+                            %linedwell=pixeldwell*pixel_per_line;
+                            line_time=cell2mat(arrayfun(@(fs,fe)linspace(fs,fe-line_per_frame*pixeldwell,nLine+1),frame_time(1:end-1),frame_time(2:end),'UniformOutput',false));
+                            linedwell=line_time(2)-line_time(1);
                             [~,lidx]=histc(gtime,line_time);
                             clock_data(:,2)=mod(lidx-1,line_per_frame)+1;
                             % get pixel clock
-                            nPixel=pixel_per_line*line_per_frame*nFrame;
-                            pixel_time=0:widthstep:(gtime(end)+gtime_step);
+                            pixel_time=cell2mat(arrayfun(@(ls,le)ls:pixeldwell:le,line_time(1:end-1),line_time(2:end),'UniformOutput',false));
+                            pixel_per_line=numel(pixel_time)/nLine;
                             [~,pidx]=histc(gtime,pixel_time);
                             clock_data(:,3)=mod(pidx-1,pixel_per_line)+1;
                             %[a,b,c]=index2sub(pidx,pixel_per_line*line_per_frame,pixel_per_line);
@@ -557,16 +583,16 @@ try
                             clock_data=sub2ind([pixel_per_line,line_per_frame,nFrame], clock_data(:,3), clock_data(:,2), clock_data(:,1));
                             % assign dimension data
                             obj.data(data_end_pos).datainfo.bin_t=dtime_bin;
-                            obj.data(data_end_pos).datainfo.X=0:widthstep:(pixel_per_line-1)*widthstep;
-                            obj.data(data_end_pos).datainfo.Y=0:heightstep:(line_per_frame-1)*heightstep;
+                            obj.data(data_end_pos).datainfo.X=linspace(0,linedwell,pixel_per_line);
+                            obj.data(data_end_pos).datainfo.Y=linspace(0,linedwell*line_per_frame,line_per_frame);
                             obj.data(data_end_pos).datainfo.Z=1:1:1;
                             obj.data(data_end_pos).datainfo.t=t;
                             obj.data(data_end_pos).datainfo.dt=t(2)-t(1);
-                            obj.data(data_end_pos).datainfo.dX=widthstep;
-                            obj.data(data_end_pos).datainfo.dY=heightstep;
+                            obj.data(data_end_pos).datainfo.dX=pixeldwell;
+                            obj.data(data_end_pos).datainfo.dY=linedwell;
                             obj.data(data_end_pos).datainfo.dZ=double(1);
                             obj.data(data_end_pos).datainfo.T=T;
-                            obj.data(data_end_pos).datainfo.dT=framestep;
+                            obj.data(data_end_pos).datainfo.dT=mean(diff(T));
                         end
                         obj.data(data_end_pos).dataval=[clock_data,dtime(validdata),gtime(validdata)];
                         clear clock_data dtime gtime validdata;
@@ -735,6 +761,8 @@ try
                             numel(obj.data(data_end_pos).datainfo.T)];
                         obj.data(data_end_pos).datatype=obj.get_datatype;
                         delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
+                        set(0,'DefaultUicontrolBackgroundColor','k');
+                        set(0,'DefaultUicontrolForegroundColor','w');
                         status=1;
                 end
             case 'Cancel'

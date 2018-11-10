@@ -3,7 +3,7 @@ function [ pid, lid, fid ] = index2sub( id, ppf, ppl )
 %   id = linear index
 %   ppf = pixel per frame
 %   ppl = pixel per line
-%   return pid/lid/fid as pixel index/line index/frame index
+%   return pid/lid/fid as pixel_index/line_index/frame_index
 id=id-1;
 pfid=mod(id,ppf);%pixel index in a frame
 pid=mod(pfid,ppl)+1;

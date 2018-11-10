@@ -10,7 +10,7 @@ function [ status, message ] = data_showlineprofile( obj, selected_data )
 status=false;message='';
 try
     current_roi=obj.data(selected_data).current_roi;
-    impolyline_idx=find(cellfun(@(x)~isempty(x),regexp({obj.data(selected_data).roi(current_roi).type},'impolyline')));
+    impolyline_idx=find(cellfun(@(x)~isempty(x),regexp({obj.data(selected_data).roi(current_roi).type},'impoly')));
     
     if isempty(impolyline_idx)
         message=sprintf('data %g has no impolyline\n',selected_data);
@@ -96,7 +96,7 @@ try
                 'ToolBar','figure',...
                 'Keypressfcn',@export_panel);
             for m=1:numel(impolyline_idx)
-                plot(dist{m}(2:end),lineprofile{m});hold all;
+                plot(dist{m}(2:end),lineprofile{m},'LineWidth',2);hold all;
             end
             hold off;
             legend(gca,'show',{obj.data(selected_data).roi(impolyline_idx).name});

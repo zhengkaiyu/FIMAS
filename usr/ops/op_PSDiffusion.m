@@ -13,12 +13,12 @@ function [ status, messages ] = op_PSDiffusion( data_handle, option, varargin )
 
 parameters=struct('note','',...
     'operator','op_PSDiffusion',...
-    'parameter_space',[],...    %modify parameter space names
-    'operator_mode','auto',... %automatic mode or manual mode
-    'windowsize',5,...  %auto mode filter window size
-    'saturation_level',255,...% max intensity from image 2^n-1 for nbit images
-    'sourcesize',10,...%point source initial diameter
-    'linear_range',[],...% linear diffusion region for robust linear fit
+    'parameter_space',[],...        %modify parameter space names
+    'operator_mode','auto',...      %automatic mode or manual mode
+    'windowsize',5,...              %auto mode filter window size
+    'saturation_level',255,...      %max intensity from image 2^n-1 for nbit images
+    'sourcesize',10,...             %point source initial diameter npixel
+    'linear_range',[],...           %linear diffusion region for robust linear fit
     'MaxFunEvals',1e4,...
     'MaxIter',1e4,...
     'TolFun',1e-6,...
@@ -60,7 +60,7 @@ try
                                 % set parent data index
                                 data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
-                                data_handle.data(new_data).datainfo.parameter_space={'D','se','corrcoef','dof'};
+                                data_handle.data(new_data).datainfo.parameter_space={'D','se','corrcoef','DoF'};
                                 status=true;
                             otherwise
                                 messages=sprintf('only take XT or XYT data type\n');
