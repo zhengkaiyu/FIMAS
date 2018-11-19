@@ -3,7 +3,7 @@ function [ status, messages ] = op_PSDiffusion( data_handle, option, varargin )
 %   1D gaussians are fitted to line scan at the point source
 %   Parameters DT vs T are extracted from the gaussian fits
 %   Robust linear fit is applied to find the gradiant of DT/T => D
-%   Applies to both 2D XT and 3D XYT data where operation will apply to
+%   Applies to both 2D XT and 3D XZT data where operation will apply to
 %   each Y slice
 %   Automatic mode will detect starting position in X and T as well as
 %   linear region.
@@ -18,6 +18,7 @@ parameters=struct('note','',...
     'windowsize',5,...              %auto mode filter window size
     'saturation_level',255,...      %max intensity from image 2^n-1 for nbit images
     'sourcesize',10,...             %point source initial diameter npixel
+    'Tbin',3,...                    %time points averages
     'linear_range',[],...           %linear diffusion region for robust linear fit
     'MaxFunEvals',1e4,...
     'MaxIter',1e4,...
@@ -50,8 +51,8 @@ try
                     case {'DATA_IMAGE'}
                         % check data dimension, we only take XYT or XT
                         switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
-                            case {9,13}
-                                % XT(01001) single image/XYT(01101) stackimages
+                            case {9,11}
+                                % XT(01001) single image/XZT(01011) stackimages
                                 parent_data=current_data;
                                 % add new data
                                 data_handle.data_add(cat(2,'op_PSDiffusion|',data_handle.data(current_data).dataname),[],[]);
@@ -63,7 +64,7 @@ try
                                 data_handle.data(new_data).datainfo.parameter_space={'D','se','corrcoef','DoF'};
                                 status=true;
                             otherwise
-                                messages=sprintf('only take XT or XYT data type\n');
+                                messages=sprintf('only take XT or XZT data type\n');
                                 return;
                         end
                         
@@ -99,6 +100,11 @@ try
                     % source size must be <1/5 of X size
                     data_handle.data(current_data).datainfo.sourcesize=min(val,data_handle.data(current_data).datainfo.data_dim(2)/5);
                     status=true;
+                case 'Tbin'
+                    val=str2double(val);
+                    % source size must be <1/5 of X size
+                    data_handle.data(current_data).datainfo.Tbin=min(val,data_handle.data(current_data).datainfo.data_dim(2)/5);
+                    status=true;
                 case 'saturation_level'
                     val=str2double(val);
                     data_handle.data(current_data).datainfo.saturation_level=val;
@@ -121,8 +127,17 @@ try
             end
         case 'calculate_data'
             global SETTING; %#ok<TLEV>
-            axeshandle=SETTING.panel(end).handle;
             for current_data=data_idx
+                figure('Name',sprintf('Point Source Diffusion fitting from data item %s',data_handle.data(current_data).dataname),...
+                    'Color','k',...
+                    'NumberTitle','off',...
+                    'MenuBar','none',...
+                    'ToolBar','figure',...
+                    'Keypressfcn',@export_panel);
+                axeshandle1=subplot(1,4,1);
+                axeshandle2=subplot(1,4,2);
+                axeshandle3=subplot(1,4,3);
+                axeshandle4=subplot(1,4,4);
                 % go through each selected data
                 switch data_handle.data(current_data).datainfo.operator_mode
                     case 'auto' % automatic mode
@@ -133,47 +148,57 @@ try
                         T=data_handle.data(parent_data).datainfo.T;
                         % get averaging windowsize
                         windowsize= data_handle.data(current_data).datainfo.windowsize;
-                        % find starting point
-                        temp=mean(data_handle.data(parent_data).dataval,2);% sum in X only to get T profile
-                        temp=filter(ones(1,windowsize)/windowsize,1,temp,[],5);%smooth data
-                        [~,diffpos]=max(temp,[],5);diffpos=diffpos-round(windowsize/2);% linear region estimate
-                        % work out source release in T
-                        [~,puffpos]=max(diff(temp(:,:,:,:,diffpos-floor(diffpos/2):diffpos+floor(diffpos/2))),[],5);
-                        puffpos=puffpos-round(windowsize/2)+diffpos-floor(diffpos/2);% move back the averaging window size/2
-                        endpos=data_handle.data(parent_data).datainfo.data_dim(5);% get end position in T
-                        waist=data_handle.data(current_data).datainfo.sourcesize;% set gaussian waist as sourcesize
-                        
-                        %fitting parameters
+                        % time binning size
+                        Tbin=data_handle.data(current_data).datainfo.Tbin;
+                        % set gaussian waist as sourcesize
+                        waist=data_handle.data(current_data).datainfo.sourcesize;
+                        % fitting parameters
                         MaxFunEvals=data_handle.data(current_data).datainfo.MaxFunEvals;
                         MaxIter=data_handle.data(current_data).datainfo.MaxIter;
                         TolFun=data_handle.data(current_data).datainfo.TolFun;
                         satlevel=data_handle.data(current_data).datainfo.saturation_level;
                         displaystep=data_handle.data(current_data).datainfo.Displaystep;
-                        % loop through Y do analysis
-                        for Slice_idx=1:data_handle.data(parent_data).datainfo.data_dim(3)
+                        % loop through Z do analysis
+                        for Slice_idx=1:data_handle.data(parent_data).datainfo.data_dim(4)
                             % get profile near the source starting
                             % positions to get starting estimates for
                             % gaussian fitting
-                            Y=squeeze(mean(data_handle.data(parent_data).dataval(:,:,Slice_idx,:,puffpos:puffpos+10),5));
+                            % find starting point
+                            slicedata=squeeze(data_handle.data(parent_data).dataval(:,:,:,Slice_idx,:));
+                            temp=mean(slicedata,1);% sum in X only to get T profile
+                            plot(axeshandle2,T,temp);
+                            tempfilt=filter(ones(1,windowsize)/windowsize,1,temp);%smooth data
+                            [~,diffpos]=max(tempfilt);diffpos=diffpos-round(windowsize/2);% linear region estimate
+                            % work out source release in T
+                            [~,puffpos]=max(diff(tempfilt(diffpos-floor(diffpos/2):diffpos+floor(diffpos/2))));
+                            puffpos=puffpos-round(windowsize/2)+diffpos-floor(diffpos/2);% move back the averaging window size/2
+                            % estimate background signal in the image
+                            bg=median(slicedata(:,1:puffpos-1),2);
+                            endpos=find(temp(puffpos:end)<=mean(bg),1,'first');% get end position in T
+                            if isempty(endpos)
+                                endpos=size(slicedata,2);
+                            else
+                                endpos=endpos+puffpos;
+                            end
+                            endpos=min(size(slicedata,2)-Tbin,endpos);
+                            Y=mean(slicedata(:,puffpos:puffpos+10),2);
                             [~,peakpos]=max(Y);
                             init_estimates(1)=trapz(X,Y);%amplitude
                             init_estimates(3)=X(peakpos);%offset from centre
                             init_estimates(2)=data_handle.data(parent_data).datainfo.dX*waist;%width
                             estimates=init_estimates;
                             DT=nan(numel(T),1);
-                            % estimate background signal in the image
-                            bg=(squeeze(median(data_handle.data(parent_data).dataval(:,:,Slice_idx,:,1:puffpos-1),5)));
+                            
                             % fit 1D gaussian over T
                             for T_idx=puffpos:1:endpos
-                                Y=squeeze(data_handle.data(parent_data).dataval(:,:,Slice_idx,:,T_idx));
-                                Y=Y-bg;
+                                Y=mean(slicedata(:,T_idx+Tbin),2)-bg;
                                 % attempt gaussian fit if signal is above
                                 % background signal level
                                 if (median(Y)>0)
                                     [estimates,~,exitflag] = fminsearch(@chi2gaussfunc,estimates,...
                                         optimset('Display','off','MaxFunEvals',MaxFunEvals,'MaxIter',MaxIter,'TolX',TolFun),...
                                         X,Y,satlevel);
-                                    if exitflag==1&&(max(gaussfunc(estimates,X))>=(median(Y)+std(Y)))
+                                    if exitflag==1&&(max(gaussfunc(estimates,X))>=std(Y))
                                         if (estimates(2)>=waist)
                                             % if fitting worked and result
                                             % estimates are reasonable, i.e.
@@ -182,8 +207,8 @@ try
                                             DT(T_idx)=estimates(2);% assign width to dataval
                                             if displaystep
                                                 %plotting
-                                                display_data(gaussfunc(estimates,X), axeshandle, 'line', {X,[]}, {'X','a.u.'}, [false,false], []);%display fitting
-                                                display_data(Y, axeshandle, 'scatter', {X,[]}, {'X','a.u.'}, [false,false], []);%display data
+                                                display_data(gaussfunc(estimates,X), axeshandle3, 'line', {X,[]}, {'X','a.u.'}, [false,false], []);%display fitting
+                                                display_data(Y, axeshandle3, 'scatter', {X,[]}, {'X','a.u.'}, [false,false], []);%display data
                                                 pause(0.001);% pause to see the result
                                             end
                                             
@@ -208,8 +233,8 @@ try
                             [p,S]=robustfit(T(linrange(1):linrange(2))',DT(linrange(1):linrange(2)));
                             f = polyval(flipud(p),T(puffpos:linrange(2)));
                             if displaystep
-                                display_data(DT(puffpos:endpos), axeshandle, 'scatter', {T(puffpos:endpos),[]}, {'T','a.u.'}, [false,false], []);%display data
-                                display_data(f, axeshandle, 'line', {T(puffpos:linrange(2)),[]}, {'T','a.u.'}, [false,false], []);%display fitting
+                                display_data(DT(puffpos:endpos), axeshandle4, 'scatter', {T(puffpos:endpos),[]}, {'T','DT'}, [false,false], []);%display data
+                                display_data(f, axeshandle4, 'line', {T(puffpos:linrange(2)),[]}, {'T','DT'}, [false,false], []);%display fitting
                                 %residue=f'-DT(linrange(1):linrange(2));
                                 pause(0.001);% pause to see the result
                             end
@@ -231,15 +256,22 @@ try
 catch exception
     messages=exception.message;
 end
+end
+function sse = chi2gaussfunc( p, x, f, sl )
+% p = paramters
+% x = independent variable
+% f = data function value wrt x
+% sl = saturation level
+FittedCurve=gaussfunc(p,x);
+FittedCurve = FittedCurve.*(FittedCurve<sl)+sl*(FittedCurve>=sl);
+ErrorVector = (FittedCurve - f');
+sse = sum(ErrorVector .^ 2);
+end
 
-    function sse = chi2gaussfunc( p, x, f, sl )
-        % p = paramters
-        % x = independent variable
-        % f = data function value wrt x
-        % sl = saturation level
-        FittedCurve=gaussfunc(p,x);
-        FittedCurve = FittedCurve.*(FittedCurve<sl)+sl*(FittedCurve>=sl);
-        ErrorVector = (FittedCurve - f);
-        sse = sum(ErrorVector .^ 2);
-    end
+function export_panel(handle,eventkey)
+global SETTING;
+switch eventkey.Key
+    case {'f3'}
+        SETTING.export_panel(findobj(handle,'Type','Axes'));
+end
 end
