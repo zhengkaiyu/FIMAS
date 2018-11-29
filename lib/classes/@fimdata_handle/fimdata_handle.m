@@ -14,14 +14,15 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
     
     properties ( Constant = true )
         % Data dimension order
-        % (delay_time,x,y,z,global_time) or
-        % (parameters,x,y,z,global_time)
+        % tXYZT (delay_time,x,y,z,global_time) or
+        % CXYZT (channel,x,y,z,global_time) or
+        % pXYZT (parameter,x,y,z,global_time)
         DIM_TAG = {'t','X','Y','Z','T'};
         
         % DATA_TYPE will help determine where to output data and data
         % calculation
         % 5 possible parameters:
-        %   microscopic delay time (t) or parameter space (p)
+        %   microscopic delay time (t) or or channel (C) or parameter space (p)
         %   image x axis (x)
         %   image y axis (y)
         %   image z axis (z)

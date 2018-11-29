@@ -37,8 +37,8 @@ set(0,'DefaultUicontrolForegroundColor','w');
 
 % ---------------------------------------------------
 % version related initialisation for parallel computing
-[ver,date]=version;
-release_yr=str2double(datestr(date,'YYYY'));
+[ ver, date ] = version;
+release_yr = str2double(datestr(date,'YYYY'));
 switch release_yr
     case {2015,2016}
         feature('accel','on');
@@ -64,7 +64,7 @@ switch release_yr
         errordlg(sprintf('Incompatible MATLAB Version.\nCurrent Version %s\nRequire >R2008a & <R2016b',ver),'Version Error','modal');
 end
 % ---------------------------------------------------
-%profile -memory on;
+% profile -memory on;
 % ---------------------------------------------------
 % open main gui interface
 MAIN_GUI;

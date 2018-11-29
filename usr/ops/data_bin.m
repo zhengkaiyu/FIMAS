@@ -19,15 +19,15 @@ try
     while data_idx<=numel(selected_data)
         % get the current data index
         current_data=selected_data(data_idx);
-        % check for data operator
-        if find(strcmp(obj.data(current_data).datainfo.operator,'data_bin'))
-            % existing data
-            newdata=false;
-        else
-            % new data will need to be created
-            newdata=true;
-        end
         if askforparam % ask if it is the first one
+            % check for data operator
+            if find(strcmp(obj.data(current_data).datainfo.operator,'data_bin'))
+                % existing data
+                newdata=false;
+            else
+                % new data will need to be created
+                newdata=true;
+            end
             % check for bin dimension
             if isempty(obj.data(current_data).datainfo.bin_dim)
                 % bin dimension don't exist need to get set it to full size

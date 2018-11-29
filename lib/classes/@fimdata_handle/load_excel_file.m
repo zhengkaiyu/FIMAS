@@ -1,6 +1,8 @@
 function [ status, message ] = load_excel_file( obj, filename )
 %load_excel_file reads interactively from user selection in eXcel sheet
-%
+% first row being header
+% first column being time
+% all other columns are traces
 
 %% function complete
 status=false;
