@@ -192,10 +192,10 @@ try
                         t_new=0;
                         temp=histc(newid,1:1:new_ppl*new_lpf*new_nframe);
                     end
-                    newdata=reshape(temp,newdatasize(1),new_ppl,new_lpf,1,new_nframe);
+                    newrawdata=reshape(temp,newdatasize(1),new_ppl,new_lpf,1,new_nframe);
                     
-                    if ~isempty(newdata)
-                        obj.data(current_data).dataval=newdata;
+                    if ~isempty(newrawdata)
+                        obj.data(current_data).dataval=newrawdata;
                         % recalculate dimension data
                         
                         if numel(t_new)>1
