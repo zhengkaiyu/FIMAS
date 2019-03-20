@@ -215,6 +215,9 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         %load picoquant ptu binary files (photon record)
         [ status, message ] = load_pq_ptu_file( obj, filename);
         [ status, message ] = load_pq_ptu_file_spc( obj, filename );
+        %load picoquant tttr mode pt* binary files (photon record)
+        [ status, message ] = load_pq_pt2_file( obj, filename);
+        [ status, message ] = load_pq_pt3_file( obj, filename);
         
         %--------------
         %LSM image file type
@@ -240,7 +243,7 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         %import exported ascii files (trace)
         [ status, message ] = load_atrc_file( obj, filename);
         %import exported csv ascii files from bruker localisation
-        [ status, message ] = obj.load_bruker_srf_file( obj, filename)
+        [ status, message ] = load_bruker_srf_file( obj, filename)
         % older version data file format
         [ status, message ] = load_old_dataformat( obj, filename );
         %------------
