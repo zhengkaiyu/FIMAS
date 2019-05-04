@@ -1,34 +1,52 @@
-function [ status, message ] = data_bin( obj, selected_data )
+function [ status, message ] = data_bin( obj, selected_data, askforparam, defaultparam )
 % DATA_BIN bin currently selected data in provided dimensions
+%--------------------------------------------------------------------------
 %   1. The process is irreversible, therefore new data holder will be created.
 %
 %   2. Data which does not fit into whole bins at the end will be discarded
 %
 %   3. Default mode is sum. nan* mode should be used if data contain nan
 %
-%   4. To collapse various dataitem of different size in binning dimension use
-%   Inf in that binning dimension
+%   4. To collapse various dataitem of different size in binning dimension use Inf in that binning dimension
+%
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','newdata','1','setbinsize','[1,1,1,1,1]','opmode','sum','calcmode','reduce');
+%   selected_data=data index, 1 means previous generated data
+%   newdata=0|1; for batch process it needs to be 1
+%   setbinsize=1x5 vector of binning size >=1
+%   opmode=sum|max|min|mean|median|nansum|nanmax|nanmin|nanmean|nanmedian
+%   calcmode=same|reduce;   default is reduce
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %% function complete
 
 % assume worst
 status=false;
+% for batch process must return 'Data parentidx to childidx *' for each
+% successful calculation
+message='';
 try
-    data_idx=1;% initialise counter
-    askforparam=true;% always ask for the first one
-    while data_idx<=numel(selected_data)
+    % initialise counter
+    data_idx=1;
+    % number of data to process
+    ndata=numel(selected_data);
+    % loop through individual data
+    while data_idx<=ndata
         % get the current data index
         current_data=selected_data(data_idx);
-        if askforparam % ask if it is the first one
-            % check for data operator
+        % ---- Parameter Assignment ----
+        % if it is not automated, we need manual parameter input/adjustment
+        if askforparam
+            % 1. check for data operator
             if find(strcmp(obj.data(current_data).datainfo.operator,'data_bin'))
-                % existing data
+                % overwrite existing data
                 newdata=false;
             else
                 % new data will need to be created
                 newdata=true;
             end
-            % check for bin dimension
+            % 2. check for bin dimension
             if isempty(obj.data(current_data).datainfo.bin_dim)
                 % bin dimension don't exist need to get set it to full size
                 setbinsize=obj.data(current_data).datainfo.data_dim;
@@ -36,27 +54,31 @@ try
                 % use current bin dimension
                 setbinsize=obj.data(current_data).datainfo.bin_dim;
             end
-            % check for bin calculation mode
+            % 3. check for bin calculation mode
             if isfield(obj.data(current_data).datainfo,'operator_mode')
-                opmode=obj.data(current_data).datainfo.operator_mode;% default bin mode
+                % bin mode as specified
+                opmode=obj.data(current_data).datainfo.operator_mode;
             else
-                opmode='sum';% default bin mode
+                % default bin mode is sum
+                opmode='sum';
             end
-            % check for bin calculation mode
-            if isfield(obj.data(current_data).datainfo,'calculator_mode')
-                calcmode=obj.data(current_data).datainfo.calculator_mode;% default bin mode
-            else
-                calcmode='reduce';% default bin mode
-            end
-            % check mode is correct
+            % check mode specified is correct selection
             switch opmode
                 case {'mean','nanmean','sum','nansum','max','nanmax','min','nanmin','median','nanmedian'}
-                    
+                    % valid ones
                 otherwise
+                    % if invalid operation proposed default to sum
                     opmode='sum';
             end
-            % need user input/confirm bin size
-            % get binning information
+            % 4. check for bin calculation mode
+            if isfield(obj.data(current_data).datainfo,'calculator_mode')
+                % specified binning dim reduction
+                calcmode=obj.data(current_data).datainfo.calculator_mode;
+            else
+                % default bin mode is data size reduction
+                calcmode='reduce';
+            end
+            % need user input/confirm some parameters
             prompt = {'This is based on the current data (mean/sum/max/min/median and nan mode)',...
                 'Enter t bin sizes',...
                 'Enter X bin size',...
@@ -77,52 +99,89 @@ try
                 % get bin sizes
                 setbinsize=cellfun(@(x)str2double(x),answer(2:6))';
                 if ~newdata
+                    % if it is overwrite existing data we need to update
+                    % existing bin_dim
                     obj.data(current_data).datainfo.bin_dim=setbinsize;
                 end
                 % calculation mode
                 opmode=answer{1};
                 calcmode=answer{7};
                 newdata=str2double(answer{8})==1;
+                % update opmode
                 switch opmode
                     case {'mean','nanmean','sum','nansum','max','nanmax','min','nanmin','median','nanmedian'}
                         obj.data(current_data).datainfo.operator_mode=opmode;
                     otherwise
-                        message=sprintf('unknown binning mode entered\n Use sum or mean\n');
+                        message=sprintf('%s\nUnknown binning mode %s entered. Use sum/mean/max/min/median or their nan version.',message,opmode);
                         return;
                 end
+                % update calmode
                 switch calcmode
                     case {'reduce','same'}
                         if ~newdata
                             obj.data(current_data).datainfo.calculator_mode=calcmode;
                         end
                     otherwise
-                        message=sprintf('unknown calcmode mode entered\n Use reduce or same\n');
+                        message=sprintf('%s\nUnknown calcmode mode %s entered. Use reduce or same.',message,calcmode);
                         return;
                 end
                 % for multiple data ask for apply to all option
                 if numel(selected_data)>1
-                    % ask if want to apply to the rest of the data items
-                    button = questdlg('Apply this setting to: ','Multiple Selection','Apply to Rest','Just this one','Apply to Rest') ;
-                    switch button
-                        case 'Apply to Rest'
-                            askforparam=false;
-                        case 'Just this one'
-                            askforparam=true;
-                        otherwise
-                            % action cancellation
-                            askforparam=false;
-                    end
+                    askforparam=askapplyall('apply');
                 end
             else
                 % cancel clicked don't do anything to this data item
                 setbinsize=[];
             end
         else
-            % user decided to apply same settings to rest
+            % user decided to apply same settings to rest or use default
+            % assign parameters
+            fname=defaultparam(1:2:end);
+            fval=defaultparam(2:2:end);
+            for fidx=1:numel(fname)
+                switch fname{fidx}
+                    case 'setbinsize'
+                        setbinsize=str2num(fval{fidx});
+                    case 'newdata'
+                        newdata=logical(str2double(fval{fidx}));
+                    case 'opmode'
+                        opmode=char(fval{fidx});
+                    case 'calcmode'
+                        calcmode=char(fval{fidx});
+                end
+            end
             
+            % only use waitbar for user attention if we are in
+            % automated mode
+            if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+                % Report current estimate in the waitbar's message field
+                done=data_idx/ndata;
+                waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
+            else
+                % create waitbar if it doesn't exist
+                waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
+                    'CreateCancelBtn',...
+                    'setappdata(gcbf,''canceling'',1)',...
+                    'WindowStyle','normal',...
+                    'Color',[0.2,0.2,0.2]);
+                setappdata(waitbar_handle,'canceling',0);
+            end
         end
-        % ---- Calculation Part ----
-        if ~isempty(setbinsize)
+        
+        % ---- Data Calculation ----
+        if isempty(setbinsize)
+            % decided to cancel action
+            if numel(selected_data)>1
+                askforparam=askapplyall('cancel');
+                if askforparam==false
+                    % quit if in automated mode
+                    message=sprintf('%s\nAction cancelled!',message);
+                    return;
+                end
+            else
+                message=sprintf('%sAction cancelled!',message);
+            end
+        else
             % decided to process
             if newdata
                 parent_data=current_data;
@@ -229,17 +288,17 @@ try
                             obj.data(current_data).datainfo.dT=1;
                         end
                         status=true;
-                        message=sprintf('data binned\n');
+                        message=sprintf('%s\nData %s to %s binned',message,num2str(parent_data),num2str(current_data));
                         %redefine data type
                         obj.data(current_data).datainfo.data_dim=newdatasize;
                         obj.data(current_data).datatype=obj.get_datatype(current_data);
                         obj.data(current_data).datainfo.last_change=datestr(now);
                     else
-                        message=sprintf('data binned failed\n');
+                        message=sprintf('%s\nData %s bin failed',message,num2str(parent_data));
                     end
                 otherwise
                     if find(newsize==0)
-                        message='bin size is too large';
+                        message=sprintf('%s\nData %s bin failed. Bin size is too large',message,num2str(parent_data));
                     else
                         offset_size=newsize.*binsize;
                         %binning
@@ -320,7 +379,7 @@ try
                                 obj.data(current_data).datainfo.T=0;
                                 obj.data(current_data).datainfo.dT=1;
                             end
-                            message=sprintf('data binned\n');
+                            message=sprintf('%s\nData %s to %s binned',message,num2str(parent_data),num2str(current_data));
                             %redefine data type
                             obj.data(current_data).datainfo.data_dim=newsize;
                             obj.data(current_data).datatype=obj.get_datatype(current_data);
@@ -328,33 +387,18 @@ try
                         end
                     end
             end
-        else
-            if numel(selected_data)>1
-                % ask if want to cancel for the rest of the data items
-                button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
-                switch button
-                    case 'Apply to Rest'
-                        askforparam=false;
-                    case 'Just this one'
-                        askforparam=true;
-                    otherwise
-                        % action cancellation
-                        askforparam=false;
-                end
-                if askforparam==false
-                    message=sprintf('Action cancelled!');
-                    return;
-                end
-            else
-                message=sprintf('Action cancelled!');
-            end
         end
         % increment data index
         data_idx=data_idx+1;
     end
-catch exception
+    % close waitbar if exist
     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end
-    message=exception.message;
+catch exception
+    % error handle
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
+    message=sprintf('%s\n%s',message,exception.message);
 end

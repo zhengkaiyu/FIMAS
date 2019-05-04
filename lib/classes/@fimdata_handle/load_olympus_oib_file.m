@@ -169,7 +169,7 @@ try
             if sizeT>1
                 [~,tidx]=unique(scaninfo.TheT);
                 if sizeT==numel(tidx)
-                    obj.data(data_end_pos).datainfo.dT=info.xmlmeta_TimeIncrement;
+                    obj.data(data_end_pos).datainfo.dT=str2double(info.xmlmeta_TimeIncrement);
                     obj.data(data_end_pos).datainfo.T=scaninfo.Plane_DeltaT(tidx);
                 else
                     T_start=str2double(info.f_GlobalAxis4ParametersCommonStartPosition);
@@ -183,8 +183,8 @@ try
             
             %core meta infos
             obj.data(data_end_pos).datainfo.t_aquasition=str2double(info.f_GlobalTimePerSeries)/(1000*1000);%in seconds
-            obj.data(data_end_pos).datainfo.digital_zoom=info.f_GlobalAcquisitionParametersCommonZoomValue;
-            obj.data(data_end_pos).datainfo.optical_zoom=info.f_GlobalMagnification;
+            obj.data(data_end_pos).datainfo.digital_zoom=str2double(info.f_GlobalAcquisitionParametersCommonZoomValue);
+            obj.data(data_end_pos).datainfo.optical_zoom=str2double(info.f_GlobalMagnification);
             
             obj.data(data_end_pos).datainfo.data_idx=obj.current_data;
             obj.data(data_end_pos).datainfo.data_dim=[1,sizeX,sizeY,sizeZ,sizeT];

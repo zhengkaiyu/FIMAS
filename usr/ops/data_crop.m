@@ -1,21 +1,39 @@
-function [ status, message ] = data_crop( obj, selected_data )
+function [ status, message ] = data_crop( obj, selected_data, askforparam, defaultparam )
 % DATA_CROP crop data with inputted boundaries in all dimensions
+%--------------------------------------------------------------------------
+%   1. !! The process is irreversible, therefore new data holder will be created !!
 %
-%   !! The process is irreversible, therefore new data holder will be
-%   created !!
+%   2. Normal mode retains data in the interval
 %
-%   Normal mode retains data in the interval
-%   Inverse mode removes data in the interval
+%   3. Inverse mode removes data in the interval
+%
+%   4. Specify single interval for each dimension, therefore 1x5 cell
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','dim_interval','{[0,12.5],[0,256],[0,256],[0,10],[0,100]}','mode','normal');
+%   selected_data=data index, 1 means previous generated data
+%   dim_interval={[t1,t2],[X1,X2],[Y1,Y2],[Z1,Z2],[T1,T2]};
+%   mode=normal|inverse
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %% function complete
+
 % assume worst
 status=false;
+% for batch process must return 'Data parentidx to childidx' for each
+% successful calculation
+message='';
 try
-    data_idx=1;% initialise counter
-    askforparam=true;% always ask for the first one
-    while data_idx<=numel(selected_data)
+    % initialise counter
+    data_idx=1;
+    % number of data to process
+    ndata=numel(selected_data);
+    % loop through individual data
+    while data_idx<=ndata
         % get the current data index
         current_data=selected_data(data_idx);
+        % ---- Parameter Assignment ----
+        % if it is not automated, we need manual parameter input/adjustment
         if askforparam % ask if it is the first one
             % work out full interval as default
             dim_interval=cellfun(@(x)[obj.data(current_data).datainfo.(x)(1),obj.data(current_data).datainfo.(x)(end)],...
@@ -50,16 +68,7 @@ try
                 % for multiple data ask for apply to all option
                 if numel(selected_data)>1
                     % ask if want to apply to the rest of the data items
-                    button = questdlg('Apply this setting to: ','Multiple Selection','Apply to Rest','Just this one','Apply to Rest') ;
-                    switch button
-                        case 'Apply to Rest'
-                            askforparam=false;
-                        case 'Just this one'
-                            askforparam=true;
-                        otherwise
-                            % action cancellation
-                            askforparam=false;
-                    end
+                    askforparam=askapplyall('apply');
                 end
             else
                 % cancel clicked don't do anything to this data item
@@ -67,29 +76,47 @@ try
                 % for multiple data ask for apply to all option
                 if numel(selected_data)>1
                     % ask if want to cancel for the rest of the data items
-                    button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
-                    switch button
-                        case 'Apply to Rest'
-                            askforparam=false;
-                        case 'Just this one'
-                            askforparam=true;
-                        otherwise
-                            % action cancellation
-                            askforparam=false;
-                    end
+                    askforparam=askapplyall('cancel');
                     if askforparam==false
-                        message=sprintf('Action cancelled!');
+                        message=sprintf('%s\nAction cancelled!',message);
                         return;
                     end
                 else
-                    message=sprintf('Action cancelled!');
+                    message=sprintf('%s\nAction cancelled!',message);
                 end
             end
         else
-            % user decided to apply same settings to rest
+            % user decided to apply same settings to rest or use default
+            % assign parameters
+            fname=defaultparam(1:2:end);
+            fval=defaultparam(2:2:end);
+            for fidx=1:numel(fname)
+                switch fname{fidx}
+                    case 'dim_interval'
+                        dim_interval=eval(fval{fidx});
+                    case 'mode'
+                        mode=char(fval{fidx});
+                end
+            end
             
+            % only use waitbar for user attention if we are in
+            % automated mode
+            if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+                % Report current estimate in the waitbar's message field
+                done=data_idx/ndata;
+                waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
+            else
+                % create waitbar if it doesn't exist
+                waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
+                    'CreateCancelBtn',...
+                    'setappdata(gcbf,''canceling'',1)',...
+                    'WindowStyle','normal',...
+                    'Color',[0.2,0.2,0.2]);
+                setappdata(waitbar_handle,'canceling',0);
+            end
         end
-        % ---- Calculation Part ----
+        
+        % ---- Data Calculation ----
         if ~isempty(dim_interval)
             % decided to process
             switch obj.data(current_data).datatype
@@ -126,8 +153,8 @@ try
                         obj.data(new_data).datainfo.operator_mode=mode;
                         obj.data(new_data).datainfo.panel=obj.data(parent_data).datainfo.panel;
                         for dim=obj.DIM_TAG
-                            dim=char(dim);
-                            obj.data(new_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
+                            dimtext=char(dim);
+                            obj.data(new_data).datainfo.(cat(2,'d',dimtext))=obj.data(parent_data).datainfo.(cat(2,'d',dimtext));
                         end
                         % recalculate dimension data
                         if ~isempty(obj.data(parent_data).datainfo.t)
@@ -178,8 +205,8 @@ try
                         obj.data(new_data).datainfo.operator='data_crop';
                         obj.data(new_data).datainfo.operator_mode=mode;
                         for dim=obj.DIM_TAG
-                            dim=char(dim);
-                            obj.data(new_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
+                            dimtext=char(dim);
+                            obj.data(new_data).datainfo.(cat(2,'d',dimtext))=obj.data(parent_data).datainfo.(cat(2,'d',dimtext));
                         end
                         % recalculate dimension data
                         if ~isempty(obj.data(parent_data).datainfo.t)
@@ -201,15 +228,23 @@ try
                         obj.data(new_data).metainfo=obj.data(parent_data).metainfo;
                         obj.data(new_data).datainfo.last_change=datestr(now);
                         status=true;
-                        message=sprintf('data cropped\n%s',message);
+                        message=sprintf('%s\nData %s to %s cropped.',message,num2str(current_data),num2str(new_data));
                     end
             end
         else
-            message=sprintf('action cancelled\n');
+            message=sprintf('%s\nAction cancelled!',message);
         end
         % increment data index
         data_idx=data_idx+1;
     end
+    % close waitbar if exist
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
 catch exception
-    message=exception.message;
+    % error handle
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
+    message=sprintf('%s\n%s',message,exception.message);
 end

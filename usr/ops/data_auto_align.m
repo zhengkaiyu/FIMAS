@@ -1,4 +1,4 @@
-function [ status, message ] = data_auto_align( obj, selected_data )
+function [ status, message ] = data_auto_align( obj, selected_data, askforparam, defaultparam ) )
 % DATA_AUTO_ALIGN automatically align X-Y drift in time series XYT/tXYT apply to current selected data.
 %
 %   Based on Georgios D. Evangelidis ECC algorithm Interp method is accurate but cannot be used for FLIM data.  Only   discrete step shift can be applied to FLIM data at present

@@ -41,7 +41,7 @@ set(0,'DefaultUicontrolForegroundColor','w');
 [ ver, date ] = version;
 release_yr = str2double(datestr(date,'YYYY'));
 switch release_yr
-    case {2015,2016}
+    case {2015,2016,2017,2018}
         feature('accel','on');
         %{
         poolobj = gcp('nocreate');
@@ -62,7 +62,7 @@ switch release_yr
     case {2008,2009,2010,2011,2012,2013,2014}
         %matlabpool;
     otherwise
-        errordlg(sprintf('Incompatible MATLAB Version.\nCurrent Version %s\nRequire >R2008a & <R2016b',ver),'Version Error','modal');
+        errordlg(sprintf('Incompatible MATLAB Version.\nCurrent Version %s\nRequire >R2008a & <R2018a',ver),'Version Error','modal');
 end
 % ---------------------------------------------------
 % profile -memory on;

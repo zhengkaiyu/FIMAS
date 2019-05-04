@@ -171,55 +171,100 @@ try
         dtime_start=0;dtime_stop=dtime_max;
         n_dtime_step=ceil(dtime_max/dtime_step);
         %
-        %fix time step to 256 neareast
-        dtime_bin=ceil(n_dtime_step/256);
-        t=linspace(dtime_start,dtime_stop,n_dtime_step/dtime_bin);%get delay time scale
+        switch  info.Measurement_Mode
+            case 'T3'
+                %fix time step to 256 neareast
+                dtime_bin=ceil(n_dtime_step/256);
+                t=linspace(dtime_start,dtime_stop,n_dtime_step/dtime_bin);%get delay time scale
+            case 'T2'
+                dtime_bin=1;
+                t=[0,dtime_step];%get delay time scale
+        end
         %}
         
         %------------
         % restructure data in spc format
-        %---seperate data (PicoHarp T3 Format)---
-        channel=uint8(bitand(data,CHANNEL_MASK)/2^28);%channeldata
-        dtime=uint16(bitand(data,DTIME_MASK)/2^16);%next 12bit=delaytime
-        gtime=double(bitand(data,GTIME_MASK));%last 16bit=gtime
-        clear data;%clear rawdata to save space
-        
-        %---data/special event channel---
-        idx_special=uint64(find(channel==MAX_CH_NUM+1));    %special event
-        clear channel;
-        
-        %categorises special events
-        idx_overflow=(dtime(idx_special)==0);       %overflow event for global time
-        gclock_tick_pos=idx_special(idx_overflow);  %overflow event index
-        idx_marker=idx_special(~idx_overflow);      %external marker event index
-        clear idx_special idx_overflow;
-        %---organise event markers to calculate correct pixind---
-        %global linestart_pos linestop_pos clock_data linestart_framenum linestop_framenum;
-        %external marker events categories
-        hwmarker_pos=idx_marker(dtime(idx_marker)==marker_hw);
-        
-        %imaging frame signals
-        frame_pos=uint32(idx_marker(dtime(idx_marker)==marker_frame));
-        %imaging line start/stop signals
-        linestart_pos=uint32(idx_marker(dtime(idx_marker)==marker_line_start));
-        linestop_pos=uint32(idx_marker(dtime(idx_marker)==marker_line_stop));
-        clear idx_marker;
-        
-        %---calculate global time---
-        gtick_num=numel(gclock_tick_pos)-1;
-        for tick_idx=1:1:gtick_num
-            gs=double(gclock_tick_pos(tick_idx));
-            ge=double(gclock_tick_pos(tick_idx+1))-1;
-            gtime(gs:ge)=gtime(gs:ge)+tick_idx*GTIME_MASK;
+        switch  info.Measurement_Mode
+            case 'T3'
+                %---seperate data (PicoHarp T3 Format)---
+                channel=uint8(bitand(data,CHANNEL_MASK)/2^28);%channeldata
+                dtime=uint16(bitand(data,DTIME_MASK)/2^16);%next 12bit=delaytime
+                gtime=double(bitand(data,GTIME_MASK));%last 16bit=gtime
+                clear data;%clear rawdata to save space
+                
+                %---data/special event channel---
+                idx_special=uint64(find(channel==MAX_CH_NUM+1));    %special event
+                clear channel;
+                
+                %categorises special events
+                idx_overflow=(dtime(idx_special)==0);       %overflow event for global time
+                gclock_tick_pos=idx_special(idx_overflow);  %overflow event index
+                idx_marker=idx_special(~idx_overflow);      %external marker event index
+                clear idx_special idx_overflow;
+                %---organise event markers to calculate correct pixind---
+                %global linestart_pos linestop_pos clock_data linestart_framenum linestop_framenum;
+                %external marker events categories
+                hwmarker_pos=idx_marker(dtime(idx_marker)==marker_hw);
+                
+                %imaging frame signals
+                frame_pos=uint32(idx_marker(dtime(idx_marker)==marker_frame));
+                %imaging line start/stop signals
+                linestart_pos=uint32(idx_marker(dtime(idx_marker)==marker_line_start));
+                linestop_pos=uint32(idx_marker(dtime(idx_marker)==marker_line_stop));
+                clear idx_marker;
+                
+                %---calculate global time---
+                gtick_num=numel(gclock_tick_pos)-1;
+                for tick_idx=1:1:gtick_num
+                    gs=double(gclock_tick_pos(tick_idx));
+                    ge=double(gclock_tick_pos(tick_idx+1))-1;
+                    gtime(gs:ge)=gtime(gs:ge)+tick_idx*GTIME_MASK;
+                end
+                gtime(double(gclock_tick_pos(end)):end)=gtime(double(gclock_tick_pos(end)):end)+GTIME_MASK*(tick_idx+1);
+                gtime=gtime*gtime_step*1000;  %calculate real val in sec
+                clear gclock_tick_pos gtime_step;
+                
+                %---calculate delaytime---
+                dtime = double(dtime) * dtime_step;%calculate real delaytime
+                clear dtime_start dtime_stop dtime_step;
+                
+            case 'T2'
+                % ---seperate data (PicoHarp T2 Format)---
+                gtime = double(bitand(data,DTIME_MASK+GTIME_MASK));             %the lowest 28 bits
+                channel = uint8(bitand(data,CHANNEL_MASK)/2^28);           %channeldata
+                
+                idx_special = uint64(find(channel==MAX_CH_NUM+1));     %non-photon data index
+                idx_overflow = (gtime(idx_special)==0);       %overflow event for global time
+                idx_marker = idx_special(~idx_overflow);      %external marker event index
+                
+                marker_rec = bitand(data(idx_marker),15);       %the lowest 4 bits of marker value
+                
+                clear data;%clear rawdata to save space
+                
+                gclock_tick_pos = idx_special(idx_overflow);  %overflow event index
+                %---organise event markers to calculate correct pixind---
+                %global linestart_pos linestop_pos clock_data linestart_framenum linestop_framenum;
+                %external marker events categories
+                hwmarker_pos=idx_marker(marker_rec==marker_hw);
+                %imaging frame signals
+                frame_pos=uint32(idx_marker(marker_rec==marker_frame));
+                %imaging line start/stop signals
+                linestart_pos=uint32(idx_marker(marker_rec==marker_line_start));
+                linestop_pos=uint32(idx_marker(marker_rec==marker_line_stop));
+                
+                wraparound=210698240;%ps
+                %---calculate global time---
+                gtick_num=numel(gclock_tick_pos)-1;
+                for tick_idx=1:1:gtick_num
+                    gs=double(gclock_tick_pos(tick_idx));
+                    ge=double(gclock_tick_pos(tick_idx+1))-1;
+                    gtime(gs:ge)=gtime(gs:ge)+tick_idx*wraparound;
+                end
+                gtime(gclock_tick_pos(end):end)=gtime(gclock_tick_pos(end):end)+wraparound*(tick_idx+1);
+                gtime=gtime*gtime_step*1000;  %calculate real val in sec
+                dtime=double(zeros(numel(gtime),1));
+                clear gclock_tick_pos gtime_step;
         end
-        gtime(double(gclock_tick_pos(end)):end)=gtime(double(gclock_tick_pos(end)):end)+GTIME_MASK*(tick_idx+1);
-        gtime=gtime*gtime_step*1000;  %calculate real val in sec
-        clear gclock_tick_pos gtime_step;
-        
-        %---calculate delaytime---
-        dtime = double(dtime) * dtime_step;%calculate real delaytime
-        clear dtime_start dtime_stop dtime_step;
-        
         % --- start getting data into clock data format
         framenum=numel(frame_pos);
         [~,linestart_framenum]=histc(linestart_pos,frame_pos);
@@ -436,9 +481,53 @@ try
             otherwise
                 message=sprintf('%s\nIncorrect file information\nLoading Cancelled\n',message);
         end
+        
     else
         message=sprintf('Unable to load file.  Error: %s\n',message);
     end
+    
 catch exception
     message=sprintf('%s\n',exception.message);
 end
+
+%{
+function ReadPT2
+    ofltime = 0;%overflow time
+    WRAPAROUND='C8F0000';
+   
+        ptime = bitand(data,DTIME_MASK+GTIME_MASK);             %the lowest 28 bits
+        channel=uint8(bitand(data,CHANNEL_MASK)/2^28);           %channeldata
+
+        timetag = T2time + ofltime;
+
+
+        idx_special=uint64(find(channel==MAX_CH_NUM+1));
+        idx_overflow=(dtime(idx_special)==0);       %overflow event for global time
+        gclock_tick_pos=idx_special(idx_overflow);  %overflow event index
+        idx_marker=idx_special(~idx_overflow);      %external marker event index
+
+        if (chan >= 0) && (chan <= 4)
+        % actual photon data
+            photontime=timetag * info.MeasDesc_GlobalResolution * 1e12; %in ps
+        else
+            if chan == 15
+                
+                markers = bitand(T2Record,15);  % where the lowest 4 bits are marker bits
+                if markers==0                   % then this is an overflow record
+                    ofltime = ofltime + WRAPAROUND; % and we unwrap the time tag overflow
+                    GotOverflow(1);
+                else                            % otherwise it is a true marker
+
+                    GotMarker(timetag, markers);
+                end;
+            else
+                fprintf(fpout,'Err');
+            end;
+        end;
+        % Strictly, in case of a marker, the lower 4 bits of time are invalid
+        % because they carry the marker bits. So one could zero them out.
+        % However, the marker resolution is only a few tens of nanoseconds anyway,
+        % so we can just ignore the few picoseconds of error.
+    end;
+end
+%}

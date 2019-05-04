@@ -1,20 +1,37 @@
-function [ status, message ] = data_rearrangedim( obj, selected_data )
+function [ status, message ] = data_rearrangedim( obj, selected_data, askforparam, defaultparam )
 % DATA_REARRANGEDIM permutes dimensions of a 5D data
-%   input permutation vector for dimension index and
-%   operation will apply to the current data selected
-%   process is reversible
-%   e.g. input [1,2,5,4,3] will change a tXYZT data to tXTZY
-%   no spc data implementation yet
+%--------------------------------------------------------------------------
+%   1. Input 1x5 permutation vector for dimension index
+%
+%   2. Operation will apply to the current data selected and process is reversible
+%
+%   3. e.g. Input [1,2,5,4,3] will change a tXYZT data to tXTZY and apply again to reverse back
+%
+%   4. SPC data not implementation yet
+%
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','new_dim','[1,2,3,4,5]');
+%   selected_data=data index, 1 means previous generated data
+%   new_dim= 1x5 vector of element interval [1,5]
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %% function complete
-status=false;message='';
+% assume worst
+status=false;
+% for batch process must return 'Data parentidx to childidx' for each
+% successful calculation
+message='';
 try
-    data_idx=1;% initialise counter
-    askforparam=true;% always ask for the first one
-    % process through all selected data
-    while data_idx<=numel(selected_data)
+    % initialise counter
+    data_idx=1;
+    % number of data to process
+    ndata=numel(selected_data);
+    % loop through individual data
+    while data_idx<=ndata
         % get current data index
         current_data=selected_data(data_idx);
+        % ---- Parameter Assignment ----
         if askforparam
             % ask for user input
             options.Resize='on';options.WindowStyle='modal';options.Interpreter='tex';
@@ -26,52 +43,58 @@ try
             set(0,'DefaultUicontrolBackgroundColor','k');
             set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
-                %swap dim
+                % swap dim, assuming user knows what they are doing
                 new_dim=eval(answer{1});
             else
                 % cancel clicked don't do anything to this data item
                 new_dim=[];
                 if numel(selected_data)>1
                     % ask if want to cancel for the rest of the data items
-                    button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
-                    switch button
-                        case 'Apply to Rest'
-                            askforparam=false;
-                        case 'Just this one'
-                            askforparam=true;
-                        otherwise
-                            % action cancellation
-                            askforparam=false;
-                    end
+                    askforparam=askapplyall('cancel');
                     if askforparam==false
-                        message=sprintf('Action cancelled!');
+                        message=sprintf('%s\nAction cancelled!',message);
                         return;
                     end
                 else
-                    message=sprintf('Action cancelled!');
+                    message=sprintf('%s\nAction cancelled!',message);
                 end
             end
             % for multiple data ask for apply to all option
             if numel(selected_data)>1
                 % ask if want to apply to the rest of the data items
-                button = questdlg('Apply this setting to: ','Multiple Selection','Apply to Rest','Just this one','Apply to Rest') ;
-                switch button
-                    case 'Apply to Rest'
-                        askforparam=false;
-                    case 'Just this one'
-                        askforparam=true;
-                    otherwise
-                        % action cancellation
-                        askforparam=false;
-                end
+                askforparam=askapplyall('apply');
             end
         else
-            % user decided to apply same settings to rest
-            
+            % user decided to apply same settings to rest or use default
+            % assign parameters
+            fname=defaultparam(1:2:end);
+            fval=defaultparam(2:2:end);
+            for fidx=1:numel(fname)
+                switch fname{fidx}
+                    case 'new_dim'
+                        new_dim=str2num(fval{fidx});
+                end
+            end
+            % only use waitbar for user attention if we are in
+            % automated mode
+            if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+                % Report current estimate in the waitbar's message field
+                done=data_idx/ndata;
+                waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
+            else
+                % create waitbar if it doesn't exist
+                waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
+                    'CreateCancelBtn',...
+                    'setappdata(gcbf,''canceling'',1)',...
+                    'WindowStyle','normal',...
+                    'Color',[0.2,0.2,0.2]);
+                setappdata(waitbar_handle,'canceling',0);
+            end
         end
-        % ---- Calculation Part ----
+        
+        % ---- Data Calculation ----
         if isempty(new_dim)
-            message=sprintf('Data swap action cancelled\n');
+            message=sprintf('%s\nData swap action cancelled',message);
         else
             % check validity
             old_dim=obj.data(current_data).datainfo.data_dim;
@@ -81,7 +104,7 @@ try
                 %invalid swap happenend
                 new_dim=[];% don't do anything later on
                 obj.data(current_data).datainfo.data_dim=old_dim;
-                message=sprintf('Invalid swap\n');
+                message=sprintf('%s\nInvalid swap',message);
             else
                 %do actual swap of value
                 obj.data(current_data).dataval=permute(obj.data(current_data).dataval,new_dim);
@@ -91,6 +114,7 @@ try
                     obj.data(current_data).datainfo.Y,...
                     obj.data(current_data).datainfo.Z,...
                     obj.data(current_data).datainfo.T};
+                %get delta axis values as well which need to be swapped
                 old_daxis={obj.data(current_data).datainfo.dt,...
                     obj.data(current_data).datainfo.dX,...
                     obj.data(current_data).datainfo.dY,...
@@ -109,13 +133,22 @@ try
                 obj.data(current_data).datainfo.last_change=datestr(now);
                 %return true
                 status=true;
-                message=sprintf('%s Data swapped to %s\n',message,char(obj.DIM_TAG(new_dim)));
+                message=sprintf('%s\nData %s to %s swapped %s dimension.',message,num2str(current_data),num2str(current_data),char(obj.DIM_TAG(new_dim)));
             end
         end
         % increment data index
         data_idx=data_idx+1;
     end
+    % close waitbar if exist
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
 catch exception
-    message=exception.message;
+    % error handle
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
+    message=sprintf('%s\n%s',message,exception.message);
+    % make sure the data_dim is returned to old one if there is a problem
     obj.data(current_data).datainfo.data_dim=old_dim;
 end

@@ -1,11 +1,11 @@
-function [ status, message ] = data_showlineprofile( obj, selected_data )
+function [ status, message ] = data_showlineprofile( obj, selected_data, askforparam, defaultparam )
 %DATA_SHOWLINEPROFILE plot line profile of selected impolyline
 %   Plot line profile of selected ROIs of selected data
 %   Profile line will be plotted in new figure window and traces can be
 %   exported using F3 shortcut key on the figure window
+%   need for XYT or XYZ data
 
-
-%% function complete
+%% function check
 % assume worst
 status=false;message='';
 try

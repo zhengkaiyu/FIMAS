@@ -1,4 +1,4 @@
-function [ status, message ] = data_showscanline( obj, selected_data )
+function [ status, message ] = data_showscanline( obj, selected_data, askforparam, defaultparam )
 %DATA_showscanline plot line scan trace onto background image for femtonics
 %data
 
@@ -20,9 +20,9 @@ try
                         % not test line try real line
                         sl_data=obj.data(selected_data).datainfo.ScanLine.ODDarray(sl_idx(sl_n)).Data1(1:2,:);
                     end
-                    [length,radius,area]=draw_sl(sl_data,sl_names{sl_idx(sl_n)},where_to);    
-                    message=sprintf('%s\n Scan Line %s (red dot start)\n ( L = %0.2fum, r = %0.2fum, A = %0.2fum^2 ) added to %s plot\n',...
-                        message,sl_names{sl_idx(sl_n)},length,radius,area,obj.data(selected_data).dataname);
+                    [npix,length,radius,area]=draw_sl(sl_data,sl_names{sl_idx(sl_n)},where_to);
+                    message=sprintf('%s\n Scan Line %s (red dot start)\n ( N = %g, L = %0.2fum, r = %0.2fum, A = %0.2fum^2 ) added to %s plot\n',...
+                        message,sl_names{sl_idx(sl_n)},npix,length,radius,area,obj.data(selected_data).dataname);
                 end
                 % plot time course
                 sl_order=reshape(repmat(sl_order,1,2)',numel(sl_order)*2,1);
@@ -46,10 +46,9 @@ try
                     % not test line try real line
                     sl_data=obj.data(selected_data).datainfo.ScanLine.Data1(1:2,:);
                 end
-                
-                [length,radius,area]=draw_sl(sl_data,sl_name,where_to);
-                message=sprintf('%s\n Scan Line (red dot start)\n ( L = %0.2fum, r = %0.2fum, A = %0.2fum^2 ) added to %s plot\n',...
-                    message,length,radius,area,obj.data(selected_data).dataname);
+                [npix,length,radius,area]=draw_sl(sl_data,sl_name,where_to);
+                message=sprintf('%s\n Scan Line (red dot start)\n ( N = %g, L = %0.2fum, r = %0.2fum, A = %0.2fum^2 ) added to %s plot\n',...
+                    message,npix,length,radius,area,obj.data(selected_data).dataname);
                 status=true;
             otherwise
                 message=sprintf('%s\n %s has unknown scan line type %s\n',message,obj.data(selected_data).dataname,obj.data(selected_data).datainfo.ScanLine.Type);
@@ -61,7 +60,7 @@ catch exception
     message=exception.message;
 end
 end
-function [length,radius,area]=draw_sl(sl_data,sl_name,where_to)
+function [npts,length,radius,area]=draw_sl(sl_data,sl_name,where_to)
 % downsample
 npts=size(sl_data,2);
 coord=downsample(sl_data',floor(size(sl_data,2)/npts));

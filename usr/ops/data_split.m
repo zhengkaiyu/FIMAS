@@ -1,31 +1,49 @@
-function [ status, message ] = data_split( obj, selected_data )
+function [ status, message ] = data_split( obj, selected_data, askforparam, defaultparam )
 %DATA_SPLIT split data in selected dimension into individual new data items
-%   split current data in either one of the t,X,Y,Z or T dimension
-%   generally useful for split multi-channel data, z stacks (of size N)
-%   user can use expression such as 1;2;3;4;5 to split into individual
-%   channel/slices OR use 1:2:5;2:2:5 to split out every other frames
-%   use more complicated expression such as [1:1:3];[4,5];[6:2:10] to split
-%   channels into designed patterns.  ; is used as split seperator.
+%--------------------------------------------------------------------------
+%   1. Split current data in either one of the t,X,Y,Z or T dimension.
+%
+%   2. Generally useful for split multi-channel data, z stacks (of size N).
+%
+%   3. User can use expression such as 1;2;3;4;5 to split into individual channel/slices OR use 1:2:5;2:2:5 to split out every other frames
+%
+%   4. Use more complicated expression such as [1:1:3];[4,5];[6:2:10] to split channels into designed patterns.  ; is used as split seperator.
+%
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','dim','1','splitexp','1;2;3');
+%   selected_data=data index, 1 means previous generated data
+%   dim=[1|2|3|4|5];
+%   splitexp=string expression
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %% function complete
 
 % assume worst
 status=false;
+% for batch process must return 'Data parentidx to childidx' for each
+% successful calculation
+message='';
 try
-    data_idx=1;% initialise counter
-    askforparam=true;% always ask for the first one
-    while data_idx<=numel(selected_data)
+    % initialise counter
+    data_idx=1;
+    % number of data to process
+    ndata=numel(selected_data);
+    % loop through individual data
+    while data_idx<=ndata
         % get the current data index
         current_data=selected_data(data_idx);
+        % ---- Parameter Assignment ----
+        % if it is not automated, we need manual parameter input/adjustment
         if askforparam
             % get axis information
-            button = questdlg('Flip which dimension?','Flip Data','t','Spatial','T','Spatial');
+            button = questdlg('Split in which dimension?','Split Data','t','Spatial','T','Spatial');
             switch button
                 case 't'
                     % channel or lifetime dimension
                     dim=1;
                 case 'Spatial'
-                    button = questdlg('Flip which dimension?','Flip Data','X','Y','Z','X');
+                    button = questdlg('Split in which dimension?','Split Data','X','Y','Z','X');
                     switch button
                         case 'X'
                             dim=2;
@@ -42,24 +60,16 @@ try
                     dim=5;
                 otherwise
                     %action cancelled
+                    dim=[];
                     if numel(selected_data)>1
                         % ask if want to cancel for the rest of the data items
-                        button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
-                        switch button
-                            case 'Apply to Rest'
-                                askforparam=false;
-                            case 'Just this one'
-                                askforparam=true;
-                            otherwise
-                                % action cancellation
-                                askforparam=false;
-                        end
+                        askforparam=askapplyall('cancel');
                         if askforparam==false
-                            message=sprintf('Action cancelled!');
+                            message=sprintf('%s\nAction cancelled!',message);
                             return;
                         end
                     else
-                        message=sprintf('Action cancelled!');
+                        message=sprintf('%s\nAction cancelled!',message);
                     end
             end
             % ask for split instruction string
@@ -75,47 +85,58 @@ try
             set(0,'DefaultUicontrolForegroundColor','w');
             if isempty(answer)
                 %action cancelled
+                splitexp=[];
                 if numel(selected_data)>1
                     % ask if want to cancel for the rest of the data items
-                    button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
-                    switch button
-                        case 'Apply to Rest'
-                            askforparam=false;
-                        case 'Just this one'
-                            askforparam=true;
-                        otherwise
-                            % action cancellation
-                            askforparam=false;
-                    end
+                    askforparam=askapplyall('cancel');
                     if askforparam==false
-                        message=sprintf('Action cancelled!');
+                        message=sprintf('%s\nAction cancelled!',message);
                         return;
                     end
                 else
-                    message=sprintf('Action cancelled!');
+                    message=sprintf('%s\nAction cancelled!',message);
                 end
             else
+                splitexp=answer{1};
                 % for multiple data ask for apply to all option
                 if numel(selected_data)>1
                     % ask if want to apply to the rest of the data items
-                    button = questdlg('Apply this setting to: ','Multiple Selection','Apply to All','Just this one','Apply to All') ;
-                    switch button
-                        case 'Apply to All'
-                            askforparam=false;
-                        case 'Just this one'
-                            askforparam=true;
-                        otherwise
-                            % action cancellation
-                            askforparam=false;
-                    end
+                    askforparam=askapplyall('apply');
                 end
             end
         else
-            % user decided to apply same settings to rest
+            % user decided to apply same settings to rest or use default
+            % assign parameters
+            fname=defaultparam(1:2:end);
+            fval=defaultparam(2:2:end);
+            for fidx=1:numel(fname)
+                switch fname{fidx}
+                    case 'dim'
+                        dim=str2num(fval{fidx});
+                    case 'splitexp'
+                        splitexp=char(fval{fidx});
+                end
+            end
             
+            % only use waitbar for user attention if we are in
+            % automated mode
+            if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+                % Report current estimate in the waitbar's message field
+                done=data_idx/ndata;
+                waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
+            else
+                % create waitbar if it doesn't exist
+                waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
+                    'CreateCancelBtn',...
+                    'setappdata(gcbf,''canceling'',1)',...
+                    'WindowStyle','normal',...
+                    'Color',[0.2,0.2,0.2]);
+                setappdata(waitbar_handle,'canceling',0);
+            end
         end
-        % ---- Calculation ----
-        temp=regexp(answer{1},';','split');
+        
+        % ---- Data Calculation ----
+        temp=regexp(splitexp,';','split');
         for newdata_idx=1:numel(temp)
             % create new data items
             % add new data
@@ -167,12 +188,20 @@ try
             obj.data(new_data).metainfo=obj.data(current_data).metainfo;
             obj.data(new_data).datainfo.parameter_space=[];
             obj.data(new_data).datainfo.last_change=datestr(now);
+            message=sprintf('%s\nData %s to %s splitted into %g new dataitems.',message,num2str(current_data),num2str(new_data),numel(temp));
         end
         status=true;
-        message=sprintf('data %s splitted into %g new dataitems\n',obj.data(current_data).dataname,numel(temp));
         % increment data index
         data_idx=data_idx+1;
     end
+    % close waitbar if exist
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
 catch exception
-    message=exception.message;
+    % error handle
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
+    message=sprintf('%s\n%s',message,exception.message);
 end

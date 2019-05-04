@@ -1,17 +1,35 @@
-function [ status, message ] = data_flipdim( obj, selected_data )
+function [ status, message ] = data_flipdim( obj, selected_data, askforparam, defaultparam )
 % DATA_FLIPDIM Flipimages upside down in selected dimension
-%   flip images in either t,X,Y,Z or T dimension
-%   no spc data implementation yet
+%--------------------------------------------------------------------------
+%   1. Flip images in either t,X,Y,Z or T dimension
+%
+%   2. SPC data not implementation yet, although not difficult
+%
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','dim','1');
+%   selected_data=data index, 1 means previous generated data
+%   dim=[1|2|3|4|5];
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %% function complete
+
 % assume worst
 status=false;
+% for batch process must return 'Data parentidx to childidx' for each
+% successful calculation
+message='';
 try
-    data_idx=1;% initialise counter
-    askforparam=true;% always ask for the first one
-    while data_idx<=numel(selected_data)
+    % initialise counter
+    data_idx=1;
+    % number of data to process
+    ndata=numel(selected_data);
+    % loop through individual data
+    while data_idx<=ndata
         % get the current data index
         current_data=selected_data(data_idx);
+        % ---- Parameter Assignment ----
+        % if it is not automated, we need manual parameter input/adjustment
         if askforparam
             % get axis information
             button = questdlg('Flip which dimension?','Flip Data','t','Spatial','T','Spatial');
@@ -36,59 +54,77 @@ try
                 otherwise
                     %action cancelled
                     dim=[];
-                    if numel(selected_data)>1
-                        % ask if want to cancel for the rest of the data items
-                        button = questdlg('Cancel ALL?','Multiple Selection','Cancel ALL','Just this one','Cancel ALL') ;
-                        switch button
-                            case 'Apply to Rest'
-                                askforparam=false;
-                            case 'Just this one'
-                                askforparam=true;
-                            otherwise
-                                % action cancellation
-                                askforparam=false;
-                        end
-                        if askforparam==false
-                            message=sprintf('Action cancelled!');
-                            return;
-                        end
-                    else
-                        message=sprintf('Action cancelled!');
-                    end
             end
-            % for multiple data ask for apply to all option
-            if numel(selected_data)>1
-                % ask if want to apply to the rest of the data items
-                button = questdlg('Apply this setting to: ','Multiple Selection','Apply to Rest','Just this one','Apply to Rest') ;
-                switch button
-                    case 'Apply to Rest'
-                        askforparam=false;
-                    case 'Just this one'
-                        askforparam=true;
-                    otherwise
-                        % action cancellation
-                        askforparam=false;
+            if isempty(dim)
+                % action cancelled previously
+                if numel(selected_data)>1
+                    % ask if want to cancel for the rest of the data items
+                    askforparam=askapplyall('cancel');
+                    if askforparam==false
+                        message=sprintf('%s\nAction cancelled!',message);
+                        return;
+                    end
+                else
+                    message=sprintf('%s\nAction cancelled!',message);
+                end
+            else
+                % for multiple data ask for apply to all option
+                if numel(selected_data)>1
+                    % ask if want to apply to the rest of the data items
+                    askforparam=askapplyall('apply');
                 end
             end
         else
-            % user decided to apply same settings to rest
-            
+            % user decided to apply same settings to rest or use default
+            % assign parameters
+            fname=defaultparam(1:2:end);
+            fval=defaultparam(2:2:end);
+            for fidx=1:numel(fname)
+                switch fname{fidx}
+                    case 'dim'
+                        dim=str2num(fval{fidx});
+                end
+            end
+            % only use waitbar for user attention if we are in
+            % automated mode
+            if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+                % Report current estimate in the waitbar's message field
+                done=data_idx/ndata;
+                waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
+            else
+                % create waitbar if it doesn't exist
+                waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
+                    'CreateCancelBtn',...
+                    'setappdata(gcbf,''canceling'',1)',...
+                    'WindowStyle','normal',...
+                    'Color',[0.2,0.2,0.2]);
+                setappdata(waitbar_handle,'canceling',0);
+            end
         end
         
-        % ---- Calculation ----
+        % ---- Data Calculation ----
         if isempty(dim)
             %action cancelled
-            message=sprintf('action cancelled\n');
+            message=sprintf('%s\nAction cancelled!',message);
         else
             %flip upside down
             obj.data(current_data).dataval=flip(obj.data(current_data).dataval,dim);
             obj.data(current_data).datainfo.last_change=datestr(now);
             status=true;
-            message=sprintf('Data fliped along %s-axis\n',obj.DIM_TAG{dim});
+            message=sprintf('%s\nData %s to %s flipped along %s-axis.',message,num2str(current_data),num2str(current_data),obj.DIM_TAG{dim});
         end
+        status=true;
         % increment data index
         data_idx=data_idx+1;
     end
+    % close waitbar if exist
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
 catch exception
-    message=exception.message;
+    % error handle
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
+    message=sprintf('%s\n%s',message,exception.message);
 end

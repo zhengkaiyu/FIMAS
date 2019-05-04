@@ -1,4 +1,4 @@
-function [ status, message ] = data_lsautoROI( obj, selected_data )
+function [ status, message ] = data_lsautoROI( obj, selected_data, askforparam, defaultparam ) )
 %DATA_LSAUTOROI automatically find roi in a linescan image
 %   Image must be in XT format
 %   Apply to reference image is more reliable and you can copy and paste

@@ -1,4 +1,4 @@
-function [ status, message ] = data_show3Dvolume( obj, selected_data )
+function [ status, message ] = data_show3Dvolume( obj, selected_data, askforparam, defaultparam ) )
 %data_show3Dvolume plot slice through 3D data to illustrate
 %   function check for existing auxillary input channel from femtonics data
 %   file .mes, user then select the channel to be plotted in an external
