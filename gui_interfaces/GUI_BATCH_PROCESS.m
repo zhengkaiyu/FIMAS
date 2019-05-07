@@ -238,6 +238,9 @@ for opidx=2:numel(BATCHPROC)
     paramarg=sprintf('{%s}',tempname(1:end-1));
     % evaluate
     [~,success,message]=evalc(sprintf('%s(%s,[%s],false,%s)',funcname,'datahandle',seldata,paramarg));
+    if ~success
+        errordlg(message);
+    end
     % find if we have new seldata index from message
     tempname=regexp(message,'(?<=Data )(([0-9])* to ([0-9])*)','match');
     newseldata=unique(cellfun(@(x)str2double(x{2}),regexp(tempname,' to ','split')));

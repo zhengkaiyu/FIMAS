@@ -10,7 +10,7 @@ function varargout = MAIN_GUI(varargin)
 % Operating System: 64bit Matlab 2016a on Linux/Mac/Windows
 % PDF Manual: require xpdf on linux and default pdf viewer on Mac/Windows
 
-% Last Modified by GUIDE v2.5 30-Apr-2019 13:32:36
+% Last Modified by GUIDE v2.5 07-May-2019 17:27:53
 
 %==============================================================
 % Begin initialization code - DO NOT EDIT
@@ -533,6 +533,166 @@ end
 beep;pause(0.001);
 
 %---------------------------------------------------------------
+% BATCH PROCESSING FUNCTIONS
+function BUTTON_ADDOP_Callback(~, ~, handles)
+% Add selected operation from list_operator to list_batchprocess
+global BATCHPROC;
+selop=handles.MENU_USEROP.Value;
+opstr=handles.MENU_USEROP.String{selop};
+batch_capable_func=~isempty(regexp(help(opstr),'[-]*Batch process[-]*','match'));
+if batch_capable_func
+    current_pos=handles.LIST_BATCHPROCESS.Value;
+    if current_pos==numel(BATCHPROC)
+        BATCHPROC(end+1).operation=opstr;
+    else
+        temp=BATCHPROC(current_pos+1:end);
+        BATCHPROC(current_pos+1).operation=opstr;
+        BATCHPROC(current_pos+1).parameters='';
+        BATCHPROC(current_pos+2:end+1)=temp;
+    end
+    handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
+    handles.LIST_BATCHPROCESS.Value=handles.LIST_BATCHPROCESS.Value+1;
+else
+    update_info(sprintf('Error Messages: %s not suitable for batch processing yet',opstr),0,handles.EDIT_INFO);
+end
+
+function BUTTON_DELOP_Callback(~, ~, handles)
+% remove selected operation from list_batchprocess
+global BATCHPROC;
+selop=handles.LIST_BATCHPROCESS.Value;
+if selop>1
+    handles.LIST_BATCHPROCESS.String(selop)=[];
+    BATCHPROC(selop)=[];
+    handles.LIST_BATCHPROCESS.Value=min(handles.LIST_BATCHPROCESS.Value,numel(BATCHPROC));
+    handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
+end
+
+function BUTTON_MOVEOPUP_Callback(~, ~, handles)
+% move selected operations from list_batchprocess up the order tree
+global BATCHPROC;
+selop=handles.LIST_BATCHPROCESS.Value;
+if selop>2
+    % swap operations
+    temp=BATCHPROC(selop-1);
+    BATCHPROC(selop-1)=BATCHPROC(selop);
+    BATCHPROC(selop)=temp;
+    handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
+    handles.LIST_BATCHPROCESS.Value=selop-1;
+end
+
+function BUTTON_MOVEOPDOWN_Callback(~, ~, handles)
+% move selected operations from list_batchprocess down the order tree
+global BATCHPROC;
+selop=handles.LIST_BATCHPROCESS.Value;
+if selop>1
+    % if not the last one
+    if selop<numel(BATCHPROC)
+        % swap function strings
+        temp=BATCHPROC(selop+1);
+        BATCHPROC(selop+1)=BATCHPROC(selop);
+        BATCHPROC(selop)=temp;
+        handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
+        handles.LIST_BATCHPROCESS.Value=selop+1;
+    end
+end
+
+function LIST_BATCHPROCESS_Callback(hObject, ~, handles)
+% load current process into parameter table
+global BATCHPROC;
+selop=hObject.Value;
+if selop>1
+    funcinfo=help(BATCHPROC(selop).operation);
+    update_info(funcinfo,0,handles.EDIT_INFO);
+    if isempty(BATCHPROC(selop).parameters)
+        % find parameters definition line
+        temp=regexp(funcinfo,'Parameter=struct(\S*);','match');
+        % make it into BATCHPROC
+        temp=regexprep(temp{1},'Parameter=','BATCHPROC(selop).parameters=');
+        % evaluate
+        eval(temp);
+    end
+    % Update parameter table
+    handles.TABLE_PARAM.Data=[fieldnames(BATCHPROC(selop).parameters),struct2cell(BATCHPROC(selop).parameters)];
+end
+
+function TABLE_PARAM_CellEditCallback(hObject, eventdata, handles)
+% update selected batch process operator parameters
+global BATCHPROC;
+selop=handles.LIST_BATCHPROCESS.Value;
+if selop>1
+    fidx=eventdata.Indices(1);
+    fname=hObject.Data(fidx,1);
+    BATCHPROC(selop).parameters.(fname{1})=eventdata.NewData;
+end
+
+function BUTTON_PROCESSBATCH_Callback(~, ~, handles)
+% acutally apply the whole batch process and wait for result
+global BATCHPROC hDATA;
+% get selected index
+seldata=num2str(handles.LIST_DATA.Value);
+%---
+% go through all the operations, ignoring the first one
+for opidx=2:numel(BATCHPROC)
+    % get function name
+    funcname=BATCHPROC(opidx).operation;
+    % get function argument
+    funcarg=BATCHPROC(opidx).parameters;
+    % see if we specified data or not
+    switch funcarg.selected_data
+        case '1'
+            % default take previous generated data
+        otherwise
+            % otherwise use specified
+            seldata=funcarg.selected_data;
+    end
+    % make cellarray of field,val pairs
+    tempname=[fieldnames(funcarg),struct2cell(funcarg)]';
+    tempname=sprintf('''%s'',',tempname{:});
+    paramarg=sprintf('{%s}',tempname(1:end-1));
+    % evaluate
+    [~,success,message]=evalc(sprintf('%s(%s,[%s],false,%s)',funcname,'hDATA',seldata,paramarg));
+    if ~success
+        errordlg(message);
+    end
+    % find if we have new seldata index from message
+    tempname=regexp(message,'(?<=Data )(([0-9])* to ([0-9])*)','match');
+    newseldata=unique(cellfun(@(x)str2double(x{2}),regexp(tempname,' to ','split')));
+    
+    %[ success, message ]=datahandle.data_delete(seldata);
+    seldata=num2str(newseldata);
+end
+% update data list
+handles.LIST_DATA.String={hDATA.data.dataname};
+handles.LIST_DATA.Value=newseldata;
+
+function BUTTON_OPENBATCH_Callback(~, ~, handles)
+% Open saved batch processing file (bpf)
+global BATCHPROC SETTING;
+% ask for file to open
+[filename,pathname]=uigetfile('*.bpf','Select the batch process file',SETTING.rootpath.saved_data);
+if ischar(pathname)
+    % load file
+    filename=cat(2,pathname,filename);
+    temp=load(filename,'-mat');
+    BATCHPROC=temp.BATCHPROC;
+    % update LIST_BATCHPROCESS
+    handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
+    SETTING.rootpath.saved_data=pathname;
+    update_info(sprintf('%s batch processing file loaded',filename),0,handles.EDIT_INFO);
+end
+
+function BUTTON_SAVEBATCH_Callback(~, ~, ~)
+% Save current settings to batch processing file (bpf)
+global BATCHPROC SETTING; %#ok<NUSED>
+[filename, pathname] = uiputfile({'*.bpf','Batch Process Files'},'Save as',SETTING.rootpath.saved_data);
+if ischar(pathname)
+    % save to file
+    filename=cat(2,pathname,filename);
+    save(filename,'BATCHPROC','-mat');
+    SETTING.rootpath.saved_data=pathname;
+    update_info(sprintf('Batch processing saved to %s.',filename),0,handles.EDIT_INFO);
+end
+%---------------------------------------------------------------
 % ROI FUNCTIONS
 % --- Executes on key press with focus on LIST_ROI and none of its controls.
 function LIST_ROI_KeyPressFcn(~, eventdata, handles)
@@ -1031,8 +1191,8 @@ function initialise(isnew,handles)
 global hDATA SETTING;
 if isnew
     % clear and declare new data handle
-    clear global hDATA SETTING;    % clear global data handle
-    global hDATA SETTING; %#ok<REDEF,TLEV>
+    clear global hDATA SETTING BATCHPROC;    % clear global data handle
+    global hDATA SETTING BATCHPROC; %#ok<REDEF,TLEV>
     hDATA=fimdata_handle; %#ok<NASGU>
     SETTING=gui_option; %#ok<NASGU>
     set(handles.MAIN_GUI,'Name','FIMAS');
@@ -1045,6 +1205,7 @@ if isnew
     hDATA.path.import=temp.rootpath.raw_data; %#ok<STRNU>
     hDATA.path.export=temp.rootpath.exported_data; %#ok<STRNU>
     hDATA.path.saved=temp.rootpath.saved_data; %#ok<STRNU>
+    BATCHPROC=struct('operation','wait for it','parameters',[]);
     
     % make button icons
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'control_panel_icon.png'));%#ok<NODEF>
@@ -1072,6 +1233,12 @@ if isnew
     set(handles.MENU_USEROP,'Value',1);
     content=get(handles.MENU_USEROP,'String');
     set(handles.MENU_USEROP,'UserData',content{1});
+    % batch process ui
+    handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
+    iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_open.png'));
+    set(handles.BUTTON_OPENBATCH,'CData',iconimg);
+    iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_save.png'));
+    set(handles.BUTTON_SAVEBATCH,'CData',iconimg);
 else
     % reset graphics e.g. open new data file
     
