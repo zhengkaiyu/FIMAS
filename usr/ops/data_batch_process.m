@@ -9,5 +9,5 @@ batch_capable_func=cellfun(@(x)~isempty(regexp(x,'[-]*Batch process[-]*','match'
 fighandle=GUI_BATCH_PROCESS('hDATA',obj,'selDATA',selected_data,'operator',oplist(batch_capable_func));
 waitfor(fighandle);
 status=true;
-message='window closed';
+message='batch processing window closed';
 end

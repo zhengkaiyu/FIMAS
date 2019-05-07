@@ -203,6 +203,10 @@ try
             else
                 % get parent data index
                 parent_data=obj.data(current_data).datainfo.parent_data_idx;
+                if isempty(parent_data)
+                    message=sprintf('%s\nMissing Parent Data. Check parent_data_idx field.',message);
+                    return;
+                end
             end
             dim_size=obj.data(parent_data).datainfo.data_dim;
             % work out new data size

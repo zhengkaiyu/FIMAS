@@ -525,7 +525,7 @@ if success
     % repopulate list in case new data added
     populate_list(handles.LIST_DATA,{hDATA.data.dataname},hDATA.current_data); %#ok<UNRCH>
     populate_list(handles.LIST_ROI,{hDATA.data(hDATA.current_data).roi.name},hDATA.data(hDATA.current_data).current_roi);
-    handles.LIST_DATA.Value=item_idx;% reset to previous as hDATA can only have one current_data
+    handles.LIST_DATA.Value=hDATA.current_data;% reset to previous as hDATA can only have one current_data
     update_info(sprintf('Output of %s: %s\n',func,message),1,handles.EDIT_INFO);
 else
     update_info(sprintf('Error Messages: %s\n from %s\n',message,func),0,handles.EDIT_INFO);
@@ -545,31 +545,31 @@ switch eventdata.Key
         combkey=eventdata.Key;
     case {'d','D'}
         %display
-        if strmatch(combkey,'control','exact');
+        if strcmp(combkey,'control');
             MENUITEM_ROI_DISPLAY_Callback([],[],handles);
         end
         combkey='';
     case {'h','H'}
         %histogram
-        if strmatch(combkey,'control','exact');
+        if strcmp(combkey,'control');
             MENUITEM_ROI_HISTOGRAM_Callback([],[],handles);
         end
         combkey='';
     case {'c','C'}
         %copy
-        if strmatch(combkey,'control','exact');
+        if strcmp(combkey,'control');
             MENUITEM_ROI_COPY_Callback([],[],handles);
         end
         combkey='';
     case {'v','V'}
         %paste
-        if strmatch(combkey,'control','exact');
+        if strcmp(combkey,'control');
             MENUITEM_ROI_PASTE_Callback([],[],handles);
         end
         combkey='';
     case {'s','S'}
         %save
-        if strmatch(combkey,'control','exact');
+        if strcmp(combkey,'control');
             MENUITEM_ROI_SAVE_Callback([],[],handles);
         end
         combkey='';
@@ -628,7 +628,7 @@ update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
 
 
 % add polyline roi to data
-function BUTTON_ROIPOLYLINE_Callback(hObject, eventdata, handles)
+function BUTTON_ROIPOLYLINE_Callback(~, ~, handles)
 global hDATA;
 [ success, message ]=hDATA.roi_add('impolyline',[]);
 if success
@@ -843,7 +843,7 @@ else
 end
 
 % --- Executes on selection change in MENU_PARAMETER.
-function MENU_PARAMETER_Callback(hObject, eventdata, handles)
+function MENU_PARAMETER_Callback(hObject, ~, handles)
 global SETTING;
 % get T page index
 page_idx=get(handles.MENU_RESULT_T,'Value');
@@ -893,7 +893,7 @@ for p_idx=[4,5,6]
 end
 
 % --- Executes on selection change in MENU_RESULT_Z.
-function MENU_RESULT_Z_Callback(hObject, eventdata, handles)
+function MENU_RESULT_Z_Callback(hObject, ~, handles)
 global SETTING;
 % get T page index
 page_idx=get(handles.MENU_RESULT_T,'Value');
@@ -948,7 +948,7 @@ if get(handles.BUTTON_LINK,'Value')
 end
 
 % --- Executes on selection change in MENU_RESULT_T.
-function MENU_RESULT_T_Callback(hObject, eventdata, handles)
+function MENU_RESULT_T_Callback(hObject, ~, handles)
 global hDATA SETTING;
 % get T page index
 page_idx=get(hObject,'Value');
@@ -1076,17 +1076,14 @@ else
     % reset graphics e.g. open new data file
     
 end
-
 % clear axes
 for panelidx=1:numel(SETTING.PANEL_NAME_LIST)
     SETTING.current_panel=panelidx;
     SETTING.update_panel_control('clear');
 end
-
 % update data list and roi list
 populate_list(handles.LIST_DATA,{hDATA.data.dataname},1); %#ok<NODEF>
 populate_list(handles.LIST_ROI,{hDATA.data(1).roi.name},1); %#ok<NODEF>
-
 % update info window
 update_info(sprintf('%s\n','New Session Initialised'),1,handles.EDIT_INFO);
 
@@ -1099,7 +1096,7 @@ switch eventdata.Key
         combkey=eventdata.Key;
     case {'f','F'}
         %display
-        if strmatch(combkey,'control','exact');
+        if strcmp(combkey,'control');
             %search field name
             tabledata=hObject.Data;
             if ~isempty(tabledata)

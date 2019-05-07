@@ -45,7 +45,7 @@ end
 
 
 % --- Executes just before GUI_BATCH_PROCESS is made visible.
-function GUI_BATCH_PROCESS_OpeningFcn(hObject, eventdata, handles, varargin)
+function GUI_BATCH_PROCESS_OpeningFcn(hObject, ~, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -83,7 +83,7 @@ iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_save.png'));
 set(handles.BUTTON_SAVE,'CData',iconimg);
 
 % --- Outputs from this function are returned to the command line.
-function varargout = GUI_BATCH_PROCESS_OutputFcn(hObject, eventdata, handles)
+function varargout = GUI_BATCH_PROCESS_OutputFcn(~, ~, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -96,24 +96,26 @@ varargout{1} = handles.output;
 %#ok<*DEFNU>
 function BUTTON_OPEN_Callback(~, ~, handles)
 % Open saved batch processing file (bpf)
-global BATCHPROC;
+global BATCHPROC SETTING;
 % ask for file to open
-[filename,pathname]=uigetfile('*.bpf','Select the batch process file');
+[filename,pathname]=uigetfile('*.bpf','Select the batch process file',SETTING.rootpath.saved_data);
 if ischar(pathname)
     % load file
     temp=load(cat(2,pathname,filename),'-mat');
     BATCHPROC=temp.BATCHPROC;
     % update LIST_BATCHPROCESS
     handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
+    SETTING.rootpath.saved_data=pathname;
 end
 
 function BUTTON_SAVE_Callback(~, ~, ~)
 % Save current settings to batch processing file (bpf)
-global BATCHPROC; %#ok<NUSED>
-[filename, pathname] = uiputfile({'*.bpf','Batch Process Files'},'Save as');
+global BATCHPROC SETTING; %#ok<NUSED>
+[filename, pathname] = uiputfile({'*.bpf','Batch Process Files'},'Save as',SETTING.rootpath.saved_data);
 if ischar(pathname)
     % save to file
     save(cat(2,pathname,filename),'BATCHPROC','-mat');
+    SETTING.rootpath.saved_data=pathname;
 end
 % --------------------------------------------------------------------
 % --- Executes on selection change in LIST_OPERATOR.
@@ -249,8 +251,7 @@ handles.LIST_SELDATA.Value=newseldata;
 %---
 
 %--------------------------------------------------------------------------
-function GUI_BATCH_PROCESS_CloseRequestFcn(hObject, eventdata, handles)
+function GUI_BATCH_PROCESS_CloseRequestFcn(hObject, ~, ~)
 % close GUI and return control to MAIN_GUI
 delete(hObject);
-
 %--------------------------------------------------------------------------

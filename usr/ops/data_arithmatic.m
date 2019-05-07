@@ -128,7 +128,7 @@ try
                 obj.data(current_data).datainfo.parent_data_idx=parent_data;
                 obj.data(current_data).datainfo.operator='data_arithmatic';
             else
-                current_data=obj.current_data;
+                parent_data=obj.data(current_data).datainfo.parent_data_idx;
             end
             obj.data(current_data).datainfo.operation_string=operation;
             % apply actual arithmatic operation

@@ -15,17 +15,27 @@ try
                 delete(obj.data(index(data_idx)).roi(r_idx).handle);%clear handle
             end
             message=sprintf('%sdeleting data %g\n',message,index(data_idx));
+            % possible check for parent and children data index consistency
+            ischildren=find(cellfun(@(x)~isempty(find(x.parent_data_idx==index(data_idx),1)),{obj.data.datainfo}));
+            for childidx=1:numel(ischildren)
+                obj.data(ischildren(childidx)).datainfo.parent_data_idx=[];
+            end
         end
-        %clear data structure
+        %clear data structure in one go
         obj.data(index)=[];
-        
-        % possible check for parent and children data index consistency
-        %update data_idx
+                
+        % update data_idx
         for data_idx=min(index):1:numel(obj.data)
+            previous_idx=obj.data(data_idx).datainfo.data_idx;
             obj.data(data_idx).datainfo.data_idx=data_idx;
+            % possible update parent and children data index consistency
+            ischildren=find(cellfun(@(x)~isempty(find(x.parent_data_idx==previous_idx,1)),{obj.data.datainfo}));
+            for childidx=1:numel(ischildren)
+                obj.data(ischildren(childidx)).datainfo.parent_data_idx=data_idx;
+            end
         end
         
-        %need to efficiently update parent data index
+        % update current data
         obj.current_data=min(index)-1;
         message=sprintf('%s%g data removed\n',message,numel(index));
         status=true;
