@@ -1,5 +1,5 @@
 function varargout = MAIN_GUI(varargin)
-% Fluorescence Imaging Microscopy Analysis Software Ver 1.2.5
+% Fluorescence Imaging Microscopy Analysis Software Ver 1.2.6
 % Author: Kaiyu Zheng
 % Email: k.zheng@ucl.ac.uk
 % -------------------------------
@@ -10,7 +10,7 @@ function varargout = MAIN_GUI(varargin)
 % Operating System: 64bit Matlab 2016a on Linux/Mac/Windows
 % PDF Manual: require xpdf on linux and default pdf viewer on Mac/Windows
 
-% Last Modified by GUIDE v2.5 07-May-2019 17:27:53
+% Last Modified by GUIDE v2.5 08-May-2019 12:33:57
 
 %==============================================================
 % Begin initialization code - DO NOT EDIT
@@ -32,7 +32,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 %==============================================================
-
 % --- Executes just before MAIN_GUI is made visible.
 function MAIN_GUI_OpeningFcn(hObject, ~, handles, varargin)
 % Choose default command line output for MAIN_GUI
@@ -262,8 +261,6 @@ if success
 end
 update_info(sprintf('%s\n',message),1,handles.EDIT_INFO);
 % --------------------------------------------------------------------
-
-% --- Executes when user attempts to close MAIN_GUI.
 function MAIN_GUI_CloseRequestFcn(hObject, ~, handles)
 global hDATA SETTING;
 % ask for confirmation
@@ -296,7 +293,6 @@ switch button
 end
 
 % --------------------------------------------------------------------
-% --- Executes on selection change in LIST_DATA.
 function LIST_DATA_Callback(hObject, ~, handles)
 global hDATA;
 % get selected data index
@@ -338,7 +334,6 @@ switch clicktype
         hDATA.current_data=data_idx;
 end
 
-% --- Executes on key press with focus on LIST_DATA and none of its controls.
 function LIST_DATA_KeyPressFcn(~, eventdata, handles)
 switch eventdata.Key
     case {'uparrow','downarrow','alt','shift','control'}
@@ -450,7 +445,6 @@ switch answer
 end
 
 %---------------------------------------------------------------
-% --- Executes when entered data in editable cell(s) in TABLE_DATAINFO.
 function TABLE_DATAINFO_CellEditCallback(hObject, eventdata, handles)
 global hDATA;
 % get current datainfo data
@@ -475,8 +469,6 @@ if eventdata.Indices(1,1)==1
 end
 
 %---------------------------------------------------------------
-
-% --- Executes on selection change in MENU_USEROP.
 function MENU_USEROP_Callback(hObject, ~, handles)
 global hDATA;
 % get user operation names
@@ -490,7 +482,6 @@ set(hObject,'UserData',operator);
 % display help text in the EDIT_INFO field for selected user operation
 hDATA.display_data_operator(handles.EDIT_INFO,idx);
 
-% --- Executes on button press in BUTTON_CALCULATE.
 function BUTTON_CALCULATE_Callback(~, ~, handles)
 % apply selected user operation to selected data
 global hDATA;
@@ -629,14 +620,16 @@ function BUTTON_PROCESSBATCH_Callback(~, ~, handles)
 % acutally apply the whole batch process and wait for result
 global BATCHPROC hDATA;
 % get selected index
-seldata=num2str(handles.LIST_DATA.Value);
-%---
+newseldata=handles.LIST_DATA.Value;
+seldata=num2str(newseldata);
 % go through all the operations, ignoring the first one
 for opidx=2:numel(BATCHPROC)
     % get function name
     funcname=BATCHPROC(opidx).operation;
     % get function argument
     funcarg=BATCHPROC(opidx).parameters;
+    temp=regexp(funcname,'_','split');
+    functype=temp{1};
     % see if we specified data or not
     switch funcarg.selected_data
         case '1'
@@ -650,16 +643,36 @@ for opidx=2:numel(BATCHPROC)
     tempname=sprintf('''%s'',',tempname{:});
     paramarg=sprintf('{%s}',tempname(1:end-1));
     % evaluate
-    [~,success,message]=evalc(sprintf('%s(%s,[%s],false,%s)',funcname,'hDATA',seldata,paramarg));
-    if ~success
-        errordlg(message);
+    switch functype
+        case 'data'
+            [~,success,message]=evalc(sprintf('%s(%s,[%s],false,%s);',funcname,'hDATA',seldata,paramarg));
+            if ~success
+                errordlg(message);
+            end
+            % find if we have new seldata index from message
+            tempname=regexp(message,'(?<=Data )(([0-9])* to ([0-9])*)','match');
+            newseldata=unique(cellfun(@(x)str2double(x{2}),regexp(tempname,' to ','split')));
+            %[ success, message ]=datahandle.data_delete(seldata);
+            seldata=num2str(newseldata);
+        case 'op'
+            for stepidx=1:1:2
+                switch stepidx
+                    case 1
+                        % create new data first
+                        [~,success,message] = evalc(sprintf('%s(%s,''add_data'',''data_index'',[%s]);',funcname,'hDATA',seldata));
+                    case 2
+                        % run operation without default parameters
+                        [~,success,message] = evalc(sprintf('%s(%s,''calculate_data'',''data_index'',[%s],''batch_param'',%s);',funcname,'hDATA',seldata,paramarg));
+                end
+                if ~success
+                    errordlg(message);
+                end
+                % find if we have new seldata index from message
+                tempname=regexp(message,'(?<=Data )(([0-9])* to ([0-9])*)','match');
+                newseldata=unique(cellfun(@(x)str2double(x{2}),regexp(tempname,' to ','split')));
+                seldata=num2str(newseldata);
+            end
     end
-    % find if we have new seldata index from message
-    tempname=regexp(message,'(?<=Data )(([0-9])* to ([0-9])*)','match');
-    newseldata=unique(cellfun(@(x)str2double(x{2}),regexp(tempname,' to ','split')));
-    
-    %[ success, message ]=datahandle.data_delete(seldata);
-    seldata=num2str(newseldata);
 end
 % update data list
 handles.LIST_DATA.String={hDATA.data.dataname};
@@ -694,7 +707,6 @@ if ischar(pathname)
 end
 %---------------------------------------------------------------
 % ROI FUNCTIONS
-% --- Executes on key press with focus on LIST_ROI and none of its controls.
 function LIST_ROI_KeyPressFcn(~, eventdata, handles)
 persistent combkey;%for combination keys
 switch eventdata.Key
@@ -758,7 +770,6 @@ switch eventdata.Key
         update_info(sprintf('%s key assignment unknown.\n',eventdata.Key),1,handles.EDIT_INFO);
 end
 
-% --- Executes on selection change in LIST_ROI.
 function LIST_ROI_Callback(hObject, ~, handles)
 global hDATA;
 selected_roi=get(hObject,'Value');
@@ -785,7 +796,6 @@ if success
 end
 %print command output from the user function steps
 update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
-
 
 % add polyline roi to data
 function BUTTON_ROIPOLYLINE_Callback(~, ~, handles)
@@ -906,7 +916,6 @@ end
 update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
 
 %--------------------------------------------------------------
-% --- Executes on selection change in MENU_DATA_Z
 function MENU_DATA_Z_Callback(hObject, ~, handles)
 global SETTING;
 % get Z slice index
@@ -951,7 +960,6 @@ for p_idx=[1,2,3]
     end
 end
 
-% --- Executes on selection change in MENU_DATA_T.
 function MENU_DATA_T_Callback(hObject, ~, handles)
 global SETTING;
 % get T page index
@@ -988,8 +996,6 @@ for p_idx=[1,2]
     end
 end
 
-
-% --- Executes on button press in BUTTON_LINK.
 function BUTTON_LINK_Callback(hObject, ~, ~)
 global SETTING;
 if get(hObject,'Value')
@@ -1002,7 +1008,6 @@ else
     set(hObject,'CData',iconimg);
 end
 
-% --- Executes on selection change in MENU_PARAMETER.
 function MENU_PARAMETER_Callback(hObject, ~, handles)
 global SETTING;
 % get T page index
@@ -1052,7 +1057,6 @@ for p_idx=[4,5,6]
     end
 end
 
-% --- Executes on selection change in MENU_RESULT_Z.
 function MENU_RESULT_Z_Callback(hObject, ~, handles)
 global SETTING;
 % get T page index
@@ -1107,7 +1111,6 @@ if get(handles.BUTTON_LINK,'Value')
     MENU_DATA_Z_Callback(handles.MENU_DATA_Z, [], handles);
 end
 
-% --- Executes on selection change in MENU_RESULT_T.
 function MENU_RESULT_T_Callback(hObject, ~, handles)
 global hDATA SETTING;
 % get T page index
@@ -1254,6 +1257,8 @@ populate_list(handles.LIST_ROI,{hDATA.data(1).roi.name},1); %#ok<NODEF>
 % update info window
 update_info(sprintf('%s\n','New Session Initialised'),1,handles.EDIT_INFO);
 
+%--------------------------------------------------------------------------
+% search through list of metadata table
 function fieldsearch(hObject, eventdata, ~)
 global SETTING;
 persistent combkey;%for combination keys

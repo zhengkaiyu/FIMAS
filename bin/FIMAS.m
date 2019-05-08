@@ -41,7 +41,7 @@ set(0,'DefaultUicontrolForegroundColor','w');
 [ ver, date ] = version;
 release_yr = str2double(datestr(date,'YYYY'));
 switch release_yr
-    case {2015,2016,2017,2018}
+    case {2015,2016,2017,2018,2019}
         feature('accel','on');
         %{
         poolobj = gcp('nocreate');

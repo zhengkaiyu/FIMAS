@@ -141,7 +141,7 @@ try
                             return;
                     end
                     % add new data
-                    [ success, message ] = obj.data_add(cat(2,'data_crop|',obj.data(current_data).dataname),[clock_data,obj.data(current_data).dataval(spc_index,2:3)],[]);
+                    [ success, ~ ] = obj.data_add(cat(2,'data_crop|',obj.data(current_data).dataname),[clock_data,obj.data(current_data).dataval(spc_index,2:3)],[]);
                     % recalculate dimension data
                     if success
                         parent_data=current_data;
@@ -194,7 +194,7 @@ try
                     end
                     newdataval=obj.data(current_data).dataval(crop_index{1},crop_index{2},crop_index{3},crop_index{4},crop_index{5});
                     % add new data
-                    [ success, message ] = obj.data_add(cat(2,'data_crop|',obj.data(current_data).dataname),newdataval,[]);
+                    [ success, ~ ] = obj.data_add(cat(2,'data_crop|',obj.data(current_data).dataname),newdataval,[]);
                     % recalculate dimension data
                     if success
                         parent_data=current_data;

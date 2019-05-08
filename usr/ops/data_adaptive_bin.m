@@ -1,8 +1,12 @@
 function [ status, message ] = data_adaptive_bin( obj, selected_data, askforparam, defaultparam )
 % data_adaptive_bin bin currently selected data in provided dimensions
+% (function check)
+%--------------------------------------------------------------------------
 %   The process is irreversible, therefore new data holder will be created.
 %   Data which does not fit into whole bins at the end will be discarded
 %   Default mode is sum. nan* mode should be used if data contain nan
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %% function check
 

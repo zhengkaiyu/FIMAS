@@ -1,6 +1,14 @@
 function [ status, message ] = op_NTC( data_handle, option, varargin )
 %OP_NTC Calculate Normalised Total Count from traces or images
+%--------------------------------------------------------------------------
+%   1. Using normalised total count to estimate calcium
 %
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','bin_dim','[1,1,1,1,1]','fit_t0','3e-10','fit_t1','9e-9','bg_threshold','10','t_disp_bound','[0.05,0.5,64]','parameter_space','');
+%   selected_data=data index, 1 means previous generated data
+%
+%--------------------------------------------------------------------------
+%   HEADER END
 
 parameters=struct('note','',...
     'operator','op_NTC',...
@@ -11,8 +19,11 @@ parameters=struct('note','',...
     'bg_threshold',10,... %background threshold
     't_disp_bound',[0.05,0.5,64]);
 
-status=false;message='';
-
+% assume worst
+status=false;
+% for batch process must return 'Data parentidx to childidx *' for each
+% successful calculation
+message='';
 try
     data_idx=data_handle.current_data;%default to current data
     % get optional input if exist
@@ -24,9 +35,16 @@ try
         % loop through to assign input values
         for option_idx=1:numel(usroption)
             switch usroption{option_idx}
-                case 'data_index'
+                case {'data_index','selected_data'}
                     % specified data indices
                     data_idx=usrval{option_idx};
+                case 'batch_param'
+                    % batch processing need to modify parameters to user
+                    % specfication
+                    op_NTC(data_handle, 'modify_parameters','data_index',data_idx,'paramarg',usrval{option_idx});
+                case 'paramarg'
+                    % batch processing passed on modified paramaters
+                    varargin=usrval{option_idx};
             end
         end
     end
@@ -62,7 +80,7 @@ try
                                 end
                                 % pass on metadata info
                                 data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
-                                message=sprintf('%s added\n',data_handle.data(new_data).dataname);
+                                message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
                                 message=sprintf('only take XT or XYT data type\n');
@@ -73,50 +91,52 @@ try
                 end
             end
         case 'modify_parameters'
-            current_data=data_handle.current_data;
-            %change parameters from this method only
-            for pidx=numel(varargin)/2
-                parameters=varargin{2*pidx-1};
-                val=varargin{2*pidx};
-                switch parameters
-                    case 'note'
-                        data_handle.data(current_data).datainfo.note=num2str(val);
-                        status=true;
-                    case 'operator'
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                    case 'fit_t0'
-                        val=str2double(val);
-                        if val>=data_handle.data(current_data).datainfo.fit_t1;
-                            message=sprintf('%sfit_t0 must be strictly < fit_t1\n',message);
-                            status=false;
-                        else
-                            data_handle.data(current_data).datainfo.fit_t0=val;
+            for current_data=data_idx
+                %change parameters from this method only
+                for pidx=1:1:numel(varargin)/2
+                    parameters=varargin{2*pidx-1};
+                    val=varargin{2*pidx};
+                    switch parameters
+                        case 'note'
+                            data_handle.data(current_data).datainfo.note=num2str(val);
                             status=true;
-                        end
-                        
-                    case 'fit_t1'
-                        val=str2double(val);
-                        if val<=data_handle.data(current_data).datainfo.fit_t0;
-                            message=sprintf('%sfit_t1 must be strictly > fit_t0\n',message);
+                        case 'operator'
+                            message=sprintf('%sUnauthorised to change %s\n',message,parameters);
                             status=false;
-                        else
-                            data_handle.data(current_data).datainfo.fit_t1=val;
+                        case 'fit_t0'
+                            val=str2double(val);
+                            if val>=data_handle.data(current_data).datainfo.fit_t1;
+                                message=sprintf('%sfit_t0 must be strictly < fit_t1\n',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.fit_t0=val;
+                                status=true;
+                            end
+                        case 'bin_dim'
+                            [status,~]=data_handle.edit_datainfo(current_data,'bin_dim',val);
+                        case 'fit_t1'
+                            val=str2double(val);
+                            if val<=data_handle.data(current_data).datainfo.fit_t0;
+                                message=sprintf('%sfit_t1 must be strictly > fit_t0\n',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.fit_t1=val;
+                                status=true;
+                            end
+                        case 'bg_threshold'
+                            val=str2double(val);
+                            data_handle.data(current_data).datainfo.bg_threshold=val;
                             status=true;
-                        end
-                    case 'bg_threshold'
-                        val=str2double(val);
-                        data_handle.data(current_data).datainfo.bg_threshold=val;
-                        status=true;
-                    case 'parameter_space'
-                        data_handle.data(current_data).datainfo.parameter_space=val;
-                        status=true;
-                    otherwise
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                end
-                if status
-                    message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                        case 'parameter_space'
+                            data_handle.data(current_data).datainfo.parameter_space=val;
+                            status=true;
+                        otherwise
+                            message=sprintf('%sUnauthorised to change %s\n',message,parameters);
+                            status=false;
+                    end
+                    if status
+                        message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                    end
                 end
             end
         case 'calculate_data'
@@ -171,7 +191,7 @@ try
                         for p_idx=1:p_total
                             % check waitbar
                             if getappdata(waitbar_handle,'canceling')
-                                message=sprintf('NTC calculation cancelled\n');
+                                message=sprintf('%s\nNTC calculation cancelled',message);
                                 delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
                                 return;
                             end
@@ -207,6 +227,7 @@ try
                         data_handle.data(current_data).datainfo.t=0;
                         delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
+                        message=sprintf('%s\nData %s to %s NTC calculated.',message,num2str(parent_data),num2str(current_data));
                         status=true;
                     case {'DATA_TRACE'}
                         min_threshold=data_handle.data(current_data).datainfo.bg_threshold;
@@ -220,8 +241,9 @@ try
                         data_handle.data(current_data).datainfo.data_dim=[1,1,1,1,1];
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
-                        message=sprintf('NTC = %g\n',val);
-                        status=1;
+                        message=sprintf('%s\nNTC = %g',message,val);
+                        message=sprintf('%s\nData %s to %s NTC calculated.',message,num2str(parent_data),num2str(current_data));
+                        status=true;
                 end
             end
     end
@@ -229,7 +251,7 @@ catch exception
     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end
-    message=exception.message;
+    message=sprintf('%s\n%s',message,exception.message);
 end
 
     function val=calculate_ntc(t,data,max_idx,min_threshold,t_duration)

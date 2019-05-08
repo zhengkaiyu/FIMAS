@@ -1,6 +1,6 @@
 function [ status, message ] = data_batch_process( obj, selected_data, askforparam, defaultparam )
-%DATA_BATCH_PROCESS Summary of this function goes here
-%   Detailed explanation goes here
+%DATA_BATCH_PROCESS DO NOT USE
+
 temp=evalc('obj.display_data_operator([],[])');
 oplist=regexp(temp,'\s*','split');
 oplist=oplist(1:end-1);

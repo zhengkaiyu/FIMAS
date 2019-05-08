@@ -1,6 +1,10 @@
 function [ status, message ] = op_MapFunc( data_handle, option, varargin )
 %OP_MAPFUNC converts input scalar value to output scalar value according to
 %the function specified
+%   1. calibration function in the fucntion libarary is inverse logistic x=x0*((a1-y)/(y-a2))^(1/p))
+%
+%   2. Mapping function of scalar to scalar
+%
 % --- Function Library ---
 %----------------------------------------------------------------------
 %---OGB1---
@@ -38,7 +42,13 @@ function [ status, message ] = op_MapFunc( data_handle, option, varargin )
 %------- BH femtonics 3ns NTC interval ------
 %1det_33C_UR_3ns_bgcorr: '@(x)46.65768*((0.14742-x)./(x-0.53825)).^(1/1.95332)'
 %--------------------------------------------
-
+%
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','calib_func','@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)','t_disp_bound','[0,200,128]','disp_lb','20','disp_ub','100','parameter_space','[Ca2+]');
+%   selected_data=data index, 1 means previous generated data
+%
+%--------------------------------------------------------------------------
+%   HEADER END
 
 parameters=struct('note','',...
     'operator','op_MapFunc',...
@@ -48,11 +58,11 @@ parameters=struct('note','',...
     'disp_ub',100,...
     'calib_func','@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)');
 
-%inverse logistic x=x0*((a1-y)/(y-a2))^(1/p))
-
-
-status=[];message='';
-
+% assume worst
+status=false;
+% for batch process must return 'Data parentidx to childidx *' for each
+% successful calculation
+message='';
 try
     data_idx=data_handle.current_data;%default to current data
     % get optional input if exist
@@ -67,6 +77,13 @@ try
                 case 'data_index'
                     % specified data indices
                     data_idx=usrval{option_idx};
+                case 'batch_param'
+                    % batch processing need to modify parameters to user
+                    % specfication
+                    op_NTC(data_handle, 'modify_parameters','data_index',data_idx,'paramarg',usrval{option_idx});
+                case 'paramarg'
+                    % batch processing passed on modified paramaters
+                    varargin=usrval{option_idx};
             end
         end
     end
@@ -98,7 +115,7 @@ try
                                 data_handle.data(new_data).datainfo.parameter_space={'[Ca2+]'};
                                 % pass on metadata info
                                 data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
-                                message=sprintf('%s added\n',data_handle.data(new_data).dataname);
+                                message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
                                 message=sprintf('only take XT or XYT data type\n');
@@ -108,54 +125,55 @@ try
             end
             % ---------------------
         case 'modify_parameters'
-            current_data=data_handle.current_data;
-            %change parameters from this method only
-            for pidx=numel(varargin)/2
-                parameters=varargin{2*pidx-1};
-                val=varargin{2*pidx};
-                switch parameters
-                    case 'note'
-                        data_handle.data(current_data).datainfo.note=num2str(val);
-                        status=true;
-                    case 'operator'
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                    case 'disp_lb'
-                        val=str2double(val);
-                        if val>=data_handle.data(current_data).datainfo.disp_ub;
-                            message=sprintf('disp_lb must be strictly < disp_ub\n');
+            for current_data=data_idx
+                %change parameters from this method only
+                for pidx=1:1:numel(varargin)/2
+                    parameters=varargin{2*pidx-1};
+                    val=varargin{2*pidx};
+                    switch parameters
+                        case 'note'
+                            data_handle.data(current_data).datainfo.note=num2str(val);
+                            status=true;
+                        case 'operator'
+                            message=sprintf('%sUnauthorised to change %s\n',message,parameters);
                             status=false;
-                        else
-                            data_handle.data(current_data).datainfo.disp_lb=val;
+                        case 'disp_lb'
+                            val=str2double(val);
+                            if val>=data_handle.data(current_data).datainfo.disp_ub;
+                                message=sprintf('%s\ndisp_lb must be strictly < disp_ub',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.disp_lb=val;
+                                status=true;
+                            end
+                        case 'disp_ub'
+                            val=str2double(val);
+                            if val<=data_handle.data(current_data).datainfo.disp_lb;
+                                message=sprintf('%s\ndisp_ub must be strictly > disp_up',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.disp_ub=val;
+                                status=true;
+                            end
+                        case 'calib_func'
+                            %check function format
+                            if isempty(regexp(val,'@[(]x[)]\S*','match'))
+                                %have no @(x)*x*
+                                errordlg('function must be in the format @(x)f(x)');
+                            else
+                                data_handle.data(current_data).datainfo.calib_func=val;
+                                status=true;
+                            end
+                        case 'parameter_space'
+                            data_handle.data(current_data).datainfo.parameter_space=num2str(val);
                             status=true;
-                        end
-                    case 'disp_ub'
-                        val=str2double(val);
-                        if val<=data_handle.data(current_data).datainfo.disp_lb;
-                            message=sprintf('disp_ub must be strictly > disp_up\n');
+                        otherwise
+                            message=sprintf('%s\nUnauthorised to change %s',message,parameters);
                             status=false;
-                        else
-                            data_handle.data(current_data).datainfo.disp_ub=val;
-                            status=true;
-                        end
-                    case 'calib_func'
-                        %check function format
-                        if isempty(regexp(val,'@[(]x[)]\S*','match'))
-                            %have no @(x)*x*
-                            errordlg('function must be in the format @(x)f(x)');
-                        else
-                            data_handle.data(current_data).datainfo.calib_func=val;
-                            status=true;
-                        end
-                    case 'parameter_space'
-                        data_handle.data(current_data).datainfo.parameter_space=num2str(val);
-                        status=true;
-                    otherwise
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                end
-                if status
-                    message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                    end
+                    if status
+                        message=sprintf('%s\n%s has changed to %s',message,parameters,val);
+                    end
                 end
             end
             % ---------------------
@@ -175,6 +193,7 @@ try
                             data_handle.data(current_data).dataval=val;
                             data_handle.data(current_data).datatype=data_handle.get_datatype;
                             data_handle.data(current_data).datainfo.last_change=datestr(now);
+                            message=sprintf('%s\nData %s to %s mapped.',message,num2str(parent_data),num2str(current_data));
                             status=true;
                         else
                             fprintf('Calculate Parent Data first\n');
@@ -183,6 +202,8 @@ try
             end
     end
 catch exception
-    message=exception.message;
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
+    message=sprintf('%s\n%s',message,exception.message);
 end
-

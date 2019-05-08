@@ -1,6 +1,9 @@
 function [ status, message ] = data_showscanline( obj, selected_data, askforparam, defaultparam )
-%DATA_showscanline plot line scan trace onto background image for femtonics
-%data
+%DATA_showscanline plot line scan trace onto background image for femtonics data
+%--------------------------------------------------------------------------
+%
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %% function complete
 % assume worst

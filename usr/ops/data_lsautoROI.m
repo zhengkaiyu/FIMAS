@@ -1,8 +1,12 @@
-function [ status, message ] = data_lsautoROI( obj, selected_data, askforparam, defaultparam ) )
+function [ status, message ] = data_lsautoROI( obj, selected_data, askforparam, defaultparam )
 %DATA_LSAUTOROI automatically find roi in a linescan image
+%(function check)
+%--------------------------------------------------------------------------
 %   Image must be in XT format
 %   Apply to reference image is more reliable and you can copy and paste
 %   roi to the reporter image afterwards
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %% function check
 % assume worst
@@ -147,7 +151,10 @@ try
             min_peakw=ceil(peak_width_min/obj.data(current_data).datainfo.(cat(2,'d',profile_dim)));
             max_peakw=ceil(peak_width_max/obj.data(current_data).datainfo.(cat(2,'d',profile_dim)));
             
-            [~,peakpos]=findpeaks(temp,'minpeakheight',min_peakh,'minpeakdistance',min_peakd);
+            [~,peakpos]=findpeaks(temp,'minpeakheight',min_peakh,...
+                'minpeakdistance',min_peakd,...
+                'minpeakwidth',min_peakw,...
+                'maxpeakwidth',max_peakw);
             if ~isempty(peakpos)
                 for roi_idx=1:numel(peakpos)
                     sl=max((peakpos(roi_idx)-max_peakw),1);
