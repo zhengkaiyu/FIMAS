@@ -4,6 +4,7 @@ function [ status, message ] = op_Spiral2Img( data_handle, option, varargin )
 
 parameters=struct('note','',...
     'operator','op_Spiral2Img',...
+    'ref_dataindex',[],...
     'ref_scanline',[],...
     'bin_dim',[1,1,1,1,1],...
     'grid_interp_size',1,...
@@ -40,7 +41,7 @@ try
                                 %XT (01001), tXT (11001), tX (11000)
                                 parent_data=current_data;
                                 % add new data
-                                data_handle.data_add(cat(2,'op_Spiral2Img|',data_handle.data(current_data).dataname),[],[]);
+                                data_handle.data_add(sprintf('%s|%s',parameters.operator,data_handle.data(current_data).dataname),[],[]);
                                 % get new data index
                                 new_data=data_handle.current_data;
                                 % copy over datainfo
@@ -53,6 +54,15 @@ try
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
                                 % pass on metadata info
                                 data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
+                                % scan indices should be in the metainfo
+                                if isfield(data_handle.data(new_data).metainfo,'ScanLine')
+                                    data_handle.data(new_data).datainfo.ref_dataindex=new_data;
+                                    data_handle.data(new_data).datainfo.ref_scanline=data_handle.data(new_data).metainfo.ScanLine;
+                                else
+                                    % no scanline metainfo in the dataitem need user specify
+                                    data_handle.data(new_data).datainfo.ref_dataindex=[];
+                                    data_handle.data(new_data).datainfo.ref_scanline=[];
+                                end
                                 message=sprintf('%s added\n',data_handle.data(new_data).dataname);
                                 status=true;
                             otherwise
@@ -76,31 +86,40 @@ try
                     case 'operator'
                         message=sprintf('%sUnauthorised to change %s\n',message,parameters);
                         status=false;
-                    case 'ref_scanline'
+                    case 'ref_dataindex'
                         status=false;
                         % ask for ref .mat file or ref data item
-                        orig_ref= data_handle.data(current_data).datainfo.ref_scanline;
-                        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-                        set(0,'DefaultUicontrolForegroundColor','k');
-                        % ask to select dataitem
-                        [s,v]=listdlg('ListString',{data_handle.data.dataname},...
-                            'SelectionMode','single',...
-                            'Name','op_Spiral2Img',...
-                            'PromptString','Select scanref data item',...
-                            'ListSize',[400,300]);
-                        set(0,'DefaultUicontrolBackgroundColor','k');
-                        set(0,'DefaultUicontrolForegroundColor','w');
-                        if v
-                            % check if scanline field exist
-                            if isfield(data_handle.data(s).datainfo,'ScanLine')
-                                data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(s).datainfo.ScanLine;
-                                message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
-                            else
-                                errordlg('Selected dataitem has now ScanLine information','Check selection','modal');
-                            end
+                        orig_ref = data_handle.data(current_data).datainfo.ref_scanline;
+                        val=str2double(val);
+                        if isfield(data_handle.data(val).datainfo,'ScanLine')
+                            % specified ref data index has scanline field
+                            data_handle.data(current_data).datainfo.ref_dataindex=val;
+                            data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(val).datainfo.ScanLine;
+                            message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
                         else
-                            % didn't change
-                            data_handle.data(current_data).datainfo.ref_scanline=orig_ref;
+                            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
+                            set(0,'DefaultUicontrolForegroundColor','k');
+                            % ask to select dataitem
+                            [s,v]=listdlg('ListString',{data_handle.data.dataname},...
+                                'SelectionMode','single',...
+                                'Name','op_Spiral2Img',...
+                                'PromptString','Select scanref data item, specified data has no scanline',...
+                                'ListSize',[400,300]);
+                            set(0,'DefaultUicontrolBackgroundColor','k');
+                            set(0,'DefaultUicontrolForegroundColor','w');
+                            if v
+                                % check if scanline field exist
+                                if isfield(data_handle.data(s).datainfo,'ScanLine')
+                                    data_handle.data(current_data).datainfo.ref_dataindex=s;
+                                    data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(s).datainfo.ScanLine;
+                                    message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
+                                else
+                                    errordlg('Selected dataitem has now ScanLine information','Check selection','modal');
+                                end
+                            else
+                                % didn't change
+                                data_handle.data(current_data).datainfo.ref_scanline=orig_ref;
+                            end
                         end
                     case 'grid_interp_size'
                         % ask to select dataitem

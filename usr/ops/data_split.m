@@ -70,6 +70,7 @@ try
                         end
                     else
                         message=sprintf('%s\nAction cancelled!',message);
+                        return;
                     end
             end
             % ask for split instruction string

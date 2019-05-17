@@ -63,6 +63,7 @@ status=false;
 % for batch process must return 'Data parentidx to childidx *' for each
 % successful calculation
 message='';
+askforparam=true;
 try
     data_idx=data_handle.current_data;%default to current data
     % get optional input if exist
@@ -84,6 +85,8 @@ try
                 case 'paramarg'
                     % batch processing passed on modified paramaters
                     varargin=usrval{option_idx};
+                    
+                    askforparam=false;
             end
         end
     end
@@ -101,7 +104,7 @@ try
                                 % XYT (01101) / XYZ (01110) / XYZT (01111)
                                 parent_data=current_data;
                                 % add new data
-                                data_handle.data_add(cat(2,'op_MapFunc|',data_handle.data(current_data).dataname),[],[]);
+                                data_handle.data_add(sprintf('%s|%s',parameters.operator,data_handle.data(current_data).dataname),[],[]);
                                 % get new data index
                                 new_data=data_handle.current_data;
                                 % copy over datainfo
@@ -118,7 +121,7 @@ try
                                 message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
-                                message=sprintf('only take XT or XYT data type\n');
+                                message=sprintf('%s\nonly take XT or XYT data type.',message);
                                 return;
                         end
                 end
@@ -135,7 +138,7 @@ try
                             data_handle.data(current_data).datainfo.note=num2str(val);
                             status=true;
                         case 'operator'
-                            message=sprintf('%sUnauthorised to change %s\n',message,parameters);
+                            message=sprintf('%s\nUnauthorised to change %s',message,parameters);
                             status=false;
                         case 'disp_lb'
                             val=str2double(val);
@@ -168,11 +171,11 @@ try
                             data_handle.data(current_data).datainfo.parameter_space=num2str(val);
                             status=true;
                         otherwise
-                            message=sprintf('%s\nUnauthorised to change %s',message,parameters);
+                            message=sprintf('%s\nUnauthorised to change %s.',message,parameters);
                             status=false;
                     end
                     if status
-                        message=sprintf('%s\n%s has changed to %s',message,parameters,val);
+                        message=sprintf('%s\n%s has changed to %s.',message,parameters,val);
                     end
                 end
             end
@@ -193,7 +196,7 @@ try
                             data_handle.data(current_data).dataval=val;
                             data_handle.data(current_data).datatype=data_handle.get_datatype;
                             data_handle.data(current_data).datainfo.last_change=datestr(now);
-                            message=sprintf('%s\nData %s to %s mapped.',message,num2str(parent_data),num2str(current_data));
+                            message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
                             status=true;
                         else
                             fprintf('Calculate Parent Data first\n');

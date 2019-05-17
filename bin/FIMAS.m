@@ -1,4 +1,3 @@
-
 function FIMAS
 % FIMAS Main executable of the FIMAS software
 %   Initialises environment for programme and start the main GUI
@@ -17,7 +16,8 @@ warning off all;
 funcpath=mfilename('fullpath');
 
 % move to base directory as we know \bin\FIMAS.m
-cd(funcpath(1:end-9));
+cd(fileparts(funcpath));
+cd('../');
 
 % find all subdirectory
 path=cat(2,pwd,filesep);
@@ -43,24 +43,8 @@ release_yr = str2double(datestr(date,'YYYY'));
 switch release_yr
     case {2015,2016,2017,2018,2019}
         feature('accel','on');
-        %{
-        poolobj = gcp('nocreate');
-        if isempty(poolobj)
-            poolsize = 0;
-        else
-            poolsize = poolobj.NumWorkers;
-        end
-        if poolsize>0
-            % close existing pools
-            delete(poolobj);
-        end
-        % speed up loading pool
-        distcomp.feature( 'LocalUseMpiexec', false );
-        % start parallel workers on the local cluster (max 12 allowed)
-        parpool(min(feature('numCores')-1,12));
-        %}
     case {2008,2009,2010,2011,2012,2013,2014}
-        %matlabpool;
+ 
     otherwise
         errordlg(sprintf('Incompatible MATLAB Version.\nCurrent Version %s\nRequire >R2008a & <R2018a',ver),'Version Error','modal');
 end

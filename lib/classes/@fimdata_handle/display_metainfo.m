@@ -18,7 +18,7 @@ try
         content=[];
         info=[];
         % recursively pull out meta info
-        temp=exhaust_disp(obj.data(data_idx).metainfo);
+        temp=exhaust_disp(obj.data(data_idx).metainfo,'root');
         % if output is not empty
         if ~isempty(content)
             % convert to string format
@@ -53,47 +53,64 @@ catch exception
     message=sprintf('%s\n',exception.message);
 end
 %---------------------------------------------
-    function val = exhaust_disp(var)
+    function val = exhaust_disp(var,topfname)
         val=[];
         if isstruct(var)
+            content{row_idx,1}=sprintf('%s',topfname);
+            content{row_idx,2}='---SECTION START---';
+            row_idx=row_idx+1;
             if isempty(var)
                 f_name=fieldnames(var);
-                 for k=1:length(f_name)
-                    content{row_idx,1}=f_name{k};
+                for k=1:length(f_name)
+                    content{row_idx,1}=sprintf('%s|%s',topfname,f_name{k});
                     content{row_idx,2}=[];
                     row_idx=row_idx+1;
                 end
             else
-                for n=1:size(var,2)
+                for n=1:numel(var)
                     f_name=fieldnames(var(n));
-                    %content{row_idx,2}='------';
-                    %row_idx=row_idx+1;
+                    if n>1
+                        % divider for multiple arrays of the same struct
+                        content{row_idx,2}=sprintf('%s',repmat('-',50,1));
+                        row_idx=row_idx+1;
+                    end
                     for k=1:length(f_name)
-                        f_val=exhaust_disp(var(n).(f_name{k}));
-                        content{row_idx,1}=f_name{k};
+                        f_val=exhaust_disp(var(n).(f_name{k}),sprintf('%s|%s',topfname,f_name{k}));
+                        content{row_idx,1}=sprintf('%s|%s',topfname,f_name{k});
                         % put *void* into empty fields
                         if isempty(f_val)
-                            f_val='*empty*';
+                            if strcmp(content{row_idx,1},content{row_idx-1,1})
+                                % section ending
+                                content(row_idx,:)=[];
+                            else
+                                f_val='*empty*';
+                                content{row_idx,2}=f_val;
+                                row_idx=row_idx+1;
+                            end
+                        else
+                            %convert cell to matrix format
+                            if iscell(f_val)
+                                f_val=data2clip(f_val);
+                            end
+                            %don't display field that is too large
+                            if (isnumeric(f_val))&&(numel(f_val)>10)
+                                f_val=sprintf('matrix of size %d x %d',size(f_val,1),size(f_val,2));
+                            end
+                            content{row_idx,2}=f_val;
+                            row_idx=row_idx+1;
                         end
-                        %convert cell to matrix format
-                        if iscell(f_val)
-                            f_val=data2clip(f_val);
-                        end
-                        %don't display field that is too large
-                        if (isnumeric(f_val))&&(numel(f_val)>10)
-                            f_val=sprintf('matrix of size %d x %d',size(f_val,1),size(f_val,2));
-                        end
-                        content{row_idx,2}=f_val;
-                        row_idx=row_idx+1;
                     end
                 end
             end
+            content{row_idx,1}=sprintf('%s',topfname);
+            content{row_idx,2}='---SECTION END---';
+            row_idx=row_idx+1;
         else
             if ischar(var)
                 %remove everything after carridge return from string
-                temp=find(double(var)>=10&double(var)<=13|double(var)==0,1,'first');
+                temp=char(regexp(var,'[^\n]*','match'));
                 if ~isempty(temp)
-                    var(temp:end)=[];
+                    var=temp;
                 end
             end
             val=var;

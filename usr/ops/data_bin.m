@@ -62,7 +62,7 @@ try
                 % default bin mode is sum
                 opmode='sum';
             end
-            % check mode specified is correct selection
+            % 4. check mode specified is correct selection
             switch opmode
                 case {'mean','nanmean','sum','nansum','max','nanmax','min','nanmin','median','nanmedian'}
                     % valid ones
@@ -70,7 +70,7 @@ try
                     % if invalid operation proposed default to sum
                     opmode='sum';
             end
-            % 4. check for bin calculation mode
+            % 5. check for bin calculation mode
             if isfield(obj.data(current_data).datainfo,'calculator_mode')
                 % specified binning dim reduction
                 calcmode=obj.data(current_data).datainfo.calculator_mode;
@@ -96,6 +96,7 @@ try
             set(0,'DefaultUicontrolBackgroundColor','k');
             set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
+                newdata=str2double(answer{8})==1;
                 % get bin sizes
                 setbinsize=cellfun(@(x)str2double(x),answer(2:6))';
                 if ~newdata
@@ -106,7 +107,6 @@ try
                 % calculation mode
                 opmode=answer{1};
                 calcmode=answer{7};
-                newdata=str2double(answer{8})==1;
                 % update opmode
                 switch opmode
                     case {'mean','nanmean','sum','nansum','max','nanmax','min','nanmin','median','nanmedian'}

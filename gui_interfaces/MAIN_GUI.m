@@ -274,6 +274,12 @@ switch button
         SETTING.rootpath.exported_data=hDATA.path.export;
         SETTING.rootpath.saved_data=hDATA.path.saved;
         rootpath=SETTING.rootpath; %#ok<NASGU>
+        % move back to base directory in case user has looked else where
+        % get current file path
+        funcpath=mfilename('fullpath');
+        % move to base directory as we know \bin\FIMAS.m
+        cd(fileparts(funcpath));
+        cd('../');
         % save to default path file
         save(cat(2,'.',filesep,'lib',filesep,'default_path.mat'),'rootpath','-mat');
         % clear all data handle before exiting
@@ -285,7 +291,7 @@ switch button
         if ~isempty(gc_gui)
             delete(gc_gui);
         end
-        % clsoe main GUI
+        % close main GUI
         delete(hObject);
     case 'No'
         %cancel closure
@@ -519,6 +525,7 @@ if success
     handles.LIST_DATA.Value=hDATA.current_data;% reset to previous as hDATA can only have one current_data
     update_info(sprintf('Output of %s: %s\n',func,message),1,handles.EDIT_INFO);
 else
+    populate_list(handles.LIST_DATA,{hDATA.data.dataname},hDATA.current_data); %#ok<UNRCH>
     update_info(sprintf('Error Messages: %s\n from %s\n',message,func),0,handles.EDIT_INFO);
 end
 beep;pause(0.001);

@@ -107,8 +107,11 @@ try
             %action cancelled
             message=sprintf('%s\nAction cancelled!',message);
         else
-            %flip upside down
+            % flip data upside down along the dimension
             obj.data(current_data).dataval=flip(obj.data(current_data).dataval,dim);
+            % flip dimension information
+            obj.data(current_data).datainfo.(obj.DIM_TAG{dim})=flip(obj.data(current_data).datainfo.(obj.DIM_TAG{dim}));
+            % update change time
             obj.data(current_data).datainfo.last_change=datestr(now);
             status=true;
             message=sprintf('%s\nData %s to %s flipped along %s-axis.',message,num2str(current_data),num2str(current_data),obj.DIM_TAG{dim});

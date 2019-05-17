@@ -1,8 +1,8 @@
-function [ status, message ] = op_peakdetect( data_handle, option, varargin )
+function [ status, message ] = op_PeakDetect( data_handle, option, varargin )
 %OP_PEAKDETECT Peak detection require version R2014 or later
 %   Detailed explanation goes here
 parameters=struct('note','',...
-    'operator','op_peakdetect',...
+    'operator','op_PeakDetect',...
     'parameter_space','width|prominence',...
     'minpeakprominence',1,...%multiple of std
     'minpeakdist',100,...%ms
@@ -44,7 +44,7 @@ try
                                 % T (00001) / XT (01001) / XYT (01101) / XYZT (01111)
                                 parent_data=current_data;
                                 % add new data
-                                data_handle.data_add(cat(2,'op_peakdetect|',data_handle.data(current_data).dataname),[],[]);
+                                data_handle.data_add(sprintf('%s|%s',parameters.operator,data_handle.data(current_data).dataname),[],[]);
                                 % get new data index
                                 new_data=data_handle.current_data;
                                 % copy over datainfo

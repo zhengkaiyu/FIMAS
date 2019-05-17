@@ -1,4 +1,4 @@
-function [ output_args ] = op_imEntropy( input_args )
+function [ output_args ] = op_ImEntropy( input_args )
 %OP_IMENTROPY Summary of this function goes here
 %   Detailed explanation goes here
 

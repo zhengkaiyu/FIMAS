@@ -1,9 +1,9 @@
-function [ status, message ] = op_gatedInt( data_handle, option, varargin )
+function [ status, message ] = op_GatedInt( data_handle, option, varargin )
 %op_gatedInt Calculate Normalised Total Count from traces or images by
 %gate2/gate1 values.  This can be used for G/R
 %
 parameters=struct('note','',...
-    'operator','op_gatedInt',...
+    'operator','op_GatedInt',...
     'parameter_space','gInt',...
     'bin_dim',[1,1,1,1,1],...
     'gate1',[0.5,1.5]*1e-9,...
@@ -43,7 +43,7 @@ try
                                 % tXYT (11101) / tXYZ (11110) / tXYZT (11111)
                                 parent_data=current_data;
                                 % add new data
-                                data_handle.data_add(cat(2,'op_gatedInt|',data_handle.data(current_data).dataname),[],[]);
+                                data_handle.data_add(sprintf('%s|%s',parameters.operator,data_handle.data(current_data).dataname),[],[]);
                                 % get new data index
                                 new_data=data_handle.current_data;
                                 % copy over datainfo
