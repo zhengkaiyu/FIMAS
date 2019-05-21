@@ -1,13 +1,19 @@
 function [ status, message ] = op_Phasor( data_handle, option, varargin )
 %OP_Phasor Does Phasor analysis map on t/T images/traces
+%--------------------------------------------------------------------------
 %
-%=======================================
-%options     values    explanation
-%=======================================
-%disp_lb 0.63ns (OGB1 femtonic)
-%disp_ub 3.68ns (OGB1 femtonic)
-%fixed_comp 2.3ns (iGlu)
-%=======================================
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','t_duration','9','disp_lb','0.53','disp_ub','3.85','fixed_comp','2.3','bg_threshold','10','parameter_space','Llow|Lmid|Lhigh');
+%   selected_data=data index, 1 means previous generated data
+%   t_duration=9, ns of interval for phasor analysis
+%   disp_lb=0.63, ns (OGB1 femtonics) marker for lower tau point
+%   disp_lb=3.85, ns (OGB1 femtonics) marker for upper tau point
+%   fixed_comp=2.3, ns (iGlu) marker for fixed components tau point
+%   bg_threshold=10,background tail photon count threshold
+%   parameter_space='Llow|Lmid|Lhigh', name for generated parameters
+%--------------------------------------------------------------------------
+%   HEADER END
+
 %table contents must all have default values
 parameters=struct('note','',...
     'operator','op_Phasor',...
@@ -19,9 +25,16 @@ parameters=struct('note','',...
     'bg_threshold',10,...
     'FIR_func',[],...
     'method','simple');%simple or deconvole(need FIR)
-status=false;message='';
+
+% assume worst
+status=false;
+% for batch process must return 'Data parentidx to childidx *' for each
+% successful calculation
+message='';
+askforparam=true;
 try
-    data_idx=data_handle.current_data;%default to current data
+    %default to current data
+    data_idx=data_handle.current_data;
     % get optional input if exist
     if nargin>2
         % get parameters argument
@@ -31,9 +44,18 @@ try
         % loop through to assign input values
         for option_idx=1:numel(usroption)
             switch usroption{option_idx}
-                case 'data_index'
+                case {'data_index','selected_data'}
                     % specified data indices
                     data_idx=usrval{option_idx};
+                case 'batch_param'
+                    % batch processing need to modify parameters to user
+                    % specfication
+                    op_Phasor(data_handle, 'modify_parameters','data_index',data_idx,'paramarg',usrval{option_idx});
+                case 'paramarg'
+                    % batch processing passed on modified paramaters
+                    varargin=usrval{option_idx};
+                    % batch processing avoid any manual input
+                    askforparam=false;
             end
         end
     end
@@ -50,7 +72,7 @@ try
                                 % t (10000) / tT (10001) / tXT (11001) / tXY(11100) / tXYT (11101) / tXYZT (11111)
                                 parent_data=current_data;
                                 % add new data
-                                data_handle.data_add(cat(2,'op_Phasor|',data_handle.data(current_data).dataname),[],[]);
+                                data_handle.data_add(sprintf('%s|%s',parameters.operator,data_handle.data(current_data).dataname),[],[]);
                                 % get new data index
                                 new_data=data_handle.current_data;
                                 % copy over datainfo
@@ -71,95 +93,97 @@ try
                                 data_handle.data(new_data).datainfo.data_dim(1)=2;
                                 % pass on metadata info
                                 data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
-                                message=sprintf('%s%s added\n',message, data_handle.data(new_data).dataname);
+                                message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
-                                message=sprintf('only take tT data type\n');
+                                message=sprintf('%s\nonly take XT or XYT data type.',message);
+                                return;
                         end
                 end
             end
         case 'modify_parameters'
-            current_data=data_handle.current_data;
-            %change parameters from this method only
-            for pidx=numel(varargin)/2
-                parameters=varargin{2*pidx-1};
-                val=varargin{2*pidx};
-                switch parameters
-                    case 'note'
-                        data_handle.data(current_data).datainfo.note=num2str(val);
-                        status=true;
-                    case 'operator'
-                        errordlg('Unauthorised to change parameter');
-                        status=false;
-                    case 'parameter_space'
-                        data_handle.data(current_data).datainfo.parameter_space=val;
-                        status=true;
-                    case 't_duration'
-                        val=str2double(val);
-                        if val<=0;
-                            fprintf('t_duration must be strictly > 0\n');
-                            status=false;
-                        else
-                            data_handle.data(current_data).datainfo.t_duration=val;
+            for current_data=data_idx
+                %change parameters from this method only
+                for pidx=1:1:numel(varargin)/2
+                    parameters=varargin{2*pidx-1};
+                    val=varargin{2*pidx};
+                    switch parameters
+                        case 'note'
+                            data_handle.data(current_data).datainfo.note=num2str(val);
                             status=true;
-                        end
-                    case 'disp_lb'
-                        val=str2double(val);
-                        if val>=data_handle.data(current_data).datainfo.disp_ub;
-                            fprintf('disp_lb must be strictly < disp_ub\n');
+                        case 'operator'
+                            message=sprintf('%s\nUnauthorised to change %s.',message,parameters);
                             status=false;
-                        else
-                            data_handle.data(current_data).datainfo.disp_lb=val;
+                        case 'parameter_space'
+                            data_handle.data(current_data).datainfo.parameter_space=val;
                             status=true;
-                        end
-                    case 'disp_ub'
-                        val=str2double(val);
-                        if val<=data_handle.data(current_data).datainfo.disp_lb;
-                            fprintf('disp_ub must be strictly > disp_lb\n');
-                            status=false;
-                        else
-                            data_handle.data(current_data).datainfo.disp_ub=val;
+                        case 't_duration'
+                            val=str2double(val);
+                            if val<=0;
+                                message=sprintf('%s\nt_duration must be strictly > 0.',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.t_duration=val;
+                                status=true;
+                            end
+                        case 'disp_lb'
+                            val=str2double(val);
+                            if val>=data_handle.data(current_data).datainfo.disp_ub;
+                                message=sprintf('%s\ndisp_lb must be strictly < disp_ub.',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.disp_lb=val;
+                                status=true;
+                            end
+                        case 'disp_ub'
+                            val=str2double(val);
+                            if val<=data_handle.data(current_data).datainfo.disp_lb;
+                                message=sprintf('%s\ndisp_ub must be strictly > disp_lb.',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.disp_ub=val;
+                                status=true;
+                            end
+                        case 'fixed_comp'
+                            val=str2double(val);
+                            data_handle.data(current_data).datainfo.fixed_comp=val;
                             status=true;
-                        end
-                    case 'fixed_comp'
-                        val=str2double(val);
-                        data_handle.data(current_data).datainfo.fixed_comp=val;
-                        status=true;
-                    case 'bg_threshold'
-                        val=str2double(val);
-                        data_handle.data(current_data).datainfo.bg_threshold=val;
-                        status=true;
-                    case 'method'
-                        answer = questdlg('Which method for fitting?','Exponential Fitting Method','simple','deconvolution','simple');
-                        switch answer
-                            case 'deconvolution'
-                                data_handle.data(current_data).datainfo.method=answer;
-                                if isempty(data_handle.data(current_data).datainfo.FIR_func)
-                                    %get FIR function
-                                    [FileName,PathName,~]=uigetfile({'*.asc','ASCII file'},'Get FIR data file (ascii format)');
-                                    if ~isempty(PathName)
-                                        temp=load(cat(2,PathName,filesep,FileName),'-ascii');
-                                        if size(temp,1)<3
-                                            data_handle.data(current_data).datainfo.FIR_func=temp';
-                                        else
-                                            data_handle.data(current_data).datainfo.FIR_func=temp;
+                        case 'bg_threshold'
+                            val=str2double(val);
+                            data_handle.data(current_data).datainfo.bg_threshold=val;
+                            status=true;
+                        case 'method'
+                            answer = questdlg('Which method for fitting?','Exponential Fitting Method','simple','deconvolution','simple');
+                            switch answer
+                                case 'deconvolution'
+                                    data_handle.data(current_data).datainfo.method=answer;
+                                    if isempty(data_handle.data(current_data).datainfo.FIR_func)
+                                        %get FIR function
+                                        [FileName,PathName,~]=uigetfile({'*.asc','ASCII file'},'Get FIR data file (ascii format)');
+                                        if ~isempty(PathName)
+                                            temp=load(cat(2,PathName,filesep,FileName),'-ascii');
+                                            if size(temp,1)<3
+                                                data_handle.data(current_data).datainfo.FIR_func=temp';
+                                            else
+                                                data_handle.data(current_data).datainfo.FIR_func=temp;
+                                            end
+                                            %change fitting method to use FIR
+                                            data_handle.data(current_data).datainfo.method='deconvolution';
                                         end
-                                        %change fitting method to use FIR
-                                        data_handle.data(current_data).datainfo.method='deconvolution';
                                     end
-                                end
-                                status=true;
-                            case 'simple'
-                                data_handle.data(current_data).datainfo.method='simple';
-                                data_handle.data(current_data).datainfo.FIR_func=[];
-                                status=true;
-                            otherwise
-                                data_handle.data(current_data).datainfo.fit_method='simple';%default to tail fit
-                                status=true;
-                        end
-                end
-                if status
-                    message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                                    status=true;
+                                case 'simple'
+                                    data_handle.data(current_data).datainfo.method='simple';
+                                    data_handle.data(current_data).datainfo.FIR_func=[];
+                                    status=true;
+                                otherwise
+                                    data_handle.data(current_data).datainfo.fit_method='simple';%default to tail fit
+                                    status=true;
+                            end
+                    end
+                    if status
+                        message=sprintf('%s\n%s has changed to %s.',message,parameters,val);
+                    end
                 end
             end
         case 'calculate_data'
@@ -228,12 +252,12 @@ try
                                 % Report current estimate in the waitbar's message field
                                 if floor(100*done)>=barstep
                                     % update waitbar
-                                    waitbar(done,waitbar_handle,sprintf('%g%%',floor(100*done)));
+                                    waitbar(done,waitbar_handle,sprintf('%g%%',barstep));
                                     barstep=barstep+1;
                                 end
                                 % check waitbar
                                 if getappdata(waitbar_handle,'canceling')
-                                    message=sprintf('Data Import cancelled\n');
+                                    message=sprintf('%s\n%s calculation cancelled.',message,parameters.operator);
                                     delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
                                     return;
                                 end
@@ -241,21 +265,20 @@ try
                         end
                     end
                 end
-                delete(waitbar_handle);
+                delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
                 val=reshape(val,2,pX_lim,pY_lim,pZ_lim,pT_lim);
                 data_handle.data(current_data).dataval=val;
                 data_handle.data(current_data).datatype=data_handle.get_datatype;
-                
+                data_handle.data(current_data).datainfo.last_change=datestr(now);
+                message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
+                status=true;
             end
-            data_handle.data(current_data).datainfo.last_change=datestr(now);
-            status=true;
-        otherwise
     end
 catch exception
     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end
-    message=exception.message;
+    message=sprintf('%s\n%s',message,exception.message);
 end
 
     function val=calculate_phasor(t,data,max_idx,min_threshold,t_duration,FIR,t_FIR)
@@ -326,5 +349,4 @@ end
             val=[nan,nan];
         end
     end
-
 end

@@ -345,7 +345,6 @@ try
                 % get display options
                 [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, pos_dim_idx );
                 switch bin2dec(num2str(pos_dim_idx))%display decide on data dimension
-                    
                     case 12
                         % XY(01100)
                         % colour scale map from ancester
@@ -369,7 +368,8 @@ try
                         % XT(01001)/YT(00101)
                         display_dim=pos_dim_idx;% plot 2D
                         % shrink data to 2D
-                        val=obj.data(data_idx).dataval;
+                          % shrink data to 2D
+                        val=squeeze(obj.data(data_idx).dataval);
                         % no Z or T seq
                         data_size(4)=1;data_size(5)=1;
                         [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );

@@ -8,7 +8,7 @@ function [ status, message ] = data_showauxch( obj, selected_data, askforparam, 
 %   3. In batch mode, data are automatically saved as new dataitem
 %
 %---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','channel','1','savetrace','false');
+%   Parameter=struct('selected_data','1','channel','1','savetrace','true');
 %   selected_data=data index, 1 means previous generated data
 %   channel=0|1|2; default selection of femtonics auxi channels
 %	savetrace=true|false; save aux channel data to new dataitem

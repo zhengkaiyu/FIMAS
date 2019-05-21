@@ -46,7 +46,11 @@ function [ status, message ] = op_MapFunc( data_handle, option, varargin )
 %---Batch process----------------------------------------------------------
 %   Parameter=struct('selected_data','1','calib_func','@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)','t_disp_bound','[0,200,128]','disp_lb','20','disp_ub','100','parameter_space','[Ca2+]');
 %   selected_data=data index, 1 means previous generated data
-%
+%   calib_func='@(x)', calibration function used to map values
+%   t_disp_bound=[0,200,128], display bound with [min,max,nlevels]
+%   disp_lb=20, display value lower bound
+%   disp_ub=100, display value upper bound
+%   parameter_space='[Ca2+]', name for generated parameters 
 %--------------------------------------------------------------------------
 %   HEADER END
 
@@ -81,7 +85,7 @@ try
                 case 'batch_param'
                     % batch processing need to modify parameters to user
                     % specfication
-                    op_NTC(data_handle, 'modify_parameters','data_index',data_idx,'paramarg',usrval{option_idx});
+                    op_MapFunc(data_handle, 'modify_parameters','data_index',data_idx,'paramarg',usrval{option_idx});
                 case 'paramarg'
                     % batch processing passed on modified paramaters
                     varargin=usrval{option_idx};

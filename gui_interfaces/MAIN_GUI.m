@@ -525,7 +525,7 @@ if success
     handles.LIST_DATA.Value=hDATA.current_data;% reset to previous as hDATA can only have one current_data
     update_info(sprintf('Output of %s: %s\n',func,message),1,handles.EDIT_INFO);
 else
-    populate_list(handles.LIST_DATA,{hDATA.data.dataname},hDATA.current_data); %#ok<UNRCH>
+    populate_list(handles.LIST_DATA,{hDATA.data.dataname},hDATA.current_data);
     update_info(sprintf('Error Messages: %s\n from %s\n',message,func),0,handles.EDIT_INFO);
 end
 beep;pause(0.001);
@@ -701,7 +701,7 @@ if ischar(pathname)
     update_info(sprintf('%s batch processing file loaded',filename),0,handles.EDIT_INFO);
 end
 
-function BUTTON_SAVEBATCH_Callback(~, ~, ~)
+function BUTTON_SAVEBATCH_Callback(~, ~, handles)
 % Save current settings to batch processing file (bpf)
 global BATCHPROC SETTING; %#ok<NUSED>
 [filename, pathname] = uiputfile({'*.bpf','Batch Process Files'},'Save as',SETTING.rootpath.saved_data);
@@ -1202,9 +1202,9 @@ global hDATA SETTING;
 if isnew
     % clear and declare new data handle
     clear global hDATA SETTING BATCHPROC;    % clear global data handle
-    global hDATA SETTING BATCHPROC; %#ok<REDEF,TLEV>
+    global hDATA SETTING BATCHPROC;  %#ok<TLEV,REDEF>
     hDATA=fimdata_handle; %#ok<NASGU>
-    SETTING=gui_option; %#ok<NASGU>
+    SETTING=gui_option;  %#ok<NASGU>
     set(handles.MAIN_GUI,'Name','FIMAS');
     temp=load(cat(2,'.',filesep,'lib',filesep,'default_path.mat'),'-mat');% load default paths
     if isunix
@@ -1216,7 +1216,6 @@ if isnew
     hDATA.path.export=temp.rootpath.exported_data; %#ok<STRNU>
     hDATA.path.saved=temp.rootpath.saved_data; %#ok<STRNU>
     BATCHPROC=struct('operation','wait for it','parameters',[]);
-    
     % make button icons
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'control_panel_icon.png'));%#ok<NODEF>
     set(handles.PUSHTOOL_GRAPHCONTROLPANEL,'CData',iconimg);
@@ -1245,18 +1244,18 @@ if isnew
     set(handles.MENU_USEROP,'UserData',content{1});
     % batch process ui
     handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
-    iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_open.png'));
+    iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_open.png')); %#ok<NODEF>
     set(handles.BUTTON_OPENBATCH,'CData',iconimg);
-    iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_save.png'));
+    iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_save.png')); %#ok<NODEF>
     set(handles.BUTTON_SAVEBATCH,'CData',iconimg);
 else
     % reset graphics e.g. open new data file
     
 end
 % clear axes
-for panelidx=1:numel(SETTING.PANEL_NAME_LIST)
-    SETTING.current_panel=panelidx;
-    SETTING.update_panel_control('clear');
+for panelidx=1:numel(SETTING.PANEL_NAME_LIST) %#ok<NODEF>
+    SETTING.current_panel=panelidx;%#ok<STRNU>
+    SETTING.update_panel_control('clear');%#ok<NODEF>
 end
 % update data list and roi list
 populate_list(handles.LIST_DATA,{hDATA.data.dataname},1); %#ok<NODEF>
@@ -1288,7 +1287,7 @@ switch eventdata.Key
                 set(0,'DefaultUicontrolForegroundColor','w');
                 if ~isempty(answer)
                     temp=regexpi(fname,answer);
-                    foundinfo=tabledata(find(sum(cellfun(@(x)~isempty(x),temp),2)),:);
+                    foundinfo=tabledata(sum(cellfun(@(x)~isempty(x),temp),2)>0,:);
                     if ~isempty(foundinfo)
                         temp = figure(...
                             'WindowStyle','modal',...% able to use

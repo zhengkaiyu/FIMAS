@@ -1,30 +1,39 @@
 function [ status, message ] = op_dF_R( data_handle, option, varargin )
 %op_dF_R calculate delta fluorescence over reference channel (dG/R)
-%
+%--------------------------------------------------------------------------
 %=======================================
 %options     values    explanation
-%=======================================
-%F_CH        1          usually channel 1, check which channel reprensent
-%the functional signal
-%R_CH        2          usually channel 2, check which channel is the
-%reference channel
-%f0_t_int    [20,100]   time interval for the f0 value in df/f0
-%bg_t_int    [0,20]     time interval for the background values
-%R_bin       [1,1,1,1,10]         binning for the reference signal,
-%1x5vector specify binning for each dimension
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','F_CH','1','R_CH','1','f0_t_int','[20,100]','bg_t_int','[0,20]','R_bin','[1,1,1,1,10]','parameter_space','df/f0');
+%   selected_data=data index, 1 means previous generated data
+%   F_CH=1, functional channel, usually channel 1
+%   R_CH=1, reference channel,usually channel 2
+%   f0_t_int=[20,100],time interval for the f0 value in df/f0
+%   bg_t_int=[0,20],time interval for the background values
+%   R_bin=[1,1,1,1,10],1x5vector specify binning for each dimension,binning for the reference signal
+%   parameter_space='df/f0', name for generated parameters
+%--------------------------------------------------------------------------
+%   HEADER END
 
 %table contents must all have default values
 parameters=struct('note','',...
     'operator','op_dF_R',...
+    'parameter_space','df/f0',...
     'F_CH',1,...
     'R_CH',2,...
     'f0_t_int',[20,100],...
     'bg_t_int',[0,20],...
     'R_bin',[1,1,1,1,10]);
 
-status=false;message='';
+% assume worst
+status=false;
+% for batch process must return 'Data parentidx to childidx *' for each
+% successful calculation
+message='';
+askforparam=true;
 try
-    data_idx=data_handle.current_data;%default to current data
+    %default to current data
+    data_idx=data_handle.current_data;
     % get optional input if exist
     if nargin>2
         % get parameters argument
@@ -34,12 +43,22 @@ try
         % loop through to assign input values
         for option_idx=1:numel(usroption)
             switch usroption{option_idx}
-                case 'data_index'
+                case {'data_index','selected_data'}
                     % specified data indices
                     data_idx=usrval{option_idx};
+                case 'batch_param'
+                    % batch processing need to modify parameters to user
+                    % specfication
+                    op_dF_R(data_handle, 'modify_parameters','data_index',data_idx,'paramarg',usrval{option_idx});
+                case 'paramarg'
+                    % batch processing passed on modified paramaters
+                    varargin=usrval{option_idx};
+                    % batch processing avoid any manual input
+                    askforparam=false;
             end
         end
     end
+    
     switch option
         case 'add_data'
             for current_data=data_idx
@@ -55,7 +74,7 @@ try
                                 % T (00001) / XT (01001) / XYT (01101) / XYZT (01111)
                                 parent_data=current_data;
                                 % add new data
-                                data_handle.data_add(cat(2,'op_dF_R|',data_handle.data(current_data).dataname),[],[]);
+                                data_handle.data_add(sprintf('%s|%s',parameters.operator,data_handle.data(current_data).dataname),[],[]);
                                 % get new data index
                                 new_data=data_handle.current_data;
                                 % copy over datainfo
@@ -64,43 +83,52 @@ try
                                 data_handle.data(new_data).datainfo.data_idx=new_data;
                                 % set parent data index
                                 data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
+                                data_handle.data(new_data).datainfo.parameter_space={'NTC'};
                                 % combine the parameter fields
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
                                 data_handle.data(new_data).datainfo.bin_dim=data_handle.data(current_data).datainfo.bin_dim;
                                 if isempty(data_handle.data(new_data).datainfo.bin_dim)
                                     data_handle.data(new_data).datainfo.bin_dim=[1,1,1,1,1];
                                 end
-                                message=sprintf('%s%s added\n',message, data_handle.data(new_data).dataname);
+                                % pass on metadata info
+                                data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
+                                message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
-                                message=sprintf('only take T, XT, XYT or XYZT data type\n');
+                                otherwise
+                                message=sprintf('%s\nonly take XT or XYT data type.',message);
+                                return;
                         end
                 end
             end
             % ---------------------
         case 'modify_parameters'
-            current_data=data_handle.current_data;
-            %change parameters from this method only
-            for pidx=numel(varargin)/2
-                parameters=varargin{2*pidx-1};
-                val=varargin{2*pidx};
-                switch parameters
-                    case 'note'
-                        data_handle.data(current_data).datainfo.note=num2str(val);
-                        status=true;
-                    case 'operator'
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                    case {'R_bin','F_CH','R_CH','f0_t_int','bg_t_int'}
-                        val=str2num(val); %#ok<*ST2NM>
-                        data_handle.data(current_data).datainfo.(parameters)=val;
-                        status=true;
-                    otherwise
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                end
-                if status
-                    message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+            for current_data=data_idx
+                %change parameters from this method only
+                for pidx=1:1:numel(varargin)/2
+                    parameters=varargin{2*pidx-1};
+                    val=varargin{2*pidx};
+                    switch parameters
+                        case 'note'
+                            data_handle.data(current_data).datainfo.note=num2str(val);
+                            status=true;
+                        case 'operator'
+                            message=sprintf('%s\nUnauthorised to change %s.',message,parameters);
+                            status=false;
+                        case 'parameter_space'
+                            data_handle.data(current_data).datainfo.parameter_space=num2str(val);
+                            status=true;
+                        case {'R_bin','F_CH','R_CH','f0_t_int','bg_t_int'}
+                            val=str2num(val); %#ok<*ST2NM>
+                            data_handle.data(current_data).datainfo.(parameters)=val;
+                            status=true;
+                        otherwise
+                            message=sprintf('%s\nUnauthorised to change %s.',message,parameters);
+                            status=false;
+                    end
+                    if status
+                        message=sprintf('%s\n%s has changed to %s.',message,parameters,val);
+                    end
                 end
             end
             % ---------------------
@@ -155,7 +183,8 @@ try
                         data_handle.data(current_data).datainfo.display_dim=(size(data_handle.data(current_data).dataval)>1);
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
-                        message=sprintf('%s%s calculated on %s\n',message,data_handle.data(current_data).datainfo.operator,data_handle.data(current_data).dataname);
+                        message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
+                        status=true;
                     case 'DATA_TRACE'
                         datasize=[2,data_handle.data(parent_data).datainfo.data_dim(2:end)];
                         % binning
@@ -163,7 +192,7 @@ try
                         Ybin=data_handle.data(current_data).datainfo.bin_dim(3);
                         Zbin=data_handle.data(current_data).datainfo.bin_dim(4);
                         Tbin=data_handle.data(current_data).datainfo.bin_dim(5);
-                         % binning
+                        % binning
                         windowsize=[1,Xbin,Ybin,Zbin,Tbin];
                         fval=data_handle.data(parent_data).dataval([data_handle.data(current_data).datainfo.F_CH,data_handle.data(current_data).datainfo.R_CH],:,:,:,:);
                         fval(1,:,:,:,:)=convn(fval(1,:,:,:,:),ones(windowsize),'same');
@@ -201,12 +230,15 @@ try
                         data_handle.data(current_data).datainfo.display_dim=(size(data_handle.data(current_data).dataval)>1);
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
-                        message=sprintf('%s%s calculated on %s\n',message,data_handle.data(current_data).datainfo.operator,data_handle.data(current_data).dataname);
+                        message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
+                        status=true;
                 end
             end
-            status=true;
         otherwise
     end
 catch exception
-    message=exception.message;
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
+    message=sprintf('%s\n%s',message,exception.message);
 end

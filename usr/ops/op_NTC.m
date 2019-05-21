@@ -6,7 +6,12 @@ function [ status, message ] = op_NTC( data_handle, option, varargin )
 %---Batch process----------------------------------------------------------
 %   Parameter=struct('selected_data','1','bin_dim','[1,1,1,1,1]','fit_t0','3e-10','fit_t1','9e-9','bg_threshold','10','t_disp_bound','[0.05,0.5,64]','parameter_space','');
 %   selected_data=data index, 1 means previous generated data
-%
+%   bin_dim=[1,1,1,1,1],spatial binning before calculation, default no binning
+%   fit_t0=3e-10,starting point to seek for FLIM peak
+%   fit_t1=9e-9, integration period after detected peak,default 9ns
+%   bg_threshold=10,background tail photon count threshold
+%   t_disp_bound=[0.05,0.5,64], display bound with [min,max,nlevels]
+%   parameter_space='df/f0', name for generated parameters 
 %--------------------------------------------------------------------------
 %   HEADER END
 
