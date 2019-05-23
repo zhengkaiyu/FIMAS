@@ -94,13 +94,44 @@ try
                     subplot(numseg,5,(ptidx-1)*5+5);plot(dist_lp,lp);
                 end
             end
+            button = questdlg('What to do with Line profile data?','Line profile data','Plot','Save','Plot&Save','Plot');
+            switch button
+                case {'Save','Plot&Save'}
+                    savedata=true;
+                case 'Plot'
+                    savedata=false;
+            end
             figure('Name',sprintf('Line profiles from data item %s',obj.data(selected_data).dataname),...
                 'NumberTitle','off',...
                 'MenuBar','none',...
                 'ToolBar','figure',...
                 'Keypressfcn',@export_panel);
+            parent_data=selected_data;
             for m=1:numel(impolyline_idx)
+                % plot data
                 plot(dist{m}(2:end),lineprofile{m},'LineWidth',2);hold all;
+                if savedata
+                    % new data
+                    % add new data
+                    obj.data_add(sprintf('%s|%s','data_showlineprofile',obj.data(selected_data).dataname),[],[]);
+                    % get new data index
+                    new_data=obj.current_data;
+                    % copy over datainfo
+                    obj.data(new_data).datainfo=obj.data(parent_data).datainfo;
+                    % set data index
+                    obj.data(new_data).datainfo.data_idx=new_data;
+                    % set parent data index
+                    obj.data(new_data).datainfo.parent_data_idx=parent_data;
+                    % set X
+                    obj.data(new_data).datainfo.X=dist{m}(2:end);
+                    obj.data(new_data).datainfo.dX=dist{m}(2)-dist{m}(1);
+                    % set val
+                    obj.data(new_data).dataval=lineprofile{m};
+                    % update info
+                    obj.data(new_data).datainfo.data_dim=[1,numel(lineprofile{m}),1,1,1];
+                    obj.data(new_data).datatype=obj.get_datatype(new_data);
+                    obj.data(new_data).datainfo.last_change=datestr(now);
+                end
             end
             hold off;
             legend(gca,'show',{obj.data(selected_data).roi(impolyline_idx).name});

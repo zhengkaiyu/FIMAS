@@ -4,4 +4,3 @@ function [ output_args ] = op_ImEntropy( input_args )
 
 S=k+log(theta)+log(gamma(k))+(1-k)+psi(k);
 end
-
