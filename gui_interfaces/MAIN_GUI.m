@@ -1244,6 +1244,7 @@ if isnew
     set(handles.MENU_USEROP,'UserData',content{1});
     % batch process ui
     handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
+    handles.LIST_BATCHPROCESS.Value=1;
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_open.png')); %#ok<NODEF>
     set(handles.BUTTON_OPENBATCH,'CData',iconimg);
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'file_save.png')); %#ok<NODEF>

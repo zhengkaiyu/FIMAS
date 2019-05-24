@@ -4,20 +4,20 @@ function [ status, message ] = op_NTC( data_handle, option, varargin )
 %   1. Using normalised total count to estimate calcium
 %
 %---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','bin_dim','[1,1,1,1,1]','fit_t0','3e-10','fit_t1','9e-9','bg_threshold','10','t_disp_bound','[0.05,0.5,64]','parameter_space','');
+%   Parameter=struct('selected_data','1','bin_dim','[1,1,1,1,1]','fit_t0','3e-10','fit_t1','9e-9','bg_threshold','10','t_disp_bound','[0.05,0.5,64]','parameter_space','NTC');
 %   selected_data=data index, 1 means previous generated data
 %   bin_dim=[1,1,1,1,1],spatial binning before calculation, default no binning
 %   fit_t0=3e-10,starting point to seek for FLIM peak
 %   fit_t1=9e-9, integration period after detected peak,default 9ns
 %   bg_threshold=10,background tail photon count threshold
 %   t_disp_bound=[0.05,0.5,64], display bound with [min,max,nlevels]
-%   parameter_space='df/f0', name for generated parameters 
+%   parameter_space='NTC', name for generated parameters 
 %--------------------------------------------------------------------------
 %   HEADER END
 
 parameters=struct('note','',...
     'operator','op_NTC',...
-    'parameter_space','',...
+    'parameter_space','NTC',...
     'bin_dim',[1,1,1,1,1],...
     'fit_t0',3e-10,...
     'fit_t1',9e-9,... %ns after peak
@@ -62,7 +62,7 @@ try
         case 'add_data'
             for current_data=data_idx
                 switch data_handle.data(current_data).datatype
-                    case {'DATA_IMAGE','DATA_TRACE'}
+                    case {'DATA_IMAGE','DATA_TRACE','RESULT_IMAGE','RESULT_TRACE'}
                         % check data dimension, we only take tXY, tXT, tT, tXYZ,
                         % tXYZT
                         switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
@@ -82,7 +82,6 @@ try
                                 data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
                                 % combine the parameter fields
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
-                                data_handle.data(new_data).datainfo.parameter_space={'NTC'};
                                 data_handle.data(new_data).datainfo.bin_dim=data_handle.data(parent_data).datainfo.bin_dim;
                                 if isempty(data_handle.data(new_data).datainfo.bin_dim)
                                     data_handle.data(new_data).datainfo.bin_dim=[1,1,1,1,1];
@@ -153,7 +152,7 @@ try
                 % go through each selected data
                 parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
                 switch data_handle.data(parent_data).datatype
-                    case {'DATA_IMAGE'}%originated from 3D/4D traces_image
+                    case {'DATA_IMAGE','RESULT_IMAGE'}%originated from 3D/4D traces_image
                         % get pixel binnin information
                         pX_lim=numel(data_handle.data(parent_data).datainfo.X);
                         pY_lim=numel(data_handle.data(parent_data).datainfo.Y);
@@ -238,7 +237,7 @@ try
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
                         message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
                         status=true;
-                    case {'DATA_TRACE'}
+                    case {'DATA_TRACE','RESULT_TRACE'}
                         min_threshold=data_handle.data(current_data).datainfo.bg_threshold;
                         % get dt dimension information
                         t=data_handle.data(parent_data).datainfo.t;

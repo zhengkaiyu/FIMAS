@@ -99,7 +99,7 @@ try
         case 'add_data'
             for current_data=data_idx
                 switch data_handle.data(current_data).datatype
-                    case {'RESULT_IMAGE','RESULT_TRACE','RESULT_POINT'}
+                    case {'DATA_IMAGE','DATA_TRACE','RESULT_IMAGE','RESULT_TRACE','RESULT_POINT'}
                         % check data dimension, we only take tXY, tXT, tT, tXYZ,
                         % tXYZT
                         switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
@@ -189,7 +189,7 @@ try
                 % go through each selected data
                 parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
                 switch data_handle.data(parent_data).datatype
-                    case {'RESULT_IMAGE','RESULT_TRACE','RESULT_POINT'}%originated from 3D/4D traces_image
+                    case {'DATA_IMAGE','DATA_TRACE','RESULT_IMAGE','RESULT_TRACE','RESULT_POINT'}%originated from 3D/4D traces_image
                         data=data_handle.data(parent_data).dataval;
                         if ~isempty(data)
                             calib_func=str2func(data_handle.data(current_data).datainfo.calib_func);

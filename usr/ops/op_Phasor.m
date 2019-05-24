@@ -3,7 +3,7 @@ function [ status, message ] = op_Phasor( data_handle, option, varargin )
 %--------------------------------------------------------------------------
 %
 %---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','t_duration','9','disp_lb','0.53','disp_ub','3.85','fixed_comp','2.3','bg_threshold','10','parameter_space','Llow|Lmid|Lhigh');
+%   Parameter=struct('selected_data','1','bin_dim','[1,1,1,1,1]','t_duration','9','disp_lb','0.53','disp_ub','3.85','fixed_comp','2.3','bg_threshold','10','parameter_space','Llow|Lmid|Lhigh');
 %   selected_data=data index, 1 means previous generated data
 %   t_duration=9, ns of interval for phasor analysis
 %   disp_lb=0.63, ns (OGB1 femtonics) marker for lower tau point
@@ -19,6 +19,7 @@ parameters=struct('note','',...
     'operator','op_Phasor',...
     't_duration',9,... %ns after peak
     'parameter_space','Llow|Lmid|Lhigh',...
+    'bin_dim',[1,1,1,1,1],...
     'disp_lb',0.53,...
     'disp_ub',3.85,...
     'fixed_comp',2.3,...
@@ -114,6 +115,8 @@ try
                         case 'operator'
                             message=sprintf('%s\nUnauthorised to change %s.',message,parameters);
                             status=false;
+                        case 'bin_dim'
+                            [status,~]=data_handle.edit_datainfo(current_data,'bin_dim',val);
                         case 'parameter_space'
                             data_handle.data(current_data).datainfo.parameter_space=val;
                             status=true;

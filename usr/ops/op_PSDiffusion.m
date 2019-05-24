@@ -61,7 +61,7 @@ try
                                 % set parent data index
                                 data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
-                                data_handle.data(new_data).datainfo.parameter_space={'D','se','corrcoef','DoF'};
+                                data_handle.data(new_data).datainfo.parameter_space='D|se|corrcoef|DoF';
                                 status=true;
                             otherwise
                                 messages=sprintf('only take XT or XZT data type\n');

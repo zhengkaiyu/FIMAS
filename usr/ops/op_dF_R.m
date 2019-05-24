@@ -4,7 +4,7 @@ function [ status, message ] = op_dF_R( data_handle, option, varargin )
 %=======================================
 %options     values    explanation
 %---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','F_CH','1','R_CH','1','f0_t_int','[20,100]','bg_t_int','[0,20]','R_bin','[1,1,1,1,10]','parameter_space','df/f0');
+%   Parameter=struct('selected_data','1','bin_dim','[1,1,1,1,1]','F_CH','1','R_CH','1','f0_t_int','[20,100]','bg_t_int','[0,20]','R_bin','[1,1,1,1,10]','parameter_space','df/f0');
 %   selected_data=data index, 1 means previous generated data
 %   F_CH=1, functional channel, usually channel 1
 %   R_CH=1, reference channel,usually channel 2
@@ -19,6 +19,7 @@ function [ status, message ] = op_dF_R( data_handle, option, varargin )
 parameters=struct('note','',...
     'operator','op_dF_R',...
     'parameter_space','df/f0',...
+    'bin_dim',[1,1,1,1,1],...
     'F_CH',1,...
     'R_CH',2,...
     'f0_t_int',[20,100],...
@@ -63,7 +64,7 @@ try
         case 'add_data'
             for current_data=data_idx
                 switch data_handle.data(current_data).datatype
-                    case {'DATA_IMAGE','DATA_TRACE'}
+                    case {'DATA_IMAGE','DATA_TRACE','RESULT_IMAGE','RESULT_TRACE'}
                         % check data dimension, we only take CT, CXT, CXYT,
                         % CXYZT, where C=channel locates in t dimension
                         switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
@@ -95,7 +96,6 @@ try
                                 message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
-                                otherwise
                                 message=sprintf('%s\nonly take XT or XYT data type.',message);
                                 return;
                         end
@@ -118,6 +118,8 @@ try
                         case 'parameter_space'
                             data_handle.data(current_data).datainfo.parameter_space=num2str(val);
                             status=true;
+                        case 'bin_dim'
+                            [status,~]=data_handle.edit_datainfo(current_data,'bin_dim',val);
                         case {'R_bin','F_CH','R_CH','f0_t_int','bg_t_int'}
                             val=str2num(val); %#ok<*ST2NM>
                             data_handle.data(current_data).datainfo.(parameters)=val;
@@ -136,7 +138,7 @@ try
             for current_data=data_idx
                 parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
                 switch data_handle.data(parent_data).datatype
-                    case 'DATA_IMAGE'
+                    case {'DATA_IMAGE','RESULT_IMAGE'}
                         % get pixel binnin information
                         Xbin=data_handle.data(current_data).datainfo.bin_dim(2);
                         Ybin=data_handle.data(current_data).datainfo.bin_dim(3);
@@ -185,7 +187,7 @@ try
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
                         message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
                         status=true;
-                    case 'DATA_TRACE'
+                    case {'DATA_TRACE','RESULT_TRACE'}
                         datasize=[2,data_handle.data(parent_data).datainfo.data_dim(2:end)];
                         % binning
                         Xbin=data_handle.data(current_data).datainfo.bin_dim(2);

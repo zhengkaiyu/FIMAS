@@ -1,19 +1,35 @@
 function [ status, message ] = op_GatedInt( data_handle, option, varargin )
-%op_gatedInt Calculate Normalised Total Count from traces or images by
-%gate2/gate1 values.  This can be used for G/R
+%op_gatedInt Gated intensity from FLIM traces or images
+%--------------------------------------------------------------------------
+%   1. gate2/gate1 values
 %
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','bin_dim','[1,1,1,1,1]','gate1','[0.5,1.5]*1e-9','gate2','[5,12]*1e-9','normalise','total','parameter_space','gInt');
+%   selected_data=data index, 1 means previous generated data
+%   bin_dim=[1,1,1,1,1],spatial binning before calculation, default no binning
+%   gate1=[0.5,1.5]*1e-9, 0.5ns to 1.5ns window (for OGB1)
+%   gate2=[5,12]*1e-9, 5ns to 12ns window (for OGB1)
+%   normalise=none|peak|total, normalise before gating ratio
+%   parameter_space='gInt', name for generated parameters
+%--------------------------------------------------------------------------
+%   HEADER END
 parameters=struct('note','',...
     'operator','op_GatedInt',...
     'parameter_space','gInt',...
     'bin_dim',[1,1,1,1,1],...
     'gate1',[0.5,1.5]*1e-9,...
     'gate2',[5,12]*1e-9,...
-    'normalise',1);
+    'normalise','total');
 
-status=false;message='';
-
+% assume worst
+status=false;
+% for batch process must return 'Data parentidx to childidx *' for each
+% successful calculation
+message='';
+askforparam=true;
 try
-    data_idx=data_handle.current_data;%default to current data
+    %default to current data
+    data_idx=data_handle.current_data;
     % get optional input if exist
     if nargin>2
         % get parameters argument
@@ -23,9 +39,18 @@ try
         % loop through to assign input values
         for option_idx=1:numel(usroption)
             switch usroption{option_idx}
-                case 'data_index'
+                case {'data_index','selected_data'}
                     % specified data indices
                     data_idx=usrval{option_idx};
+                case 'batch_param'
+                    % batch processing need to modify parameters to user
+                    % specfication
+                    op_GatedInt(data_handle, 'modify_parameters','data_index',data_idx,'paramarg',usrval{option_idx});
+                case 'paramarg'
+                    % batch processing passed on modified paramaters
+                    varargin=usrval{option_idx};
+                    % batch processing avoid any manual input
+                    askforparam=false;
             end
         end
     end
@@ -34,12 +59,12 @@ try
         case 'add_data'
             for current_data=data_idx
                 switch data_handle.data(current_data).datatype
-                    case {'DATA_IMAGE'}
+                    case {'DATA_IMAGE','DATA_TRACE','RESULT_IMAGE','RESULT_TRACE'}
                         % check data dimension, we only take tXY, tXT, tT, tXYZ,
                         % tXYZT
                         switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
-                            case {17,25,28,29,30,31}
-                                % tT (10001) / tXT (11001) / tXY (11100) /
+                            case {16,17,25,28,29,30,31}
+                                % t (10000) / tT (10001) / tXT (11001) / tXY (11100) /
                                 % tXYT (11101) / tXYZ (11110) / tXYZT (11111)
                                 parent_data=current_data;
                                 % add new data
@@ -54,91 +79,71 @@ try
                                 data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
                                 % combine the parameter fields
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
+                                if isempty(data_handle.data(new_data).datainfo.bin_dim)
+                                    data_handle.data(new_data).datainfo.bin_dim=[1,1,1,1,1];
+                                end
                                 % pass on metadata info
                                 data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
-                                message=sprintf('%s added\n',data_handle.data(new_data).dataname);
+                                message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
-                                message=sprintf('only take tXY, tXT, tT, tXYZ data type\n');
+                                message=sprintf('%s\nonly take tXY, tXT, tT, tXYZ data type',message);
                                 return;
                         end
-                    case {'DATA_TRACE'}
-                        switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
-                            case {16}
-                                % t (10000)
-                                parent_data=current_data;
-                                % add new data
-                                data_handle.data_add(cat(2,'op_gatedInt|',data_handle.data(current_data).dataname),[],[]);
-                                % get new data index
-                                new_data=data_handle.current_data;
-                                % copy over datainfo
-                                data_handle.data(new_data).datainfo=data_handle.data(parent_data).datainfo;
-                                % set data index
-                                data_handle.data(new_data).datainfo.data_idx=new_data;
-                                % set parent data index
-                                data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
-                                % combine the parameter fields
-                                data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
-                                % pass on metadata info
-                                data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
-                                message=sprintf('%s added\n',data_handle.data(new_data).dataname);
-                                status=true;
-                            otherwise
-                                message=sprintf('only take tXY, tXT, tT, tXYZ data type\n');
-                                return;
-                        end
+                        % case {'DATA_SPC'}
                 end
             end
         case 'modify_parameters'
-            current_data=data_handle.current_data;
-            %change parameters from this method only
-            for pidx=numel(varargin)/2
-                parameters=varargin{2*pidx-1};
-                val=varargin{2*pidx};
-                switch parameters
-                    case 'note'
-                        data_handle.data(current_data).datainfo.note=num2str(val);
-                        status=true;
-                    case 'operator'
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                    case 'gate1'
-                        val=str2num(val);
-                        if isempty(val)
-                            data_handle.data(current_data).datainfo.gate1=val;
+            for current_data=data_idx
+                %change parameters from this method only
+                for pidx=1:1:numel(varargin)/2
+                    parameters=varargin{2*pidx-1};
+                    val=varargin{2*pidx};
+                    switch parameters
+                        case 'note'
+                            data_handle.data(current_data).datainfo.note=num2str(val);
                             status=true;
-                        elseif numel(val)~=2
-                            message=sprintf('%s\ngate1 must have two elements.\n',message);
+                        case 'operator'
+                            message=sprintf('%s\nUnauthorised to change %s.',message,parameters);
                             status=false;
-                        else
-                            data_handle.data(current_data).datainfo.gate1=val;
+                        case 'bin_dim'
+                            [status,~]=data_handle.edit_datainfo(current_data,'bin_dim',val);
+                        case 'gate1'
+                            val=str2num(val);
+                            if numel(val)~=2
+                                message=sprintf('%s\ngate1 must have two elements.',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.gate1=val;
+                                status=true;
+                            end
+                        case 'gate2'
+                            val=str2num(val);
+                            if numel(val)~=2
+                                message=sprintf('%s\ngate2 must have two elements.',message);
+                                status=false;
+                            else
+                                data_handle.data(current_data).datainfo.gate2=val;
+                                status=true;
+                            end
+                        case 'normalise'
+                            switch val
+                                case {'peak','total','none'}
+                                    data_handle.data(current_data).datainfo.normalise=val;
+                                otherwise
+                                    data_handle.data(current_data).datainfo.normalise='peak';
+                            end
                             status=true;
-                        end
-                    case 'gate2'
-                        val=str2num(val);
-                        if numel(val)~=2
-                            message=sprintf('%s\ngate2 must have two elements.\n',message);
+                        case 'parameter_space'
+                            data_handle.data(current_data).datainfo.parameter_space=num2str(val);
+                            status=true;
+                        otherwise
+                            message=sprintf('%s\nUnauthorised to change %s.',message,parameters);
                             status=false;
-                        else
-                            data_handle.data(current_data).datainfo.gate2=val;
-                            status=true;
-                        end
-                    case 'normalise'
-                        if str2double(val)
-                            data_handle.data(current_data).datainfo.normalise=true;
-                        else
-                            data_handle.data(current_data).datainfo.normalise=false;
-                        end
-                        status=true;
-                    case 'parameter_space'
-                        data_handle.data(current_data).datainfo.parameter_space=val;
-                        status=true;
-                    otherwise
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                end
-                if status
-                    message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                    end
+                    if status
+                        message=sprintf('%s\n%s has changed to %s.',message,parameters,val);
+                    end
                 end
             end
         case 'calculate_data'
@@ -146,7 +151,7 @@ try
                 % go through each selected data
                 parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
                 switch data_handle.data(parent_data).datatype
-                    case {'DATA_IMAGE'}%originated from 3D/4D traces_image
+                    case {'DATA_IMAGE','RESULT_IMAGE'}%originated from 3D/4D traces_image
                         % get pixel binnin information
                         pX_lim=numel(data_handle.data(parent_data).datainfo.X);
                         pY_lim=numel(data_handle.data(parent_data).datainfo.Y);
@@ -183,10 +188,10 @@ try
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
                         data_handle.data(current_data).datainfo.dt=0;
                         data_handle.data(current_data).datainfo.t=0;
-                        
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
+                        message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
                         status=true;
-                    case {'DATA_TRACE'}
+                    case {'DATA_TRACE','RESULT_TRACE'}
                         t=data_handle.data(parent_data).datainfo.t;
                         % get gate range
                         if isempty(data_handle.data(current_data).datainfo.gate1)
@@ -208,7 +213,8 @@ try
                         data_handle.data(current_data).datainfo.dt=0;
                         data_handle.data(current_data).datainfo.t=0;
                         data_handle.data(current_data).datainfo.last_change=datestr(now);
-                        message=sprintf('gatedInt = %g\n',fval);
+                        message=sprintf('%s\nNTC = %g.',message,val);
+                        message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
                         status=true;
                 end
             end
@@ -217,27 +223,28 @@ catch exception
     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end
-    message=exception.message;
+    message=sprintf('%s\n%s',message,exception.message);
 end
 
     function val=calculate_gateratio(data,gate1,gate2,normalise,maxidx)
-        if normalise
-            normdata=data(maxidx,:,:,:,:);
-        else
-            normdata=nansum(data,1);
+        switch normalise
+            case 'peak'
+                normdata=data(maxidx,:,:,:,:);
+                data=data./repmat(normdata,size(data,1),1,1,1,1);
+            case 'total'
+                normdata=nansum(data,1);
+                data=data./repmat(normdata,size(data,1),1,1,1,1);
+            case 'none'
+                
         end
-        data=data./repmat(normdata,size(data,1),1,1,1,1);
         %calculate area
         if isempty(gate1)
             val=nanmean(data(gate2,:,:,:,:),1);
+        elseif isempty(gate2)
+            val=nanmean(data(gate1,:,:,:,:),1);
         else
             val=nanmean(data(gate2,:,:,:,:),1)./nanmean(data(gate1,:,:,:,:),1);
         end
         val(isinf(val))=nan;
-        if normalise
-            
-        else
-            val=val.*normdata;
-        end
     end
 end
