@@ -132,7 +132,7 @@ try
                                 message=sprintf('Z Slice number missing\n');
                                 datainfo.Z=datainfo.Z(1:nZSlice);
                             end
-                            temp=cellfun(@(x)raw_data.(x),ifname,'UniformOutput',false);
+                            temp=cellfun(@(x)double(raw_data.(x)),ifname,'UniformOutput',false);
                             obj.data(data_end_pos).dataval(:,:,:,:,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels),nZSlice]),[3,1,2,4]);
                             datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,nZSlice,1];
                         case 'Photo'
@@ -208,7 +208,7 @@ try
                     datainfo.T=linspace(metainfo.HeightOrigin,metainfo.HeightOrigin+(metainfo.Height-1)*metainfo.HeightStep,metainfo.Height);
                     datainfo.dT=metainfo.HeightStep;
                     % get data
-                    temp=cellfun(@(x)raw_data.(x),ifname(linescanidx),'UniformOutput',false);
+                    temp=cellfun(@(x)double(raw_data.(x)),ifname(linescanidx),'UniformOutput',false);
                     % add data
                     obj.data(data_end_pos).dataval(:,:,1,1,:)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels)]),[3,1,2]);
                     % work out dimension size
@@ -264,7 +264,7 @@ try
                     % T info
                     datainfo.T=0;
                     datainfo.dT=0;
-                    temp=cellfun(@(x)raw_data.(x),ifname(bgscanidx),'UniformOutput',false);
+                    temp=cellfun(@(x)double(raw_data.(x)),ifname(bgscanidx),'UniformOutput',false);
                     % add data
                     obj.data(data_end_pos).dataval(:,:,:,1,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,nCh]),[3,1,2]);
                     % work out dimension size
@@ -316,7 +316,7 @@ try
                     framecropstart=metainfo.FoldedFrameInfo.firstFramePos;
                     framecropend=framecropstart+nLines*nFrames-1;
                     % get data
-                    temp=cellfun(@(x)raw_data.(x)(:,framecropstart:framecropend),ifname(1:nCh),'UniformOutput',false);
+                    temp=cellfun(@(x)double(raw_data.(x)(:,framecropstart:framecropend)),ifname(1:nCh),'UniformOutput',false);
                     % add data
                     obj.data(data_end_pos).dataval(:,:,:,1,:)=permute(reshape(cell2mat(temp),[metainfo.Width,nLines,nFrames,nCh]),[4,1,2,3]);
                     % work out dimension size
@@ -371,11 +371,11 @@ try
                     datainfo.T=0;
                     datainfo.dT=0;
                     if numel(ifname)<2*nCh
-                        temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:end),'UniformOutput',false);
+                        temp=cellfun(@(x)double(raw_data.(x)),ifname(nCh+1:end),'UniformOutput',false);
                         datainfo.t=1:1:numel(ifname)-nCh;
                         nCh=numel(ifname)-nCh;
                     else
-                        temp=cellfun(@(x)raw_data.(x),ifname(nCh+1:2*nCh),'UniformOutput',false);
+                        temp=cellfun(@(x)double(raw_data.(x)),ifname(nCh+1:2*nCh),'UniformOutput',false);
                     end
                     % add data
                     obj.data(data_end_pos).dataval(:,:,:,1,1)=permute(reshape(cell2mat(temp),[metainfo.Width,metainfo.Height,numel(Channels)]),[3,1,2]);

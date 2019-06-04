@@ -138,10 +138,14 @@ try
         
         % ---- Data Calculation ----
         temp=regexp(splitexp,';','split');
+        psname=regexp(obj.data(current_data).datainfo.parameter_space,'[|]','split');
+        if numel(psname)~=numel(temp)
+            psname=temp;
+        end
         for newdata_idx=1:numel(temp)
-            % create new data items
+            % create new data items 
             % add new data
-            obj.data_add(sprintf('data_split|#%g|%s',newdata_idx,obj.data(current_data).dataname),[],[]);
+            obj.data_add(sprintf('data_split|%s#%g|%s',psname{newdata_idx},newdata_idx,obj.data(current_data).dataname),[],[]);
             % get new data index
             new_data=obj.current_data;
             % set parent data index

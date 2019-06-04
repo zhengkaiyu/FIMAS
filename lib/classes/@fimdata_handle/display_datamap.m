@@ -96,6 +96,7 @@ try
                         display_data(valdt(:,1,Pages(1)),fig_handle.PANEL_DATA_dt,'line',disp_axis,axis_label,[data_size(4)>1,data_size(5)>1],data_idx);
                         set(fig_handle.PANEL_DATA_dt,'UserData',valdt);
                         %}
+                        cla(fig_handle.PANEL_DATA_dt);
                         % --- 3D plot in XYZ ---
                         % tXYT(11101)
                         display_dim=[false,true,true,false,false];% plot XY
@@ -157,6 +158,7 @@ try
                         display_data(valdt(:,1,Pages(1)),fig_handle.PANEL_DATA_dt,'line',disp_axis,axis_label,[data_size(4)>1,data_size(5)>1],data_idx);
                         set(fig_handle.PANEL_DATA_dt,'UserData',valdt);
                         %}
+                        cla(fig_handle.PANEL_DATA_dt);
                         % --- 3D plot in XYZ ---
                         % tXYT(11101)
                         display_dim=[false,true,true,false,false];% plot XY
