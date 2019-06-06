@@ -81,7 +81,7 @@ try
             % copy all the positions
             obj.roi_placeholder=obj.data(current_data).roi(current_roi);
             % output info
-            message=sprintf('%g ROI copied\n',num_roi);
+            message=sprintf('%s\n%g ROI copied.',message,num_roi);
         case 'paste'
             % get current data and roi
             current_data=obj.current_data;
@@ -127,10 +127,10 @@ try
                     obj.data(current_data).roi(end).handle.addNewPositionCallback(@(p)fprintf('y = %g; x = %g\n',p));
                 end
                 obj.data(current_data).current_roi=current_roi+1:current_roi+num_roi;
-                message=sprintf('%g ROI pasted\n',num_roi);
+                message=sprintf('%s\n%g ROI pasted',message,num_roi);
                 status=true;
             end
-        case {'impoint','imrect','impoly'}
+        case {'impoint','imrect','impoly','imellipse'}
             % get current data and roi
             current_data=obj.current_data;
             % get plot handle
@@ -173,8 +173,8 @@ try
                     obj.data(current_data).roi(current_roi).panel=where_to;
                     obj.data(current_data).roi(current_roi).type=type;
                     obj.data(current_data).current_roi=current_roi;
-                    obj.roi_select(current_roi);
-                    message=sprintf('%s ROI added\n',type);
+                    [~,rmess]=obj.roi_select(current_roi);
+                    message=sprintf('%s\n%s\n%s ROI added.',message,rmess,type);
                     status=true;
                 else
                     %if cancelled new roi return previous one to white
@@ -186,10 +186,10 @@ try
                             setColor(obj.data(current_data).roi(current_roi).handle,'w');
                         end
                     end
-                    message=sprintf('Add %s ROI cancelled\n',type);
+                    message=sprintf('%s\nAdd %s ROI cancelled.',message,type);
                 end
             else
-                message=sprintf('no panel assigned to this data\n');
+                message=sprintf('%s\nno panel assigned to this data.',message);
             end
         case 'impolyline'
             % get current data and roi
@@ -234,8 +234,8 @@ try
                     obj.data(current_data).roi(current_roi).panel=where_to;
                     obj.data(current_data).roi(current_roi).type=type;
                     obj.data(current_data).current_roi=current_roi;
-                    obj.roi_select(current_roi);
-                    message=sprintf('%s ROI added\n',type);
+                    [~,rmess]=obj.roi_select(current_roi);
+                    message=sprintf('%s\n%s\n%s ROI added.',message,rmess,type);
                     status=true;
                 else
                     %if cancelled new roi return previous one to white
@@ -247,14 +247,14 @@ try
                             setColor(obj.data(current_data).roi(current_roi).handle,'w');
                         end
                     end
-                    message=sprintf('Add %s ROI cancelled\n',type);
+                    message=sprintf('%s\nAdd %s ROI cancelled',message,type);
                 end
             else
-                message=sprintf('no panel assigned to this data\n');
+                message=sprintf('%s\nno panel assigned to this data.',message);
             end
         otherwise
-            message=sprintf('%s\n','Unknown roi type');
+            message=sprintf('%s\nUnknown roi type.',message);
     end
 catch exception
-    message=sprintf('%s\n',exception.message);
+    message=sprintf('%s\n%s',message,exception.message);
 end

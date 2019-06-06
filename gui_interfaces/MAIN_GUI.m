@@ -10,7 +10,7 @@ function varargout = MAIN_GUI(varargin)
 % Operating System: 64bit Matlab 2016a on Linux/Mac/Windows
 % PDF Manual: require xpdf on linux and default pdf viewer on Mac/Windows
 
-% Last Modified by GUIDE v2.5 08-May-2019 12:33:57
+% Last Modified by GUIDE v2.5 06-Jun-2019 16:42:21
 
 %==============================================================
 % Begin initialization code - DO NOT EDIT
@@ -837,6 +837,17 @@ end
 %print command output from the user function steps
 update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
 
+function BUTTON_ROIELLIPSE_Callback(~, ~, handles)
+global hDATA;
+[ success, message ]=hDATA.roi_add('imellipse',[]);
+if success
+    % update roi list
+    populate_list(handles.LIST_ROI,{hDATA.data(hDATA.current_data).roi.name},hDATA.data(hDATA.current_data).current_roi);
+end
+%print command output from the user function steps
+update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
+
+
 % --------------------------------------------------------------------
 % display traces from roi
 function MENUITEM_ROI_DISPLAY_Callback(~, ~, handles)
@@ -1227,6 +1238,8 @@ if isnew
     set(handles.BUTTON_ROIPOLYLINE,'CData',iconimg);
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'roi_rect_icon.png'));%#ok<NODEF>
     set(handles.BUTTON_ROIRECT,'CData',iconimg);
+    iconimg=imread(cat(2,SETTING.rootpath.icon_path,'roi_ellip_icon.png'));%#ok<NODEF>
+    set(handles.BUTTON_ROIELLIPSE,'CData',iconimg);
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'roi_poly_icon.png'));%#ok<NODEF>
     set(handles.BUTTON_ROIPOLYAREA,'CData',iconimg);
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'link_break.png'));%#ok<NODEF>

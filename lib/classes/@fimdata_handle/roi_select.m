@@ -31,12 +31,13 @@ if ~isempty(surface)
         if roi_idx(m)>1
             %i.e. not the 'ALL' template
             setColor(obj.data(current_data).roi(roi_idx(m)).handle,'w');
-            xys=getPosition(obj.data(current_data).roi(roi_idx(m)).handle);
-            obj.data(current_data).roi(roi_idx(m)).coord=xys;   
             %get boundary coordinate and find inpoly points
             switch obj.data(current_data).roi(roi_idx(m)).type
                 case 'imrect'
                     %rect
+                    xys=getPosition(obj.data(current_data).roi(roi_idx(m)).handle);
+                    major=max(xys(3:4));
+                    minor=min(xys(3:4));
                     [pixel_x,pixel_y]=meshgrid(py_lim,px_lim);%map axis is inverted
                     xys=[[xys(1),xys(2)];...
                         [xys(1),xys(2)+xys(4)];...
@@ -45,20 +46,39 @@ if ~isempty(surface)
                         [xys(1),xys(2)]];%construct polygon from rectangle coordinate
                     roi=inpolygon(pixel_x,pixel_y,xys(:,1),xys(:,2));
                     p_roi_idx=find(roi==1);
+                    
                     roilength=sum(sqrt(sum(diff([xys;xys(1,:)],1,1).^2,2)));
                 case 'impoly'
+                    xys=getPosition(obj.data(current_data).roi(roi_idx(m)).handle);
                     %polygon
                     [pixel_x,pixel_y]=meshgrid(py_lim,px_lim);%map axis is inverted
                     roi=inpolygon(pixel_x,pixel_y,xys(:,1),xys(:,2));
                     p_roi_idx=find(roi==1);
+                    radius=max(xys)-min(xys);
+                    major=max(radius);
+                    minor=min(radius);
                     % length for two points impoly
                     roilength=sum(sqrt(sum(diff([xys;xys(1,:)],1,1).^2,2)));
+                case 'imellipse'
+                    % elliptical
+                    xys=obj.data(current_data).roi(roi_idx(m)).handle.getVertices;
+                    [pixel_x,pixel_y]=meshgrid(py_lim,px_lim);%map axis is inverted
+                    roi=inpolygon(pixel_x,pixel_y,xys(:,1),xys(:,2));
+                    p_roi_idx=find(roi==1);
+                    % length for two points impoly
+                    radius=max(xys)-min(xys);
+                    major=max(radius);
+                    minor=min(radius);
+                    roilength=sum(sqrt(sum(diff([xys;xys(1,:)],1,1).^2,2)));
                 case 'impolyline'
+                    xys=getPosition(obj.data(current_data).roi(roi_idx(m)).handle);
                     xys=fliplr(xys);%map axis is inverted
                     % distance for two points impoly
                     roilength=sum(sqrt(sum(diff(xys,1,1).^2,2)));
+                    major=[];minor=[];
                     p_roi_idx=[];
                 case 'impoint'
+                    xys=getPosition(obj.data(current_data).roi(roi_idx(m)).handle);
                     %point
                     xys=fliplr(xys(1,:));%map axis is inverted
                     xpos=find(xys(1,1)<=px_lim,1,'first');
@@ -78,15 +98,18 @@ if ~isempty(surface)
                     p_roi_idx=p_roi_idx(:);
                     p_roi_idx(p_roi_idx<1)=[];
                     p_roi_idx(p_roi_idx>length(px_lim)*length(py_lim))=[];
+                    major=[];minor=[];
                     roilength=[];
             end
+            obj.data(current_data).roi(roi_idx(m)).coord=xys;
         else
             % all pixels
             p_roi_idx=1:length(px_lim)*length(py_lim);
+            major=[];minor=[];
             roilength=[];
         end
         obj.data(current_data).roi(roi_idx(m)).idx=p_roi_idx;%assign indices
         status=true;
-        message=sprintf('%s\n%s of length %g contains %g pixels',message,obj.data(current_data).roi(roi_idx(m)).name,roilength,numel(p_roi_idx));
+        message=sprintf('%s\n%s of major %g, minor %g, length %g, contains %g pixels.',message,obj.data(current_data).roi(roi_idx(m)).name,major,minor,roilength,numel(p_roi_idx));
     end
 end
