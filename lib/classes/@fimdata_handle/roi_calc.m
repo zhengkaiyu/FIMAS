@@ -5,7 +5,7 @@ function [ data, status, message ] = roi_calc( obj, roi_idx, parameter )
 
 %% function check
 
-% asnansume worst
+% asnanmeane worst
 status=false;
 message='';data=[];
 try
@@ -79,7 +79,7 @@ try
                                 % display in T dimension
                                 display_dim=[false,false,false,false,true];
                                 [ data{2,3}, data{2,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{2,1}=squeeze(nansum(data{1,1},1));
+                                data{2,1}=squeeze(nanmean(data{1,1},1));
                             case 31
                                 % tXYZT(11111)
                                 
@@ -201,17 +201,17 @@ try
                                 [~,I2,I3,~,~]=ind2sub(obj.data(current_data).datainfo.data_dim,pixel_idx);
                                 display_dim=[false,true,false,false,false];
                                 [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{1,1}=squeeze(nansum(obj.data(current_data).dataval(:,:,unique(I3),:,:),3));
+                                data{1,1}=squeeze(nanmean(obj.data(current_data).dataval(:,:,unique(I3),:,:),3));
                                 display_dim=[false,false,true,false,false];
                                 [ data{2,3}, data{2,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{2,1}=squeeze(nansum(obj.data(current_data).dataval(:,unique(I2),:,:,:),2));
+                                data{2,1}=squeeze(nanmean(obj.data(current_data).dataval(:,unique(I2),:,:,:),2));
                             case 13
                                 % XYT(01101)
                                 display_dim=[true,false,false,false,false];
                                 [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
                                 dimsize=obj.data(current_data).datainfo.data_dim;
                                 temp=reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]);
-                                data{1,1}=nansum(temp(:,pixel_idx,:),2);
+                                data{1,1}=nanmean(temp(:,pixel_idx,:),2);
                                 display_dim=[false,false,false,false,true];
                                 [ data{2,3}, data{2,2} ] = obj.get_displaydata( current_data, display_dim );
                                 data{2,1}=squeeze(data{1,1});
@@ -222,7 +222,7 @@ try
                                 [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
                                 dimsize=obj.data(current_data).datainfo.data_dim;
                                 temp=reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]);
-                                data{1,1}=squeeze(nansum(temp(1,pixel_idx,:,1),2));
+                                data{1,1}=squeeze(nanmean(temp(1,pixel_idx,:,1),2));
                             case 15
                                 % XYZT(01111)
                                 % display Z in dt for consistency with XYZT data
@@ -230,7 +230,7 @@ try
                                 [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
                                 dimsize=obj.data(current_data).datainfo.data_dim;
                                 temp=squeeze(reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]));
-                                data{1,1}=nansum(temp(pixel_idx,:,:),1);
+                                data{1,1}=nanmean(temp(pixel_idx,:,:),1);
                                 display_dim=[false,false,false,false,true];
                                 [ data{2,3}, data{2,2} ] = obj.get_displaydata( current_data, display_dim );
                                 data{2,1}=data{1,1};
@@ -239,18 +239,18 @@ try
                                 [I1,~,~,~,I5]=ind2sub(obj.data(current_data).datainfo.data_dim,pixel_idx);
                                 display_dim=[true,false,false,false,false];
                                 [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{1,1}=squeeze(nansum(obj.data(current_data).dataval(:,:,:,:,unique(I5)),5));
+                                data{1,1}=squeeze(nanmean(obj.data(current_data).dataval(:,:,:,:,unique(I5)),5));
                                 display_dim=[false,false,false,false,true];
                                 [ data{2,3}, data{2,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{2,1}=squeeze(nansum(obj.data(current_data).dataval(unique(I1),:,:,:,:),1));
+                                data{2,1}=squeeze(nanmean(obj.data(current_data).dataval(unique(I1),:,:,:,:),1));
                             case 28
                                 % tXY(11100)
                                 display_dim=[true,false,false,false,false];
                                 [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{1,1}=squeeze(nansum(obj.data(current_data).dataval(:,pixel_idx),2));
+                                data{1,1}=squeeze(nanmean(obj.data(current_data).dataval(:,pixel_idx),2));
                                 display_dim=[false,false,false,false,true];
                                 [ data{2,3}, data{2,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{2,1}=nansum(data{1,1});
+                                data{2,1}=nanmean(data{1,1});
                             case 29
                                 % tXYT(11101)
                                 % display in t dimension
@@ -258,11 +258,11 @@ try
                                 [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
                                 dimsize=obj.data(current_data).datainfo.data_dim;
                                 temp=reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]);
-                                data{1,1}=nansum(temp(:,pixel_idx,:),2);
+                                data{1,1}=nanmean(temp(:,pixel_idx,:),2);
                                 % display in T dimension
                                 display_dim=[false,false,false,false,true];
                                 [ data{2,3}, data{2,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{2,1}=squeeze(nansum(data{1,1},1));
+                                data{2,1}=squeeze(nanmean(data{1,1},1));
                             case 30
                                 % tXYZ(11110)
                                 % display in t dimension
@@ -270,11 +270,11 @@ try
                                 [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
                                 dimsize=obj.data(current_data).datainfo.data_dim;
                                 temp=reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]);
-                                data{1,1}=nansum(temp(:,pixel_idx,:),2);
+                                data{1,1}=nanmean(temp(:,pixel_idx,:),2);
                                 % display in Z dimension
                                 display_dim=[false,false,false,true,false];
                                 [ data{2,3}, data{2,2} ] = obj.get_displaydata( current_data, display_dim );
-                                data{2,1}=squeeze(nansum(data{1,1},1));
+                                data{2,1}=squeeze(nanmean(data{1,1},1));
                             case 31
                                 % tXYZT(11111)
                                 
@@ -347,7 +347,7 @@ try
                                 [data{2},~]=histc(obj.data(current_data).dataval(pixel_idx),data{1});
                             case 28
                                 % tXY(11100)
-                                temp=squeeze(nansum(obj.data(current_data).dataval(:,pixel_idx),1));
+                                temp=squeeze(nanmean(obj.data(current_data).dataval(:,pixel_idx),1));
                                 maxval=nanmax(temp(:));
                                 data{1}=linspace(obj.data(1).datainfo.X_disp_bound(1).*maxval,...
                                     obj.data(1).datainfo.X_disp_bound(2).*maxval,...
@@ -357,7 +357,7 @@ try
                                 % tXYT(11101)
                                 dimsize=obj.data(current_data).datainfo.data_dim;
                                 temp=reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]);
-                                temp=squeeze(nansum(temp(:,pixel_idx,1,:),1));
+                                temp=squeeze(nanmean(temp(:,pixel_idx,1,:),1));
                                 maxval=nanmax(temp(:));
                                 data{1}=linspace(obj.data(1).datainfo.X_disp_bound(1).*maxval,...
                                     obj.data(1).datainfo.X_disp_bound(2).*maxval,...
