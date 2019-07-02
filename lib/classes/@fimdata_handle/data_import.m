@@ -7,6 +7,7 @@ function [ status, message ] = data_import( obj, varargin )
 %% function complete
 %==============Initialise===============
 status=false;
+message='';
 options=[];
 
 data_pathname=obj.path.import;%default to obj value
@@ -26,7 +27,7 @@ try
             case 'filename'
                 data_filename=arguments{argin_num};
             otherwise
-                message=sprintf('unknown options! try to continue.\n');
+                message=sprintf('%s\nunknown options %s try to continue.',message,options{argin_num});
                 fprintf('%s\n',message);
         end
     end
@@ -89,6 +90,8 @@ try
     %----------Load files-----------------
     %set current data to template before proceed
     obj.data_select(1);
+    % for batch loading purposes so we only need to ask once
+    buttonoib=[];buttonptu=[];
     %loop through files
     for file_counter=1:1:num_file
         %cat full filename
@@ -115,12 +118,16 @@ try
             case 'ptu'
                 %picoquant binary
                 %ask for storage format
-                button = questdlg('Use spc to minimise memory usage','Storage Format','ndim','spc','ndim');
-                switch button
+                if isempty(buttonptu)
+                    buttonptu = questdlg('Use spc to minimise memory usage','Storage Format','ndim','spc','ndim');
+                end
+                switch buttonptu
                     case 'ndim'
                         [ status, message ] = obj.load_pq_ptu_file(filename);
                     case 'spc'
                         [ status, message ] = obj.load_pq_ptu_file_spc(filename);
+                    otherwise
+                        message=sprintf('%s\n#%g ptu file open cancelled',message,file_counter);
                 end
             case {'tiff','tif','TIF','TIFF'}
                 %TIF image file format
@@ -144,14 +151,13 @@ try
                 % saved older version of data analysis file
                 [ status, message ] = obj.load_old_dataformat(filename);
             otherwise
-                message=sprintf('file %s, format unknown\n',data_filename{file_counter});
+                message=sprintf('%s\nfile %s, format unknown',message,data_filename{file_counter});
         end
         %append messages
-        message=sprintf('File# : %g processed.\nReturn Message : %s\n',file_counter, message);
+        message=sprintf('%s\nFile# : %g processed.',message,file_counter);
     end
     %append messages
-    message=sprintf('%s\n%g number of file processed from %s\n',message, num_file, data_pathname);
-    
+    message=sprintf('%s\n%g number of file processed from %s',message, num_file, data_pathname);
 catch exception%error handle
-    message=sprintf('%s\n',exception.message);
+    message=sprintf('%s\n%s',message,exception.message);
 end

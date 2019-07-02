@@ -123,8 +123,8 @@ try
                     %get actual shift data
                     shift_size=cell2mat(final_warp(1:end))';
                     %get rid of out of bound shifts (more than 1/2 of the image pixel size due to poor estimate
-                    out_bound=(abs(shift_size(:,1))>numel(px_lim)/2|abs(shift_size(:,2))>numel(py_lim)/2);
-                    shift_size(out_bound,:)=[];x(out_bound)=[];
+                    %out_bound=(abs(shift_size(:,1))>numel(px_lim)/2|abs(shift_size(:,2))>numel(py_lim)/2);
+                    %shift_size(out_bound,:)=[];x(out_bound)=[];
                     %respline the points missed
                     temp(:,1)=spline(x,shift_size(:,1),xx);
                     temp(:,2)=spline(x,shift_size(:,2),xx);
@@ -154,7 +154,7 @@ try
                     isnew=0;
                 else
                     %row number inconsisten with data
-                    message=sprintf('number of rows in xyshift data inconsisten with image data\n');
+                    message=sprintf('number of rows in xyshift data inconsistent with image data\n');
                     return;
                 end
             else
@@ -201,7 +201,7 @@ try
             setappdata(waitbar_handle,'canceling',0);
             
             for slice_idx=2:n_slices
-                obj.data(current_data).dataval(1,:,:,slice_idx) = spatial_interp(squeeze(obj.data(parent_data).dataval(1,:,:,slice_idx)),shift_size(slice_idx,:)', 'cubic','translation', nx, ny);
+                obj.data(current_data).dataval(1,:,:,:,slice_idx) = spatial_interp(squeeze(obj.data(parent_data).dataval(1,:,:,:,slice_idx)),shift_size(slice_idx,:)', 'cubic','translation', nx, ny);
                 
                 %output some progress so we know it is doing things
                 if getappdata(waitbar_handle,'canceling')

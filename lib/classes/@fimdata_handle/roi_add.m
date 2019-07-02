@@ -114,6 +114,11 @@ try
                         case 'impolyline'
                             roitype='impoly';
                             eval(cat(2,'obj.data(current_data).roi(end).handle=',roitype,'(where_to,obj.roi_placeholder(m).coord,''Closed'',false);'));
+                        case {'imellipse','imrect'}
+                            roitype=obj.data(current_data).roi(end).type;
+                            coordmin=min(obj.roi_placeholder(m).coord);
+                            coordmax=max(obj.roi_placeholder(m).coord);
+                            eval(cat(2,'obj.data(current_data).roi(end).handle=',roitype,'(where_to,[coordmin,coordmax-coordmin]);'));
                         otherwise
                             roitype=obj.data(current_data).roi(end).type;
                             eval(cat(2,'obj.data(current_data).roi(end).handle=',roitype,'(where_to,obj.roi_placeholder(m).coord);'));
@@ -189,7 +194,7 @@ try
                     message=sprintf('%s\nAdd %s ROI cancelled.',message,type);
                 end
             else
-                message=sprintf('%s\nno panel assigned to this data.',message);
+                message=sprintf('%s\no panel assigned to this data.',message);
             end
         case 'impolyline'
             % get current data and roi

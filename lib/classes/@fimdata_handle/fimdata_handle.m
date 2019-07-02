@@ -225,7 +225,7 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         
         %import biorad pic files
         [ status, message ] = load_biorad_pic_file( obj, filename);
-        %import olympus oic files
+        %import olympus oib files using bioformat
         [ status, message ] = load_olympus_oib_file( obj, filename);
         %import Femtonics mes files
         [ status, message ] = load_femtonic_mes_file( obj, filename);
