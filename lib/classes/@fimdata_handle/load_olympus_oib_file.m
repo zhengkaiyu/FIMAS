@@ -96,6 +96,11 @@ try
         obj.data(data_end_pos).datainfo.Y=Y;
         obj.data(data_end_pos).datainfo.Z=Z;
         obj.data(data_end_pos).datainfo.T=T;
+        obj.data(data_end_pos).datainfo.dt=1;
+        obj.data(data_end_pos).datainfo.dX=dX;
+        obj.data(data_end_pos).datainfo.dY=dY;
+        obj.data(data_end_pos).datainfo.dZ=dZ;
+        obj.data(data_end_pos).datainfo.dT=dT;
         
         % core meta infos
         obj.data(data_end_pos).datainfo.parameter_space=channelname;

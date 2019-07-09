@@ -104,7 +104,7 @@ try
                         %get the correlation matrix between current and template frame
                         %template frame is the first slice
                         [~, final_warp{slice_idx}, ~]=ecc(val(:,:,slice_idx), val(:,:,1), NoL, NoI, 'translation', init);
-                        
+                        init=final_warp{slice_idx}/2;
                         %output some progress so we know it is doing things
                         if getappdata(waitbar_handle,'canceling')
                             fprintf('NTC calculation cancelled\n');

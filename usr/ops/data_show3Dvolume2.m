@@ -57,7 +57,7 @@ try
         ystart=1+nn_dist;ystop=numel(r2)-nn_dist;
         zstart=1+znn_dist;zstop=numel(r3)-znn_dist;
         
-        lb=0.01;ub=200;
+        lb=bg_threshold;ub=200;
         
         [i,j,k]=ind2sub(subimgsize,1:nvoxel);
         i=i(:);j=j(:);k=k(:);
