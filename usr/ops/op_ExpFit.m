@@ -227,7 +227,7 @@ try
                             calc_idx(calc_idx>px_lim*py_lim)=[];
                             data=nansum(frame_data(t0:t1,calc_idx),2);
                             if  max(data(:))> min_threshold
-                                [estimates,~,flag] = fminsearch(@expfitfun,parameter,...
+                                [estimates,~,flag] = fminsearch(@chi2expfunc,parameter,...
                                     optimset('Display','off','MaxFunEvals',MaxFunEvals,...
                                     'MaxIter',MaxIter,'TolFun',TolFun),t,data);
                             else
@@ -239,7 +239,7 @@ try
                             else
                                 parameter=estimates;%update initial guess
                             end
-                            residue=expfitfun(estimates,t,data);
+                            residue=chi2expfunc(estimates,t,data);
                             val(:,p_idx) = [coeff',1./estimates,residue];
                         end
                         
@@ -253,18 +253,4 @@ try
 catch exception
     message=exception.message;
 end
-
-    function res = expfitfun(lambda,t,y)
-        X = zeros(m,n);
-        for j = 1:n
-            X(:,j) = exp(-lambda(j)*t);
-        end
-        if ~isempty(fft_FIR)
-            X=ifft(fft_FIR.*fft(X,m,1),m,1);
-        end
-        coeff = X\y;
-        z = X*coeff;
-        res=(sum((z-y).^2));
-        %res=sum(((z(meas_head:meas_tail).^2).*(y(meas_head:meas_tail)-z(meas_head:meas_tail))).^2);
-    end
 end

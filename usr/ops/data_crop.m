@@ -226,6 +226,7 @@ try
                         end
                         % pass on metadata info
                         obj.data(new_data).metainfo=obj.data(parent_data).metainfo;
+                        obj.data(new_data).datatype=obj.get_datatype(new_data);
                         obj.data(new_data).datainfo.last_change=datestr(now);
                         status=true;
                         message=sprintf('%s\nData %s to %s cropped.',message,num2str(current_data),num2str(new_data));

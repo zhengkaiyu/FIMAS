@@ -8,10 +8,11 @@ function [ status, message ] = data_showauxch( obj, selected_data, askforparam, 
 %   3. In batch mode, data are automatically saved as new dataitem
 %
 %---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','channel','1','savetrace','true');
+%   Parameter=struct('selected_data','1','channel','AnI1Cal','savetrace','true','displaytrace','false');
 %   selected_data=data index, 1 means previous generated data
-%   channel=0|1|2; default selection of femtonics auxi channels
+%   channel=AnI1Cal; default selection of femtonics AUXi%i AnI%iCal
 %	savetrace=true|false; save aux channel data to new dataitem
+%	displaytrace=true|false; display aux channel data to new figure window
 %--------------------------------------------------------------------------
 %   HEADER END
 
@@ -35,7 +36,7 @@ try
         if askforparam
             %find existing AUXi channels
             fnames=fieldnames(obj.data(current_data).metainfo);
-            temp=regexp(fnames,'AUXi\w*','match');
+            temp=regexp(fnames,'[(AUXi)(AnI)]\d.','match');
             ch_present=fnames(cellfun(@(x)~isempty(x),temp));
             if isempty(ch_present)
                 %ask for channel
@@ -65,8 +66,10 @@ try
                     switch button
                         case 'Save'
                             savetrace=true;
+                            displaytrace=true;
                         case 'Plot'
                             savetrace=false;
+                            displaytrace=true;
                     end
                     % for multiple data ask for apply to all option
                     if numel(selected_data)>1
@@ -82,9 +85,11 @@ try
             for fidx=1:numel(fname)
                 switch fname{fidx}
                     case 'channel'
-                        channel=sprintf('AUXi%s',fval{fidx});
+                        channel=sprintf('%s',fval{fidx});
                     case 'savetrace'
                         savetrace=eval(fval{fidx});
+                    case 'displaytrace'
+                        displaytrace=eval(fval{fidx});
                 end
             end
             % only use waitbar for user attention if we are in
@@ -128,15 +133,17 @@ try
                 yunit=obj.data(current_data).metainfo.(channel).yunit;
                 npts=numel(y);
                 t=linspace(x(1),x(2)*npts,npts);
-                figure('Name',sprintf('%s from data item %s',channel,obj.data(current_data).dataname),...
-                    'NumberTitle','off',...
-                    'MenuBar','none',...
-                    'ToolBar','figure',...
-                    'Keypressfcn',@export_panel);
-                plot(t,y,'k-','LineWidth',2);
-                xlabel(gca,sprintf('%s (%s)',obj.data(current_data).metainfo.(channel).xname,xunit));
-                ylabel(gca,sprintf('%s (%s)',obj.data(current_data).metainfo.(channel).yname,yunit));
-                title(gca,sprintf('%s from data item %s',channel,obj.data(current_data).dataname),'Interpreter','none','FontSize',10);
+                if displaytrace
+                    figure('Name',sprintf('%s from data item %s',channel,obj.data(current_data).dataname),...
+                        'NumberTitle','off',...
+                        'MenuBar','none',...
+                        'ToolBar','figure',...
+                        'Keypressfcn',@export_panel);
+                    plot(t,y,'k-','LineWidth',2);
+                    xlabel(gca,sprintf('%s (%s)',obj.data(current_data).metainfo.(channel).xname,xunit));
+                    ylabel(gca,sprintf('%s (%s)',obj.data(current_data).metainfo.(channel).yname,yunit));
+                    title(gca,sprintf('%s from data item %s',channel,obj.data(current_data).dataname),'Interpreter','none','FontSize',10);
+                end
                 if savetrace
                     parent_data=current_data;
                     % add new data

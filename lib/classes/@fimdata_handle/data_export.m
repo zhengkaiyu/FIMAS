@@ -13,6 +13,7 @@ try
             'Select Exported Data Analysis File',obj.path.export);
         filename=cat(2,pathname,filename);
     end
+    filename=regexprep(filename,'[|]','_');
     [pathname,~,extension]=fileparts(filename);
     if pathname~=0     %if files selected
         switch extension(2:end)

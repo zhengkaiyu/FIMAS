@@ -176,12 +176,5 @@ catch exception
     message=exception.message;
 end
 
-function export_panel(handle,eventkey)
-global SETTING;
-switch eventkey.Key
-    case {'f3'}
-        SETTING.export_panel(findobj(handle,'Type','Axes'));
-end
-
 function coord=roicentroid(val,Itotal,dr,orig)
 coord=sum(bsxfun(@times,val(:,1:3),val(:,4)),1)/Itotal.*dr+orig;

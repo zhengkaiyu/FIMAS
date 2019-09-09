@@ -257,21 +257,3 @@ catch exception
     messages=exception.message;
 end
 end
-function sse = chi2gaussfunc( p, x, f, sl )
-% p = paramters
-% x = independent variable
-% f = data function value wrt x
-% sl = saturation level
-FittedCurve=gaussfunc(p,x);
-FittedCurve = FittedCurve.*(FittedCurve<sl)+sl*(FittedCurve>=sl);
-ErrorVector = (FittedCurve - f');
-sse = sum(ErrorVector .^ 2);
-end
-
-function export_panel(handle,eventkey)
-global SETTING;
-switch eventkey.Key
-    case {'f3'}
-        SETTING.export_panel(findobj(handle,'Type','Axes'));
-end
-end

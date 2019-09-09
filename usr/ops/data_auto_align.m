@@ -107,7 +107,7 @@ try
                         init=final_warp{slice_idx}/2;
                         %output some progress so we know it is doing things
                         if getappdata(waitbar_handle,'canceling')
-                            fprintf('NTC calculation cancelled\n');
+                            fprintf('Autoalign calculation cancelled\n');
                             delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
                             return;
                         end

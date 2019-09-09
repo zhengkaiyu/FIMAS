@@ -6,10 +6,11 @@ function [ status, message ] = data_batchexport( obj, selected_data, askforparam
 %   2. Main purpose is to maintain data index for batch processing
 %
 %---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','format','edf','directory','');
+%   Parameter=struct('selected_data','1','format','edf','directory','','bundle','true');
 %   selected_data=data index, 1 means previous generated data
 %   format=mat|edf|tiff|tif|TIFF|TIF
 %   directory=path to which data are exported, default '' uses global path
+%   bundle=0|1, as a single file bundle or separate individual files
 %--------------------------------------------------------------------------
 %   HEADER END
 %% function complete
@@ -33,7 +34,7 @@ try
         % if it is not automated, we need manual parameter input/adjustment
         if askforparam
             % need user input/confirm names
-            prompt = {sprintf('format (mat,edf,tiff)'),'export path'};
+            prompt = {sprintf('format (mat,edf,tiff)'),'export path','bundle'};
             dlg_title = 'Data batch export';
             num_lines = 1;
             def = {'edf',SETTING.rootpath.exported_data};
@@ -54,8 +55,14 @@ try
                 else
                     exportpath=answer{2};
                 end
+                switch answer{3}
+                    case {'1','true'}
+                        bundle=true;
+                    otherwise
+                        bundle=false;
+                end
                 % for multiple data ask for apply to all option
-                if numel(selected_data)>1
+                if ~bundle && numel(selected_data)>1
                     askforparam=askapplyall('apply');
                 end
             else
@@ -80,6 +87,13 @@ try
                             exportpath=SETTING.rootpath.exported_data;
                         else
                             exportpath=fval{fidx};
+                        end
+                    case 'bundle'
+                        switch fval{fidx}
+                            case {'1','true'}
+                                bundle=true;
+                            otherwise
+                                bundle=false;
                         end
                 end
             end
@@ -114,11 +128,26 @@ try
             end
         else
             % ---- Data Calculation ----
-            % make filename
-            filename=sprintf('%s%s%s.%s',exportpath,filesep,obj.data(current_data).dataname,exportformat);
-            % export
-            obj.data_export(current_data,filename);
-            message=sprintf('%s\nData %s to %s exported',message,num2str(current_data),num2str(1));
+            if bundle
+                % export as one file
+                % make filename
+                filename=sprintf('%s%s%s_bundle.%s',exportpath,filesep,obj.data(selected_data(1)).dataname,exportformat);
+                % export
+                obj.data_export(selected_data,filename);
+                message=sprintf('%s\nData %s to %s exported',message,num2str(selected_data),filename);
+                status=true;
+                % close waitbar if exist
+                if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+                    delete(waitbar_handle);
+                end
+                return;
+            else
+                % make filename
+                filename=sprintf('%s%s%s.%s',exportpath,filesep,obj.data(current_data).dataname,exportformat);
+                % export
+                obj.data_export(current_data,filename);
+                message=sprintf('%s\nData %s to %s exported',message,num2str(current_data),filename);
+            end
         end
         data_idx=data_idx+1;
         status=true;

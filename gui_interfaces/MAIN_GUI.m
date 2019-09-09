@@ -655,11 +655,12 @@ for opidx=2:numel(BATCHPROC)
             [~,success,message]=evalc(sprintf('%s(%s,[%s],false,%s);',funcname,'hDATA',seldata,paramarg));
             if ~success
                 errordlg(message);
+            else
+                update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
             end
             % find if we have new seldata index from message
             tempname=regexp(message,'(?<=Data )(([0-9])* to ([0-9])*)','match');
             newseldata=unique(cellfun(@(x)str2double(x{2}),regexp(tempname,' to ','split')));
-            %[ success, message ]=datahandle.data_delete(seldata);
             seldata=num2str(newseldata);
         case 'op'
             for stepidx=1:1:2
@@ -673,6 +674,8 @@ for opidx=2:numel(BATCHPROC)
                 end
                 if ~success
                     errordlg(message);
+                else
+                    update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
                 end
                 % find if we have new seldata index from message
                 tempname=regexp(message,'(?<=Data )(([0-9])* to ([0-9])*)','match');
@@ -699,6 +702,8 @@ if ischar(pathname)
     handles.LIST_BATCHPROCESS.String={BATCHPROC.operation};
     SETTING.rootpath.saved_data=pathname;
     update_info(sprintf('%s batch processing file loaded',filename),0,handles.EDIT_INFO);
+    %
+    handles.LIST_BATCHPROCESS.Value=1;
 end
 
 function BUTTON_SAVEBATCH_Callback(~, ~, handles)
