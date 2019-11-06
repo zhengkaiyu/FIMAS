@@ -8,7 +8,7 @@ function [ status, message ] = op_PSLocalisation( data_handle, option, varargin 
 %   selected_data=data index, 1 means previous generated data
 %   parameter_space=Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp
 %   estimate_nsource=integer(>=0); number of gaussian center in one frame fit
-%   interval_start= 1x(m+1) vector or 'auto'; starting time point for [background,1AP,2AP,...mAP], auto uses AP_deltaT as minimum peak distance in findpeaks function
+%   interval_start= 1x(m+1) vector or 'auto\d*'; starting time point for [background,1AP,2AP,...mAP], auto uses AP_deltaT as minimum peak distance in findpeaks function
 %   baseline_deltaT=scalar(>0); time interval in ms for baseline period
 %   bg_deltaT=scalar or 1xm vector~(>0);   time interval in ms for background pre APs
 %   AP_deltaT=scalar or 1xm vector(>0); time interval in ms for m post APs
@@ -135,15 +135,35 @@ try
                                     % call peak find function on
                                     % electrophysdata
                                     peakdataidx=str2double(cell2mat(regexp(val,'(?<=auto)\d*','match')));
-                                    peakdata=squeeze(data_handle.data(peakdataidx).dataval);
-                                    Tdata=data_handle.data(peakdataidx).datainfo.T;
-                                    minpdist=min(data_handle.data(current_data).datainfo.AP_deltaT);
-                                    [pks,locs,w,p]=findpeaks(peakdata,Tdata,'MinPeakDistance',minpdist,'MinPeakProminence',4);
-                                    % plot in debug mode
-                                    %figure;plot(Tdata,peakdata,'k-',locs,pks,'ro');
-                                    % get background start using the first peak - bg duration - baseline duration
-                                    bgstart=locs(1)-data_handle.data(current_data).datainfo.baseline_deltaT-data_handle.data(current_data).datainfo.bg_deltaT;
-                                    data_handle.data(current_data).datainfo.interval_start=[bgstart,locs];
+                                    if ~isempty(peakdataidx)
+                                        peakdata=squeeze(data_handle.data(peakdataidx).dataval);
+                                        Tdata=data_handle.data(peakdataidx).datainfo.T;
+                                        minpdist=min(data_handle.data(current_data).datainfo.AP_deltaT);
+                                        [pks,locs,w,p]=findpeaks(peakdata,Tdata,'MinPeakDistance',minpdist,'MinPeakProminence',4);
+                                        % plot in debug mode
+                                        %figure;plot(Tdata,peakdata,'k-',locs,pks,'ro');
+                                        if isempty(locs)%no peak found revert to default
+                                            opts.Interpreter='tex';
+                                            answer=inputdlg({'Use auto\d* format failed please input intervals manually here'},'Interval Start',1,{'[200,366,466,566,666,766]'},opts);
+                                            if isempty(answer)
+                                                data_handle.data(current_data).datainfo.interval_start=[200,366,466,566,666,766];
+                                            else
+                                                data_handle.data(current_data).datainfo.interval_start=str2num(answer);
+                                            end
+                                        else
+                                            % get background start using the first peak - bg duration - baseline duration
+                                            bgstart=locs(1)-data_handle.data(current_data).datainfo.baseline_deltaT-data_handle.data(current_data).datainfo.bg_deltaT;
+                                            data_handle.data(current_data).datainfo.interval_start=[bgstart,locs];
+                                        end
+                                    else
+                                        opts.Interpreter='tex';
+                                        answer=inputdlg({'Use auto\d* format failed please input intervals manually here'},'Interval Start',1,{'[200,366,466,566,666,766]'},opts);
+                                        if isempty(answer)
+                                            data_handle.data(current_data).datainfo.interval_start=[200,366,466,566,666,766];
+                                        else
+                                            data_handle.data(current_data).datainfo.interval_start=str2num(answer);
+                                        end
+                                    end
                                 otherwise
                                     data_handle.data(current_data).datainfo.interval_start=max(10,round(str2num(val)));
                             end
