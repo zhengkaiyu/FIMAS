@@ -8,7 +8,7 @@ function [ status, message ] = op_PSLocalisation( data_handle, option, varargin 
 %   selected_data=data index, 1 means previous generated data
 %   parameter_space=Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp
 %   estimate_nsource=integer(>=0); number of gaussian center in one frame fit
-%   interval_start= 1x(m+1) vector; starting time point for [background,1AP,2AP,...mAP]
+%   interval_start= 1x(m+1) vector or 'auto'; starting time point for [background,1AP,2AP,...mAP], auto uses AP_deltaT as minimum peak distance in findpeaks function
 %   baseline_deltaT=scalar(>0); time interval in ms for baseline period
 %   bg_deltaT=scalar or 1xm vector~(>0);   time interval in ms for background pre APs
 %   AP_deltaT=scalar or 1xm vector(>0); time interval in ms for m post APs
@@ -130,7 +130,23 @@ try
                             data_handle.data(current_data).datainfo.estimate_nsource=nsource;
                             data_handle.data(current_data).datainfo.parameter_space=[repmat('Cx|Cy|Sigma|Amp|',1,nsource),'Int',repmat('|dCx|dCy|dSigma|dAmp',1,nsource)];
                         case 'interval_start'
-                            data_handle.data(current_data).datainfo.interval_start=max(10,round(str2num(val)));
+                            switch val(1)
+                                case 'a'
+                                    % call peak find function on
+                                    % electrophysdata
+                                    peakdataidx=str2double(cell2mat(regexp(val,'(?<=auto)\d*','match')));
+                                    peakdata=squeeze(data_handle.data(peakdataidx).dataval);
+                                    Tdata=data_handle.data(peakdataidx).datainfo.T;
+                                    minpdist=min(data_handle.data(current_data).datainfo.AP_deltaT);
+                                    [pks,locs,w,p]=findpeaks(peakdata,Tdata,'MinPeakDistance',minpdist,'MinPeakProminence',4);
+                                    % plot in debug mode
+                                    %figure;plot(Tdata,peakdata,'k-',locs,pks,'ro');
+                                    % get background start using the first peak - bg duration - baseline duration
+                                    bgstart=locs(1)-data_handle.data(current_data).datainfo.baseline_deltaT-data_handle.data(current_data).datainfo.bg_deltaT;
+                                    data_handle.data(current_data).datainfo.interval_start=[bgstart,locs];
+                                otherwise
+                                    data_handle.data(current_data).datainfo.interval_start=max(10,round(str2num(val)));
+                            end
                         case 'baseline_deltaT'
                             data_handle.data(current_data).datainfo.baseline_deltaT=max(10,round(str2double(val)));
                         case 'bg_deltaT'
