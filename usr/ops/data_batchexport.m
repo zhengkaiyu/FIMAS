@@ -37,7 +37,7 @@ try
             prompt = {sprintf('format (mat,edf,tiff)'),'export path','bundle'};
             dlg_title = 'Data batch export';
             num_lines = 1;
-            def = {'edf',SETTING.rootpath.exported_data};
+            def = {'edf',SETTING.rootpath.exported_data,'true'};
             set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
             set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);

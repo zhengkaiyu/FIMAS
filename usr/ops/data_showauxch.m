@@ -36,7 +36,7 @@ try
         if askforparam
             %find existing AUXi channels
             fnames=fieldnames(obj.data(current_data).metainfo);
-            temp=regexp(fnames,'[(AUXi)(AnI)]\d.','match');
+            temp=regexp(fnames,'(AUXi|AnI)\d+','match');
             ch_present=fnames(cellfun(@(x)~isempty(x),temp));
             if isempty(ch_present)
                 %ask for channel

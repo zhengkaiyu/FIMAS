@@ -8,7 +8,7 @@ parameters=struct('note','',...
     'minpeakdist',100,...%ms
     'minpeakwidth',100,...%ms
     'widthref','halfprom',...
-    'threshold',0.5);%multiple of std
+    'threshold',1e-4);%multiple of std
 
 status=false;message='';
 try

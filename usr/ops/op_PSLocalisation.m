@@ -15,7 +15,10 @@ function [ status, message ] = op_PSLocalisation( data_handle, option, varargin 
 %   edge_allowance=scalar(>=0); off the edge c(x,y) bounds as multiples of (dx,dy)
 %   display_fitting=1|0;    display figure for fitting
 %--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
 %   HEADER END
+
+%% function complete
 
 %table contents must all have default values
 parameters=struct('note','',...
