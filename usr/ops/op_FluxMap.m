@@ -135,11 +135,7 @@ switch option
                 val=cellfun(@(x)num2str(parameters.(x)),f_name,'UniformOutput',false);
                 %ask for new parameters value
                 options.Resize='on';options.WindowStyle='modal';options.Interpreter='none';
-                set(0,'DefaultUicontrolBackgroundColor',[0.7,0.7,0.7]);
-                set(0,'DefaultUicontrolForegroundColor','k');
                 answers=inputdlg(f_name,'Input parameters',1,val,options);
-                set(0,'DefaultUicontrolBackgroundColor','k');
-                set(0,'DefaultUicontrolForegroundColor','w');
                 if ~isempty(answers)
                     answers=str2double(answers);
                     original=cell(length(answers),1);changes=cell(length(answers),1);

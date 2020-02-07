@@ -70,6 +70,7 @@ if success
                         result{2,1}=reshape(result{2,1},[1,1,1,result_size(1),1]);
                     case 'T'
                         result{2,1}=reshape(result{2,1},[1,1,1,1,result_size(1)]);
+                        
                 end
                 obj.data_add(cat(2,obj.data(parent_data).dataname,'/',...
                     obj.data(parent_data).roi(parent_roi).name),result{2,1},[]);

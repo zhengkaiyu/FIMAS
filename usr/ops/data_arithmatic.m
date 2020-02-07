@@ -46,11 +46,7 @@ try
                 def = {'bsxfun(@minus,$d,mean($d(1:10,:,:,:,:),1))'};
                 newdata=true;
             end
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if isempty(answer)
                 % cancelled
                 message=sprintf('%s\nOperation cancelled',message);

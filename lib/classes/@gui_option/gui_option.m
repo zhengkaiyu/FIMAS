@@ -12,6 +12,7 @@ classdef ( ConstructOnLoad = true ) gui_option < handle
     properties ( SetAccess = public, GetAccess = public )
         rootpath;%data root path storage
         usage;
+        colour;%
         
         panel;%panel setting structure initialise at start
         current_panel=1;%current panel pointer
@@ -53,6 +54,9 @@ classdef ( ConstructOnLoad = true ) gui_option < handle
                 obj.panel(panel_idx).cbound=[0,1,2,128];%[min,max,minlevel,maxlevel]
                 obj.panel(panel_idx).colormap=obj.COLOR_MAP_LIST{panel_idx};     %panel handel
             end
+            %colour scheme
+            obj.colour.uifg=[0.5,0.5,0.5];
+            obj.colour.uibg=[0.2,0.2,0.2];
             
             temp=load(cat(2,'.',filesep,'lib',filesep,'color_order.mat'),'-mat');
             obj.color_order=temp.cmap;

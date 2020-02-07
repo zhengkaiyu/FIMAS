@@ -49,11 +49,7 @@ try
             dlg_title = cat(2,'Data crop intervals for',obj.data(current_data).dataname);
             num_lines = 2;
             def = [cellfun(@(x)num2str(x'),dim_interval,'UniformOutput',false),'normal'];
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 % get intervals
                 dim_interval=cellfun(@(x)str2num(x(1:2,:)),answer(1:5),'UniformOutput',false)'; %#ok<ST2NM>

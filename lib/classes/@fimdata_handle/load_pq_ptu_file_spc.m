@@ -136,11 +136,7 @@ try
         if numel(present_channel)>1
             % ask for single channel to load
             options.Resize='on';options.WindowStyle='modal';options.Interpreter='tex';
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer=inputdlg(cat(2,num2str(present_channel),'Which Channel to import:'),'Select Channel',1,{'1'});
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 %get selected channel
                 channel_idx=str2double(answer);
@@ -272,9 +268,6 @@ try
         [~,linestop_framenum]=histc(linestop_pos,frame_pos);
         [stoplinenum,~]=histc(linestop_framenum,1:1:framenum);
         validframe=[];
-        
-        set(0,'DefaultUicontrolBackgroundColor','w');
-        set(0,'DefaultUicontrolForegroundColor','k');
         while isempty(validframe)
             invalidframe=unique([find(startlinenum~=line_per_frame);find(stoplinenum~=line_per_frame)]);
             validframe=setxor(1:1:framenum,invalidframe);
@@ -297,8 +290,6 @@ try
                 end
             end
         end
-        set(0,'DefaultUicontrolBackgroundColor','k');
-        set(0,'DefaultUicontrolForegroundColor','w');
         validframe=validframe(:)';
         
         % ask if want fly back

@@ -66,7 +66,7 @@ try
         for imgidx=1:numImages
             Cidx=cell2mat(regexp(seriesdata{imgidx,2},'(?<=(C=|C\?=))\d*(?=/)','match'));
             if isempty(Cidx)
-                Cidx=':';
+                Cidx=sprintf('1:%g',numel(C));
             end
             Zidx=cell2mat(regexp(seriesdata{imgidx,2},'(?<=(Z=|Z\?=))\d*(?=/)','match'));
             if isempty(Zidx)
@@ -102,6 +102,7 @@ try
         obj.data(data_end_pos).datainfo.dZ=dZ;
         obj.data(data_end_pos).datainfo.dT=dT;
         
+        obj.data(data_end_pos).datainfo.display_dim=[numel(C)>1,numel(X)>1,numel(Y)>1,numel(Z)>1,numel(T)>1];
         % core meta infos
         obj.data(data_end_pos).datainfo.parameter_space=channelname;
         global SETTING;

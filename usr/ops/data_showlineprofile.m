@@ -25,12 +25,8 @@ try
             message=sprintf('data %g has no surface plot\n',selected_data);
         else
             %ask for halfwidth
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             options.WindowStyle='modal';
             answer = inputdlg('Line halfwidth in image length unit (um usually):','Line Half Width',1,{'0.5'},options);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             hw=str2double(answer);%um
             %get original image
             org_img=get(surface,'ZData');

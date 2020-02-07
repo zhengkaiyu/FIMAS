@@ -1,5 +1,5 @@
 function varargout = MAIN_GUI(varargin)
-% Fluorescence Imaging Microscopy Analysis Software Ver 1.2.6
+% Fluorescence Imaging Microscopy Analysis Software Ver 1.2.6.5
 % Author: Kaiyu Zheng
 % Email: k.zheng@ucl.ac.uk
 % -------------------------------
@@ -7,7 +7,7 @@ function varargout = MAIN_GUI(varargin)
 % CPU: Multi-Core System
 % RAM: > 4GB depending on image data size, ideally 16GB for TCSPC
 % HDD: > 4GB free
-% Operating System: 64bit Matlab 2016a on Linux/Mac/Windows
+% Operating System: 64bit Matlab 2018b on Linux/Mac/Windows
 % PDF Manual: require xpdf on linux and default pdf viewer on Mac/Windows
 
 % Last Modified by GUIDE v2.5 06-Jun-2019 16:42:21
@@ -879,12 +879,8 @@ current_roi=current_roi(current_roi>1);
 % ask for name template
 roi_name={hDATA.data(current_data).roi(current_roi).name};
 options.WindowStyle='modal';
-set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-set(0,'DefaultUicontrolForegroundColor','k');
 if ~isempty(roi_name)
     answer = inputdlg(roi_name,'Rename ROIs',1,roi_name,options);
-    set(0,'DefaultUicontrolBackgroundColor','k');
-    set(0,'DefaultUicontrolForegroundColor','w');
     if ~isempty(answer)
         % rename all selected
         for idx=1:numel(current_roi)
@@ -1004,8 +1000,11 @@ for p_idx=[1,2]
                 % surf plot
                 % get user data
                 slice_data=get(SETTING.panel(p_idx).handle,'UserData');
-                if ndims(slice_data)>2
-                    set(curplot,'ZData',squeeze(slice_data(:,:,slice_idx,page_idx)));
+                switch ndims(slice_data)
+                    case 3
+                        set(curplot,'ZData',squeeze(slice_data(:,:,page_idx)));
+                    case 4
+                        set(curplot,'ZData',squeeze(slice_data(:,:,slice_idx,page_idx)));
                 end
             end
         else
@@ -1232,6 +1231,11 @@ if isnew
     hDATA.path.export=temp.rootpath.exported_data; %#ok<STRNU>
     hDATA.path.saved=temp.rootpath.saved_data; %#ok<STRNU>
     BATCHPROC=struct('operation','wait for it','parameters',[]);
+    % ---------------------------------------------------
+    % set default colour scheme to black background and white font for dark
+    % room usage
+    set(0,'DefaultUicontrolBackgroundColor',SETTING.colour.uibg); %#ok<NODEF>
+    set(0,'DefaultUicontrolForegroundColor',SETTING.colour.uifg); %#ok<NODEF>
     % make button icons
     iconimg=imread(cat(2,SETTING.rootpath.icon_path,'control_panel_icon.png'));%#ok<NODEF>
     set(handles.PUSHTOOL_GRAPHCONTROLPANEL,'CData',iconimg);
@@ -1293,17 +1297,13 @@ switch eventdata.Key
         combkey=eventdata.Key;
     case {'f','F'}
         %display
-        if strcmp(combkey,'control');
+        if strcmp(combkey,'control')
             %search field name
             tabledata=hObject.Data;
             if ~isempty(tabledata)
                 fname=tabledata(:,1);
-                set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-                set(0,'DefaultUicontrolForegroundColor','k');
                 options.WindowStyle='modal';
                 answer = inputdlg('Find field names containing (case insensitive):','Find Field',1,{'search text here'},options);
-                set(0,'DefaultUicontrolBackgroundColor','k');
-                set(0,'DefaultUicontrolForegroundColor','w');
                 if ~isempty(answer)
                     temp=regexpi(fname,answer);
                     foundinfo=tabledata(sum(cellfun(@(x)~isempty(x),temp),2)>0,:);

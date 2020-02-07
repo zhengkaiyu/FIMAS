@@ -291,9 +291,6 @@ try
         end
         % remove data to save space
         clear data;
-        
-        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-        set(0,'DefaultUicontrolForegroundColor','k');
         % ask if want auto load
         button=questdlg(sprintf('Loading %s by: ?',filename),'Loading procedure','manual','auto','auto');
         switch button
@@ -637,11 +634,7 @@ try
                         if frame_per_stack>1
                             frame_bin=frame_per_stack;
                             frame_skip=1;
-                            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-                            set(0,'DefaultUicontrolForegroundColor','k');
                             answer=inputdlg({cat(2,'Number of frame to bin:(',num2str(frame_per_stack),') @ ',num2str(info.setup_info.DI_MAXCNT),' max count'),'Frame skip:'},'Frame Binning',1,{num2str(frame_bin),num2str(frame_skip)});
-                            set(0,'DefaultUicontrolBackgroundColor','k');
-                            set(0,'DefaultUicontrolForegroundColor','w');
                             if ~isempty(answer)
                                 frame_bin=str2double(answer{1});
                                 frame_skip=str2double(answer{2});
@@ -761,8 +754,6 @@ try
                             numel(obj.data(data_end_pos).datainfo.T)];
                         obj.data(data_end_pos).datatype=obj.get_datatype;
                         delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
-                        set(0,'DefaultUicontrolBackgroundColor','k');
-                        set(0,'DefaultUicontrolForegroundColor','w');
                         status=1;
                 end
             case 'Cancel'

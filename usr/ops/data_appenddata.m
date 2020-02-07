@@ -42,11 +42,7 @@ try
         dlg_title = 'Append Dimension';
         num_lines = 1;
         def = free_dim(1);
-        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-        set(0,'DefaultUicontrolForegroundColor','k');
         answer = inputdlg(prompt,dlg_title,num_lines,def);
-        set(0,'DefaultUicontrolBackgroundColor','k');
-        set(0,'DefaultUicontrolForegroundColor','w');
         if isempty(answer)
             % action cancelled
             append_dim=[];

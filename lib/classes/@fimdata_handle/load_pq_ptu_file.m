@@ -132,11 +132,7 @@ try
         present_channel=cell2mat(info.HWInpChan_ModuleIdx);%find out channels present
         if numel(present_channel)>1
             % ask for single channel to load
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer=inputdlg(cat(2,num2str(present_channel),'Which Channel to import:'),'Select Channel',1,{'1'});
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 %get selected channel
                 channel_idx=str2double(answer);
@@ -224,9 +220,6 @@ try
         [~,linestop_framenum]=histc(linestop_pos,frame_pos);
         [stoplinenum,~]=histc(linestop_framenum,1:1:framenum);
         validframe=[];
-        
-        set(0,'DefaultUicontrolBackgroundColor','w');
-        set(0,'DefaultUicontrolForegroundColor','k');
         while isempty(validframe)
             invalidframe=unique([find(startlinenum~=line_per_frame);find(stoplinenum~=line_per_frame)]);
             validframe=setxor(1:1:framenum,invalidframe);
@@ -249,8 +242,6 @@ try
                 end
             end
         end
-        set(0,'DefaultUicontrolBackgroundColor','k');
-        set(0,'DefaultUicontrolForegroundColor','w');
         validframe=validframe(:)';
         
         % --- provide info to confirm loading ---
@@ -298,11 +289,7 @@ try
                 if frame_per_stack>1
                     frame_bin=frame_per_stack;
                     frame_skip=1;
-                    set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-                    set(0,'DefaultUicontrolForegroundColor','k');
                     answer=inputdlg({cat(2,'Number of frame to bin:(',num2str(frame_per_stack),') @ ',num2str(info.TTResult_InputRate{channel_idx}),' input rate'),'Frame skip:'},'Frame Binning',1,{num2str(frame_bin),num2str(frame_skip)});
-                    set(0,'DefaultUicontrolBackgroundColor','k');
-                    set(0,'DefaultUicontrolForegroundColor','w');
                     if ~isempty(answer)
                         frame_bin=str2double(answer{1});
                         frame_skip=str2double(answer{2});

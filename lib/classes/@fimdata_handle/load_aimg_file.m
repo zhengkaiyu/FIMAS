@@ -33,12 +33,8 @@ try
         raw=str2double(val);% conver to numbers
         % ask for size information
         options.Resize='on';options.WindowStyle='modal';options.Interpreter='tex';
-        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-        set(0,'DefaultUicontrolForegroundColor','k');
         answer = inputdlg({'Enter t size:','Enter x size:','Enter y size:','Enter Z size:','Enter T size:'},...
             cat(2,'Data Size: ',num2str(numel(raw))),1,{'256','256','256','1','1'},options);
-        set(0,'DefaultUicontrolBackgroundColor','k');
-        set(0,'DefaultUicontrolForegroundColor','w');
         if isempty(answer)
             message=sprintf('%s\n','Import action cancelled');
         else

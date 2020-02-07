@@ -42,22 +42,28 @@ try
                 case 't'
                     % channel or lifetime dimension
                     dim=1;
+                    dimsize=numel(obj.data(current_data).datainfo.t);
                 case 'Spatial'
                     button = questdlg('Split in which dimension?','Split Data','X','Y','Z','X');
                     switch button
                         case 'X'
                             dim=2;
+                            dimsize=numel(obj.data(current_data).datainfo.X);
                         case 'Y'
                             dim=3;
+                            dimsize=numel(obj.data(current_data).datainfo.Y);
                         case 'Z'
                             dim=4;
+                            dimsize=numel(obj.data(current_data).datainfo.Z);
                         otherwise
                             %action cancelled
                             dim=[];
+                            dimsize=[];
                     end
                 case 'T'
                     % time dimension
                     dim=5;
+                    dimsize=numel(obj.data(current_data).datainfo.T);
                 otherwise
                     %action cancelled
                     dim=[];
@@ -74,16 +80,13 @@ try
                     end
             end
             % ask for split instruction string
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             prompt=sprintf('Splitting format \n(e.g. 1;2;3;4;5 or [1:1:3];[4,5];[6:2:10]}:');
             dlg_title=sprintf('Splitting Format');
             num_lines=1;
-            def={'1;2;3'};
+            defans=sprintf('%d;',1:1:dimsize);
+            def={defans(1:end-1)};
             options.WindowStyle='modal';
             answer = inputdlg(prompt,dlg_title,num_lines,def,options);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if isempty(answer)
                 %action cancelled
                 splitexp=[];

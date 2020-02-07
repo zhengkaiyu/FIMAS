@@ -38,11 +38,7 @@ try
             dlg_title = 'Data batch export';
             num_lines = 1;
             def = {'edf',SETTING.rootpath.exported_data,'true'};
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 switch answer{1}
                     case {'mat','edf','tiff','TIFF','tif','TIF'}

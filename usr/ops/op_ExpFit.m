@@ -181,7 +181,7 @@ try
                     m = numel(t);
                     n = numel(parameter);
                     
-                    if strmatch(data_handle.data(current_data).datainfo.fit_method,'reconvolution','excat');
+                    if strmatch(data_handle.data(current_data).datainfo.fit_method,'reconvolution','excat')
                         %get instrumental response
                         FIR=data_handle.data(current_data).datainfo.FIR_func;
                         [~,maxFIR_idx]=max(FIR(:));

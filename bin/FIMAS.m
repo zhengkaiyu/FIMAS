@@ -25,21 +25,14 @@ status = bfCheckJavaPath(1);
 assert(status, ['Missing Bio-Formats library. Either add loci_tools.jar '...
     'to the static Java path or add it to the Matlab path.']);
 % ---------------------------------------------------
-% set default colour scheme to black background and white font for dark
-% room usage
-set(0,'DefaultUicontrolBackgroundColor','k');
-set(0,'DefaultUicontrolForegroundColor','w');
-% ---------------------------------------------------
 % version related initialisation for parallel computing
 [ ver, date ] = version;
 release_yr = str2double(datestr(date,'YYYY'));
 switch release_yr
-    case {2015,2016,2017,2018,2019}
+    case {2018,2019,2020}
         feature('accel','on');
-    case {2008,2009,2010,2011,2012,2013,2014}
- 
     otherwise
-        errordlg(sprintf('Incompatible MATLAB Version.\nCurrent Version %s\nRequire >R2008a & <R2018a',ver),'Version Error','modal');
+        errordlg(sprintf('Incompatible MATLAB Version.\nCurrent Version %s\nRequire >R2018b',ver),'Version Error','modal');
 end
 % ---------------------------------------------------
 % profile -memory on;

@@ -95,12 +95,7 @@ try
             dlg_title = cat(2,'scanpos2img parameter for ',obj.data(current_data).dataname);
             num_lines = 1;
             def = {num2str(signaldataidx),num2str(scandataidx),num2str(split_ROI),num2str(bglev),num2str(I_scaling),num2str(psfwd),num2str(dx),num2str(dy),num2str(newdata)};
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
-            
             if ~isempty(answer)
                 % get answer and check options
                 % get number of t channel size

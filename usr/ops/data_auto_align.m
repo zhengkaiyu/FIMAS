@@ -76,11 +76,7 @@ try
                     dlg_title = 'ECC algorithm parameters';
                     num_lines = 1;
                     def = {num2str(NoI),num2str(NoL),num2str(init(1)),num2str(init(2))};
-                    set(0,'DefaultUicontrolBackgroundColor','w');
-                    set(0,'DefaultUicontrolForegroundColor','k');
                     answer = inputdlg(prompt,dlg_title,num_lines,def);
-                    set(0,'DefaultUicontrolBackgroundColor','k');
-                    set(0,'DefaultUicontrolForegroundColor','w');
                     if ~isempty(answer)
                         NoI=str2double(answer{1});
                         NoL=str2double(answer{2});
@@ -241,7 +237,7 @@ try
                 'Color',[0.2,0.2,0.2]);
             setappdata(waitbar_handle,'canceling',0);
             for slice_idx=2:n_slices
-                obj.data(current_data).dataval(:,:,:,slice_idx) = circshift(obj.data(parent_data).dataval(:,:,:,slice_idx),[0,shift_size(slice_idx,:),0]);
+                obj.data(current_data).dataval(:,:,:,:,slice_idx) = circshift(obj.data(parent_data).dataval(:,:,:,:,slice_idx),[0,shift_size(slice_idx,:),0]);
                 
                 %output some progress so we know it is doing things
                 if getappdata(waitbar_handle,'canceling')

@@ -44,11 +44,7 @@ try
                 num2str(peak_width_max),...
                 int_dim,num2str(int_interval),...
                 '0'};
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 % calculation mode
                 profile_dim=answer{1};

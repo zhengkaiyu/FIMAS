@@ -54,11 +54,7 @@ try
         dlg_title = cat(2,'dimension resolutoin option for loading ',filename);
         num_lines = 1;
         def = {num2str(X_res),num2str(Y_res),num2str(Z_res),num2str(scaled)};
-        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-        set(0,'DefaultUicontrolForegroundColor','k');
         answer = inputdlg(prompt,dlg_title,num_lines,def);
-        set(0,'DefaultUicontrolBackgroundColor','k');
-        set(0,'DefaultUicontrolForegroundColor','w');
         if isempty(answer)
             message=sprintf('action cancelled\n');
             return;

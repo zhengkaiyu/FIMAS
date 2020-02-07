@@ -45,11 +45,7 @@ try
             dlg_title = cat(2,'Data rename',obj.data(current_data).dataname);
             num_lines = 1;
             def = {'trial_%s_Ch1','[1:1:10]'};
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 % make out automated naming using common and indexed part
                 common=answer{1};

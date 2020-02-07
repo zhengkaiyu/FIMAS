@@ -92,8 +92,23 @@ try
     obj.data_select(1);
     % for batch loading purposes so we only need to ask once
     buttonoib=[];buttonptu=[];
+    
     %loop through files
     for file_counter=1:1:num_file
+        % make progress bar
+        if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+            % Report current estimate in the waitbar's message field
+            done=file_counter/num_file;
+            waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
+        else
+            % create waitbar if it doesn't exist
+            waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
+                'CreateCancelBtn',...
+                'setappdata(gcbf,''canceling'',1)',...
+                'WindowStyle','normal',...
+                'Color',[0.2,0.2,0.2]);
+            setappdata(waitbar_handle,'canceling',0);
+        end
         %cat full filename
         filename=cat(2,data_pathname,data_filename{file_counter},'.',data_format{file_counter});
         %=============load data====================
@@ -156,8 +171,16 @@ try
         %append messages
         message=sprintf('%s\nFile# : %g processed.',message,file_counter);
     end
+    % close waitbar if exist
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
     %append messages
     message=sprintf('%s\n%g number of file processed from %s',message, num_file, data_pathname);
 catch exception%error handle
+    % error handle
+    if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        delete(waitbar_handle);
+    end
     message=sprintf('%s\n%s',message,exception.message);
 end

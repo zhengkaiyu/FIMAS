@@ -184,16 +184,12 @@ try
                         status=false;
                         % ask for ref .mat file or ref data item
                         orig_ref= data_handle.data(current_data).datainfo.electrophys_ref;
-                        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-                        set(0,'DefaultUicontrolForegroundColor','k');
                         % ask to select dataitem
                         [s,v]=listdlg('ListString',{data_handle.data.dataname},...
                             'SelectionMode','single',...
                             'Name','op_YTfit',...
                             'PromptString','Select electrophysiology ref data item',...
                             'ListSize',[400,300]);
-                        set(0,'DefaultUicontrolBackgroundColor','k');
-                        set(0,'DefaultUicontrolForegroundColor','w');
                         if v
                             % check if size is T 
                             if data_handle.data(s).datainfo.data_dim(5)>1

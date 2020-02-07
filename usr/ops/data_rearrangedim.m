@@ -35,13 +35,9 @@ try
         if askforparam
             % ask for user input
             options.Resize='on';options.WindowStyle='modal';options.Interpreter='tex';
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(sprintf('swap dimensions using dim index [1,2,3,4,5]=[t,X,Y,Z,T]\nThis operation will apply to data %s',num2str(selected_data)),...
                 'Swap Dimensions',1,...
                 {'[1,2,3,4,5]'},options);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 % swap dim, assuming user knows what they are doing
                 new_dim=eval(answer{1});
@@ -129,7 +125,11 @@ try
                         obj.data(current_data).datainfo.(cat(2,'d',old_dim_tag))=old_daxis{new_dim(dim_idx)};
                     end
                 end
+                % swap display dim as well
+                obj.data(current_data).datainfo.display_dim=obj.data(current_data).datainfo.display_dim(new_dim);
+                % assign new type property
                 obj.data(current_data).datatype=newtype;
+                % assign last change date
                 obj.data(current_data).datainfo.last_change=datestr(now);
                 %return true
                 status=true;

@@ -160,11 +160,13 @@ try
                         obj.data(data_end_pos).datainfo.T=linspace(str2double(temp{3}),...
                             info.nPic*obj.data(data_end_pos).datainfo.dT,info.nPic);
                         data_size=[1,info.nX,info.nY,1,info.nPic];
+                        display_dim=boolean([0,1,1,0,1]);
                     case 'Microns'  %Z-stack
                         obj.data(data_end_pos).datainfo.dZ=val;
                         obj.data(data_end_pos).datainfo.Z=linspace(str2double(temp{3}),...
                             info.nPic*obj.data(data_end_pos).datainfo.dZ,info.nPic);
                         data_size=[1,info.nX,info.nY,info.nPic,1];
+                        display_dim=boolean([0,1,1,1,0]);
                 end
             else
                 obj.data(data_end_pos).datainfo.dZ=[];
@@ -172,6 +174,7 @@ try
                 obj.data(data_end_pos).datainfo.dT=[];
                 obj.data(data_end_pos).datainfo.T=1;
                 data_size=[1,info.nX,info.nY,1,1];
+                display_dim=boolean([0,1,1,0,0]);
             end
             
             %% set data type
@@ -181,7 +184,7 @@ try
                 numel(obj.data(data_end_pos).datainfo.Z),...
                 numel(obj.data(data_end_pos).datainfo.T)];
             obj.data(data_end_pos).datatype=obj.get_datatype;
-            
+            obj.data(data_end_pos).datainfo.display_dim=display_dim;
             % copy over file metainfo information
             obj.data(data_end_pos).metainfo=info;
             % -- resize to appropriate dimensions and copy over---

@@ -97,16 +97,12 @@ try
                             data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(val).datainfo.ScanLine;
                             message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
                         else
-                            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-                            set(0,'DefaultUicontrolForegroundColor','k');
                             % ask to select dataitem
                             [s,v]=listdlg('ListString',{data_handle.data.dataname},...
                                 'SelectionMode','single',...
                                 'Name','op_Spiral2Img',...
                                 'PromptString','Select scanref data item, specified data has no scanline',...
                                 'ListSize',[400,300]);
-                            set(0,'DefaultUicontrolBackgroundColor','k');
-                            set(0,'DefaultUicontrolForegroundColor','w');
                             if v
                                 % check if scanline field exist
                                 if isfield(data_handle.data(s).datainfo,'ScanLine')

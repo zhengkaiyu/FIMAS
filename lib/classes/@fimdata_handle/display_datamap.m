@@ -224,71 +224,109 @@ try
                         display_dim=pos_dim_idx;% plot 2D
                         % shrink data to 2D
                         val=squeeze(obj.data(data_idx).dataval);
+                        ndim=2;
                         % no Z or T seq
                         data_size(4)=1;data_size(5)=1;
                     case 28
                         % tXY(11100)
-                        display_dim=[false,true,true,false,false];%  plot XY
-                        % reduce t dim to get intensity XY data
-                        val=squeeze(sum(obj.data(data_idx).dataval,1));
+                       display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
+                        % get 3D value
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 25
                         % tXT(11001)
-                        % most likly CXT data
-                        display_dim=[true,true,false,false,false]; % plot tX
+                       display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
                         % get 3D value
-                        val=reshape(obj.data(data_idx).dataval,[data_size(1),data_size(2),data_size(4),data_size(5)]);
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 19
                         % tZT(10011)
                         % most likly CXT data
-                        display_dim=[true,false,false,false,true]; % plot tT
+                        display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
                         % get 3D value
-                        val=permute(squeeze(obj.data(data_idx).dataval),[1,3,2]);
-                        % plot XT
-                        data_size(5)=1; % we are plot T, Tseq is false
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 11
                         % XZT(01011)
-                        % most likely XCT
-                        display_dim=[false,true,false,false,true];% plot XT
-                        % reduce to get intensity XT data and swap Z-T
-                        val=permute(squeeze(obj.data(data_idx).dataval),[1,3,2]);
-                        % plot XT
-                        data_size(5)=1; % we are plot T, Tseq is false
+                        display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
+                        % get 3D value
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 14
                         % XYZ(01110)
-                        display_dim=[false,true,true,false,false];% plot XY
-                        % select the right Z slice
-                        val=squeeze(obj.data(data_idx).dataval);
+                       display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
+                        % get 3D value
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 13
                         % XYT(01101)
-                        display_dim=[false,true,true,false,false];% plot XY
-                        % select the right T Pages
-                        val=reshape(obj.data(data_idx).dataval,[data_size(2),data_size(3),data_size(4),data_size(5)]);
+                        display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
+                        % get 3D value
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 27
                         % tXZT
-                        display_dim=[true,true,false,false,false];% plot tX
+                        display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
                         % get 3D value
-                        val=reshape(obj.data(data_idx).dataval,[data_size(1),data_size(2),data_size(4),data_size(5)]);
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 29
                         % tXYT(11101)
-                        display_dim=[false,true,true,false,false];% plot XY
-                        % shrink data to XYT
-                        val=reshape(sum(obj.data(data_idx).dataval,1),[data_size(2),data_size(3),data_size(4),data_size(5)]);
+                        display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 30
                         % tXYZ(11110)
                         % most likely CXYZ data
-                        display_dim=[false,true,true,false,false];% plot XY
-                        % shrink data to XYZ
-                        val=squeeze(sum(obj.data(data_idx).dataval,1));
+                        display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
+                        % get 3D value
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 15
                         % XYZT(01111)
-                        display_dim=[false,true,true,false,false];% plot XY
-                        % select the right Z slices and T Pages
-                        val=squeeze(obj.data(data_idx).dataval);
+                      display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
+                        % get 3D value
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     case 31
                         % tXYZT(11111)
-                        display_dim=[false,true,true,false,false];% plot XY
-                        % select the right Z slices and T Pages
-                        val=squeeze(sum(obj.data(data_idx).dataval,1));
+                        display_dim=obj.data(data_idx).datainfo.display_dim;% plot 2D
+                        % shrink data to display dim
+                        newdatasize=data_size.*display_dim;
+                        newdatasize(newdatasize==0)=1;
+                        ndim=numel(find(newdatasize>1));
+                        % get 3D value
+                        val=reshape(sum(obj.data(data_idx).dataval,[find(~display_dim)]),newdatasize);
                     otherwise
                         val=[];
                 end
@@ -297,8 +335,12 @@ try
                 [ axis_label, disp_axis ] = obj.get_displaydata( data_idx, display_dim );
                 obj.data(data_idx).datainfo.panel=fig_handle.PANEL_DATA_MAP;
                 % plot selected slices and pages
-                display_data(val(:,:,Slices(1),Pages(1)),fig_handle.PANEL_DATA_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
-                set(fig_handle.PANEL_DATA_MAP,'UserData',val);
+                if ndim>2
+                    display_data(val(:,:,:,Slices(1),Pages(1)),fig_handle.PANEL_DATA_MAP,'surf', disp_axis, axis_label,[data_size(4)>1,data_size(5)>1],[]);
+                else
+                    display_data(val,fig_handle.PANEL_DATA_MAP,'surf', disp_axis, axis_label,[0,0],[]);
+                end
+                set(fig_handle.PANEL_DATA_MAP,'UserData',squeeze(val));
                 %end
                 % set Z and T options
                 if notify

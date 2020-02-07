@@ -21,11 +21,7 @@ try
     timestr=datestr(timestr(measure_order,:),'yyyy-mm-dd|HH:MM:SS');
     datalist=[char(dataname(measure_order)),repmat('|',numel(measure_order),1),timestr,repmat('|',numel(measure_order),1),char(commentstr(measure_order))];
     % ask user to select data to import
-    set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-    set(0,'DefaultUicontrolForegroundColor','k');
     [selected,answer]=listdlg('Name','Select Data Item','PromptString','Which data items?','OKString','Load','ListString',datalist,'ListSize',[400,500],'InitialValue',1:1:numel(measure_order));
-    set(0,'DefaultUicontrolBackgroundColor','k');
-    set(0,'DefaultUicontrolForegroundColor','w');
     if answer
         % ok pressed
         % short filename for all data items
@@ -116,6 +112,7 @@ try
                         datainfo.data_dim=[1,metainfo.Width,metainfo.Height,1,1];
                         % no scanline info needed
                         datainfo.scanline=[];
+                        datainfo.display_dim=boolean([0,1,1,0,0]);
                         status=true;
                     case 'XY'%images
                         switch metainfo.Context
@@ -142,7 +139,7 @@ try
                                 datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,1,1];
                                 % datinfo.scanline from its parent
                                 % should've been carried forward
-                                
+                                datainfo.display_dim=boolean([0,1,1,0,0]);
                                 status=true;
                             case {'ZStack','Zstack'}% Zstack images XYZ
                                 % add new data object
@@ -184,6 +181,7 @@ try
                                 datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,nZSlice,1];
                                 % no scanline info needed
                                 datainfo.scanline=[];
+                                datainfo.display_dim=boolean([0,1,1,1,0]);
                                 status=true;
                             case 'Photo'% single XY image captured
                                 % add new data object
@@ -208,6 +206,7 @@ try
                                 datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,1,1];
                                 % no scanline info needed
                                 datainfo.scanline=[];
+                                datainfo.display_dim=boolean([0,1,1,0,0]);
                                 status=true;
                             otherwise
                                 return;
@@ -235,6 +234,7 @@ try
                         datainfo.data_dim=[nCh,metainfo.Width,1,1,metainfo.Height];
                         % assign scanline info for background image to capture
                         datainfo.scanline=metainfo.ScanLine;
+                        datainfo.display_dim=boolean([0,1,0,0,1]);
                         status=true;
                     case 'FF'%folded frame XYT
                         % add new data object
@@ -266,6 +266,7 @@ try
                         datainfo.data_dim=[nCh,metainfo.Width,nLines,1,nFrames];
                         % assign scanline info for background image to capture
                         datainfo.scanline=metainfo.ScanLine;
+                        datainfo.display_dim=boolean([0,1,1,0,1]);
                         status=true;
                     otherwise
                         message=sprintf('%s\nUnable t process image type %s yet',message,metainfo.Type);
@@ -286,6 +287,7 @@ try
                 % default bin size
                 obj.data(data_end_pos).datainfo.bin_dim=[1,1,1,1,1];
                 obj.data(data_end_pos).datainfo.data_dim=datainfo.data_dim;
+                obj.data(data_end_pos).datainfo.display_dim=datainfo.display_dim;
                 obj.data(data_end_pos).datainfo.parameter_space=datainfo.ch_name;
                 obj.data(data_end_pos).datainfo.note=metainfo.Comment;
                 obj.data(data_end_pos).datatype=obj.get_datatype;
@@ -296,7 +298,8 @@ try
         end
     else
         message=sprintf('%s\ndata load from %s cancelled',message,filename);
-    end % close waitbar if exist
+    end
+    % close waitbar if exist
     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end

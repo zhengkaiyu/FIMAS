@@ -46,12 +46,18 @@ try
                             roitype='impoly';
                             fcn = makeConstrainToRectFcn(roitype,xlimit,ylimit);
                             eval(cat(2,'h=',roitype,'(where_to,pos,''Closed'',false,''PositionConstraintFcn'',fcn);'));
+                        case {'imellipse','imrect'}
+                            roitype=obj.data(current_data).roi(roi_idx).type;
+                            coordmin=min(obj.data(current_data).roi(roi_idx).coord);
+                            coordmax=max(obj.data(current_data).roi(roi_idx).coord);
+                            pos=[coordmin,coordmax-coordmin];
+                            fcn = makeConstrainToRectFcn(roitype,xlimit,ylimit);
+                            eval(cat(2,'h=',roitype,'(where_to,pos,''PositionConstraintFcn'',fcn);'));
                         otherwise
                             roitype=obj.data(current_data).roi(roi_idx).type;
                             fcn = makeConstrainToRectFcn(roitype,xlimit,ylimit);
                             eval(cat(2,'h=',roitype,'(where_to,pos,''PositionConstraintFcn'',fcn);'));
                     end
-                    
                     obj.data(current_data).roi(roi_idx).handle=h;
                     set(obj.data(current_data).roi(roi_idx).handle,'Tag',tag);
                     setPositionConstraintFcn(obj.data(current_data).roi(roi_idx).handle,fcn);

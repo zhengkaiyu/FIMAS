@@ -40,19 +40,31 @@ if strcmp(info.HeightName,'t')
                 scandata=info.ScanLine.ODDarray(patternidx);
                 % get lineID so we can look into Linfo
                 lineid=scandata.lineID;
+                
                 lineinfo=info.info_Linfo.lines(lineid);
-                
-                pattern_startpixel=info.ScanLine.Data2(patternidx);
-                pattern_endpixel=info.ScanLine.Data2(patternidx+1);
-                
+                % line1 set point, line2 upsampled points
+                % line1 can have multiple lines
+                lineseqnum=info.ScanLine.Data1(patternidx);
+                linepixelnum=info.ScanLine.Data2(patternidx);%pixel start num
+                linedelaynum=info.ScanLine.roi(patternidx);%roi deelay
+                linetype=lineinfo.type;
+                pixeltime=lineinfo.Tpixwidth*timescaler;
+                totalduration=pixeltime*lineinfo.pixnum;
+                lineduration=pixeltime*lineinfo.Tpixnum;
+                framenum=lineinfo.pixnum/lineinfo.Tpixnum;
                 
                 dx=lineinfo.pixwidth;
                 dt=lineinfo.apptime*timescaler;
-                
                 % number of dwell pixel to image pixel
                 nptaverage=lineinfo.scanspeed;
-                pattern_startpixel=round(pattern_startpixel/nptaverage);
-                pattern_endpixel=round(pattern_endpixel/nptaverage)-1;
+                pattern_startpixel=info.ScanLine.Data2(patternidx)+1;
+                pattern_endpixel=info.ScanLine.Data2(patternidx+1);
+                pattern_startpixel=ceil(pattern_startpixel/nptaverage);
+                pattern_endpixel=ceil(pattern_endpixel/nptaverage);
+                
+                scan_Tsize=size(scandata.Data2,2)-1;
+                scan_Lsize=floor(size(scandata.Data1,2)/nptaverage);
+                % roi within scanline
                 roipixgroup=lineinfo.line2RoI;
                 roipixpos=lineinfo.line1;
                 nROI=numel(roipixpos);
@@ -61,9 +73,13 @@ if strcmp(info.HeightName,'t')
                 roistarttime=mean(roitimeinterval);
                 % pixel group per line
                 roixbound=[ceil(roipixgroup(1,:)/nptaverage);floor(roipixgroup(2,:)/nptaverage)];
+                [i,j]=ind2sub([scan_Lsize,scan_Tsize],[pattern_startpixel:1:pattern_endpixel]);
                 for roiidx=1:nROI
+                    % roi{k}.frame
+                    % roi{k}.frame(
                     % size(lineinfo.line1{roiidx})
                     roixinterval=roixbound(1,roiidx):1:roixbound(2,roiidx);
+                    
                     roipos=roixinterval*dx;
                     roitime=roistarttime(roiidx)*dt;
                     % pass back argument assigned

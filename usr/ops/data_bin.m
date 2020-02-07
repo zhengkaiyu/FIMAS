@@ -90,11 +90,7 @@ try
             dlg_title = cat(2,'Data bin sizes for',obj.data(current_data).dataname);
             num_lines = 1;
             def = {opmode,num2str(setbinsize(1)),num2str(setbinsize(2)),num2str(setbinsize(3)),num2str(setbinsize(4)),num2str(setbinsize(5)),calcmode,num2str(newdata)};
-            set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-            set(0,'DefaultUicontrolForegroundColor','k');
             answer = inputdlg(prompt,dlg_title,num_lines,def);
-            set(0,'DefaultUicontrolBackgroundColor','k');
-            set(0,'DefaultUicontrolForegroundColor','w');
             if ~isempty(answer)
                 newdata=str2double(answer{8})==1;
                 % get bin sizes

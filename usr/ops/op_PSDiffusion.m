@@ -211,7 +211,6 @@ try
                                                 display_data(Y, axeshandle3, 'scatter', {X,[]}, {'X','a.u.'}, [false,false], []);%display data
                                                 pause(0.001);% pause to see the result
                                             end
-                                            
                                         else
                                             estimates(2)=init_estimates(2);
                                         end

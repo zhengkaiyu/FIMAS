@@ -34,11 +34,7 @@ try
         prompt = {sprintf('Batch data delete %s',sprintf('%s; ',obj.data(selected_data).dataname))};
         dlg_title = 'Batch Delete Data';
         def = 'Yes';
-        set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-        set(0,'DefaultUicontrolForegroundColor','k');
         answer = questdlg(prompt,dlg_title,'Yes','No',def);
-        set(0,'DefaultUicontrolBackgroundColor','k');
-        set(0,'DefaultUicontrolForegroundColor','w');
         switch answer
             case 'Yes'
                 % yes batch delete selected data

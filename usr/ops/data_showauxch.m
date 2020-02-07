@@ -43,15 +43,11 @@ try
                 message=sprintf('%s\n %s has no auxillary channel\n',message,obj.data(current_data).dataname);
                 channel=[];
             else
-                set(0,'DefaultUicontrolBackgroundColor',[0.3,0.3,0.3]);
-                set(0,'DefaultUicontrolForegroundColor','k');
                 [s,~] = listdlg('PromptString','Select Auxillary Channel:',...
                     'SelectionMode','single',...
                     'ListString',ch_present,...
                     'OkString','Select',...
                     'InitialValue',2);
-                set(0,'DefaultUicontrolBackgroundColor','k');
-                set(0,'DefaultUicontrolForegroundColor','w');
                 if isempty(s)
                     % cancel clicked don't do anything to this data item
                     channel=[];
