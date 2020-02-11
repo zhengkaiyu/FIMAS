@@ -66,7 +66,7 @@ switch button
         SETTING.rootpath.raw_data=hDATA.path.import;
         SETTING.rootpath.exported_data=hDATA.path.export;
         SETTING.rootpath.saved_data=hDATA.path.saved;
-        rootpath=SETTING.rootpath; %#ok<NASGU>
+        rootpath=SETTING.rootpath; 
         % save to default path file
         save(cat(2,'.',filesep,'lib',filesep,'default_path.mat'),'rootpath','-mat');
         % clear all data handle before exiting
@@ -273,7 +273,7 @@ switch button
         SETTING.rootpath.raw_data=hDATA.path.import;
         SETTING.rootpath.exported_data=hDATA.path.export;
         SETTING.rootpath.saved_data=hDATA.path.saved;
-        rootpath=SETTING.rootpath; %#ok<NASGU>
+        rootpath=SETTING.rootpath; 
         % move back to base directory in case user has looked else where
         % get current file path
         funcpath=mfilename('fullpath');
@@ -710,7 +710,7 @@ end
 
 function BUTTON_SAVEBATCH_Callback(~, ~, handles)
 % Save current settings to batch processing file (bpf)
-global BATCHPROC SETTING; %#ok<NUSED>
+global BATCHPROC SETTING; 
 [filename, pathname] = uiputfile({'*.bpf','Batch Process Files'},'Save as',SETTING.rootpath.saved_data);
 if ischar(pathname)
     % save to file
@@ -731,31 +731,31 @@ switch eventdata.Key
         combkey=eventdata.Key;
     case {'d','D'}
         %display
-        if strcmp(combkey,'control');
+        if strcmp(combkey,'control')
             MENUITEM_ROI_DISPLAY_Callback([],[],handles);
         end
         combkey='';
     case {'h','H'}
         %histogram
-        if strcmp(combkey,'control');
+        if strcmp(combkey,'control')
             MENUITEM_ROI_HISTOGRAM_Callback([],[],handles);
         end
         combkey='';
     case {'c','C'}
         %copy
-        if strcmp(combkey,'control');
+        if strcmp(combkey,'control')
             MENUITEM_ROI_COPY_Callback([],[],handles);
         end
         combkey='';
     case {'v','V'}
         %paste
-        if strcmp(combkey,'control');
+        if strcmp(combkey,'control')
             MENUITEM_ROI_PASTE_Callback([],[],handles);
         end
         combkey='';
     case {'s','S'}
         %save
-        if strcmp(combkey,'control');
+        if strcmp(combkey,'control')
             MENUITEM_ROI_SAVE_Callback([],[],handles);
         end
         combkey='';

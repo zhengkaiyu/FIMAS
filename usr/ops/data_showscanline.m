@@ -75,7 +75,7 @@ if isempty(sl_name)
 end
 hsl=findobj(where_to,'Tag',sl_name);
 if isempty(hsl)
-    set(where_to,'NextPlot','add');
+    %set(where_to,'NextPlot','add');
     hsl=plot(where_to,coord(:,2),coord(:,1),'Color','y','LineStyle','-','LineWidth',1);
     set(hsl,'Tag',sl_name);
 else
@@ -85,8 +85,9 @@ hsls=findobj(where_to,'Tag',cat(2,sl_name,'s'));
 if isempty(hsls)
     hsls=plot(where_to,coord(1,2),coord(1,1),'Marker','o','MarkerFaceColor','r');
     set(hsls,'Tag',cat(2,sl_name,'s'));
-    set(where_to,'NextPlot','replace');
+    %set(where_to,'NextPlot','replace');
 else
     set(hsls,'XData',coord(1,2),'YData',coord(1,1));
 end
+set(where_to,'ZLimMode','auto');
 end
