@@ -37,7 +37,7 @@ try
         % get series image data
         seriesdata=rawdata{sidx,1};
         numImages=size(seriesdata,1);
-        
+        T=1;dT=1;
         % get dimension size
         for axisidx=0:1:str2double(info.f_GlobalAxisParameterCommonAxisCount)
             axisname=info.(cat(2,'f_GlobalAxis',num2str(axisidx),'ParametersCommonAxisCode'));
@@ -102,7 +102,7 @@ try
         obj.data(data_end_pos).datainfo.dZ=dZ;
         obj.data(data_end_pos).datainfo.dT=dT;
         
-        obj.data(data_end_pos).datainfo.display_dim=[numel(C)>1,numel(X)>1,numel(Y)>1,numel(Z)>1,numel(T)>1];
+        obj.data(data_end_pos).datainfo.display_dim=[false,numel(X)>1,numel(Y)>1,numel(Z)>1,numel(T)>1];
         % core meta infos
         obj.data(data_end_pos).datainfo.parameter_space=channelname;
         global SETTING;

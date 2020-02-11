@@ -193,6 +193,7 @@ if ishandle(panel_handle)
                                 if sum(isinf(val))==0
                                     val=sort(val);
                                     set(panel_handle,'CLim',val);
+                                    set(panel_handle,'ZLim',val);
                                     obj.panel(panel_idx).zscale(1:2)=val;
                                     % update minimum bound
                                     obj.panel(panel_idx).zbound(1)=min(val(1),obj.panel(panel_idx).zbound(1));

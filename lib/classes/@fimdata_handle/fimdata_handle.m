@@ -69,7 +69,7 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
             'dT',0,...                  % macroscopic time step
             'data_dim',[],...           % boolean data diminsion of [t/p,X,Y,Z,T]
             'bin_dim',[],...            % binning number in each diminsions
-            'display_dim',[false,false,false,false,false],... % boolean display diminsion of [t/p,X,Y,Z,T]
+            'display_dim',[false,true,true,false,false],... % boolean display diminsion of [t/p,X,Y,Z,T]
             't_disp_bound',[0,12,128],...  % display bounds for t [lb,ub,levels]
             'X_disp_bound',[0,1,128],...   % display bounds for X [lb,ub,levels]
             'Y_disp_bound',[0,1,128],...   % display bounds for Y [lb,ub,levels]

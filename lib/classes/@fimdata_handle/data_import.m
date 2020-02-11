@@ -98,7 +98,7 @@ try
         % make progress bar
         if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
             % Report current estimate in the waitbar's message field
-            done=file_counter/num_file;
+            done=(file_counter-1)/num_file;
             waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
         else
             % create waitbar if it doesn't exist
