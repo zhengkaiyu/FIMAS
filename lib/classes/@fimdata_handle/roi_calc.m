@@ -131,11 +131,14 @@ try
                                 roicoord(:,1)=obj.data(current_data).roi(current_roi(roiidx)).coord(:,1);
                                 roicoord(:,2)=obj.data(current_data).roi(current_roi(roiidx)).coord(:,2);
                             case 'imrect'
+                                %{
                                 xpt1=obj.data(current_data).roi(current_roi(roiidx)).coord(1,1);
                                 xpt2=obj.data(current_data).roi(current_roi(roiidx)).coord(1,1)+obj.data(current_data).roi(current_roi(roiidx)).coord(1,3);
                                 ypt1=obj.data(current_data).roi(current_roi(roiidx)).coord(1,2);
                                 ypt2=obj.data(current_data).roi(current_roi(roiidx)).coord(1,2)+obj.data(current_data).roi(current_roi(roiidx)).coord(1,4);
                                 roicoord=[xpt1,ypt1;xpt2,ypt1;xpt2,ypt2;xpt1,ypt2];
+                                %}
+                                roicoord=obj.data(current_data).roi(current_roi(roiidx)).coord;
                             case 'impoint'
                                 xcoord=obj.data(current_data).roi(current_roi(roiidx)).coord(:,1);
                                 ycoord=obj.data(current_data).roi(current_roi(roiidx)).coord(:,2);
@@ -147,6 +150,8 @@ try
                                 ypt1=ycoord-dY;
                                 ypt2=ycoord+dY;
                                 roicoord=[xpt1,ypt1;xpt2,ypt1;xpt2,ypt2;xpt1,ypt2];
+                            case 'imellipse'
+                                roicoord=obj.data(current_data).roi(current_roi(roiidx)).coord;
                         end
                         loc=inpolygon(obj.data(current_data).dataval(1,:)',obj.data(current_data).dataval(2,:)',roicoord(:,1),roicoord(:,2));
                         % original datamap size

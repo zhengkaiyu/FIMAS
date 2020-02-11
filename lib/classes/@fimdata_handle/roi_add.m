@@ -189,7 +189,6 @@ try
                     status=true;
                 else
                     %if cancelled new roi return previous one to white
-                    
                     for current_roi=obj.data(current_data).current_roi
                         if current_roi>1
                             % ignore template whoes index is 1

@@ -68,7 +68,7 @@ if ~isempty(data)
             end
             if isempty(surf_plot)
                 %add new plot
-                set(axeshandle,'NextPlot','replace');
+                set(axeshandle,'NextPlot','add');
                 surf_plot=mesh(axeshandle,dim{2},dim{1},data,'EdgeColor','interp','FaceColor','interp');
                 set(surf_plot,'Tag','surf');
             else
@@ -104,7 +104,7 @@ if ~isempty(data)
             cmap=squeeze(data{2});
             data=squeeze(data{1});
             if isempty(surf_plot)
-                set(axeshandle,'NextPlot','replace');
+                set(axeshandle,'NextPlot','add');
                 surf_plot=mesh(axeshandle,dim{2},dim{1},data,cmap,'EdgeColor','interp','FaceColor','interp');
                 set(surf_plot,'Tag','mod_surf');
             else
@@ -242,7 +242,7 @@ if ~isempty(data)
             end
             if isempty(histmap_plot)
                 %add new plot
-                set(axeshandle,'NextPlot','replace');
+                set(axeshandle,'NextPlot','add');
                 histmap_plot=mesh(axeshandle,dim{2},dim{1},data,'EdgeColor','interp','FaceColor','interp');
                 set(histmap_plot,'Tag','surf');
             else
@@ -365,7 +365,7 @@ if ~isempty(data)
             temp(temp==0)=nan;
             if isempty(phasor_plot)||tohold%check if exist or is plot hold mode
                 %plot new line
-                set(axeshandle,'NextPlot','replace');
+                set(axeshandle,'NextPlot','add');
                 phasor_plot=mesh(axeshandle,dim{2}{1},dim{2}{2},temp','EdgeColor','none','FaceColor','interp');
                 set(phasor_plot,'Tag','phasor_map');
             else

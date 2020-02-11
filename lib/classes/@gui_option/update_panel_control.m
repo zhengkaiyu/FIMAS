@@ -37,7 +37,7 @@ if ishandle(panel_handle)
                 % redisplays the controls
                 obj.update_panel_control('display',obj.panel_control_handle);
             end
-            
+            panel_handle.Tag=obj.panel(panel_idx).name;
             % notify user
             message=sprintf('%s cleared\n',obj.panel(panel_idx).name);
             status=true;

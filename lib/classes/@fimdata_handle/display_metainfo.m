@@ -37,7 +37,7 @@ try
     end
     if isempty(output_to)
         % output just the message
-        message=cellfun(@(x)['<html><table border=0 width=400 color=#C0C0C0 bgcolor=#000000><TR><TD>' x '</TD></TR> </table></html>'],info,'UniformOutput',false);
+        message=cellfun(@(x)['<html><table border=0 width=400 color=#C0C0C0 bgcolor=#000000><TR><TD>',x(:)','</TD></TR> </table></html>'],info,'UniformOutput',false);
     elseif ishandle(output_to)
         % if output is handle
          set(output_to,'Data',info);

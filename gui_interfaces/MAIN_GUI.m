@@ -644,6 +644,8 @@ for opidx=2:numel(BATCHPROC)
         otherwise
             % otherwise use specified
             seldata=funcarg.selected_data;
+            % replace usage of end with actual data number
+            seldata=regexprep(seldata,'end',num2str(numel(hDATA.data)));
     end
     % make cellarray of field,val pairs
     tempname=[fieldnames(funcarg),struct2cell(funcarg)]';
@@ -1279,6 +1281,7 @@ end
 for panelidx=1:numel(SETTING.PANEL_NAME_LIST) %#ok<NODEF>
     SETTING.current_panel=panelidx;%#ok<STRNU>
     SETTING.update_panel_control('clear');%#ok<NODEF>
+    SETTING.current_panel=panelidx;%#ok<STRNU>
 end
 % update data list and roi list
 populate_list(handles.LIST_DATA,{hDATA.data.dataname},1); %#ok<NODEF>
