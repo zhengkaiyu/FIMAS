@@ -75,14 +75,14 @@ try
             dimsize=double(metainfo.XDim);
             dimoffset=double(metainfo.XAxisConversionConversionLinearOffset);
             dimres=double(metainfo.XAxisConversionConversionLinearScale);
-            datainfo.X=(1:1:dimsize-1)*dimres+dimoffset;
+            datainfo.X=([1:1:dimsize]-1)*dimres+dimoffset;
             datainfo.dX=dimres;
             nX=dimsize;
             % Y info
             dimsize=double(metainfo.YDim);
             dimoffset=double(metainfo.YAxisConversionConversionLinearOffset);
             dimres=double(metainfo.YAxisConversionConversionLinearScale);
-            datainfo.Y=(1:1:dimsize-1)*dimres+dimoffset;
+            datainfo.Y=([1:1:dimsize]-1)*dimres+dimoffset;
             datainfo.dY=dimres;
             nY=dimsize;
             % Z/T info
@@ -99,13 +99,13 @@ try
                     datainfo.Z=metainfo.GeomTransTransl(3);
                     datainfo.dZ=0;
                     nZ=1;
-                    datainfo.T=(1:1:dimsize-1)*dimres+dimoffset;
+                    datainfo.T=([1:1:dimsize]-1)*dimres+dimoffset;
                     datainfo.dT=dimres;
                     nT=dimsize;
                 case 'z'
                     % slow z stack
                     datatype='slowzstack';
-                    datainfo.Z=(1:1:dimsize-1)*dimres+dimoffset;
+                    datainfo.Z=([1:1:dimsize]-1)*dimres+dimoffset;
                     datainfo.dZ=dimres;
                     nZ=dimsize;
                     datainfo.T=dataidx;
@@ -123,13 +123,14 @@ try
                     case 'Tstack'
                         % work out dimension size
                         obj.data(data_end_pos).dataval(datasetidx,:,:,1,:)=double(rawdata)*imgscale+imgoffset;
+                        datainfo.display_dim=boolean([0,1,1,0,1]);
                     case 'slowzstack'
                         % work out dimension size
                         obj.data(data_end_pos).dataval(datasetidx,:,:,:,1)=double(rawdata)*imgscale+imgoffset;
+                        datainfo.display_dim=boolean([0,1,1,1,0]);
                 end
             end
             datainfo.data_dim=[nCh,nX,nY,nZ,nT];
-            datainfo.display_dim=boolean([0,1,1,0,1]);
             % merge fileinfo and datainfo
             metainfo=setstructfields(content{1},metainfo);
             % copy over metainfo
