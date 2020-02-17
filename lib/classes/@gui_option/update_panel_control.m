@@ -193,7 +193,6 @@ if ishandle(panel_handle)
                                 if sum(isinf(val))==0
                                     val=sort(val);
                                     set(panel_handle,'CLim',val);
-                                    set(panel_handle,'ZLim',val);
                                     obj.panel(panel_idx).zscale(1:2)=val;
                                     % update minimum bound
                                     obj.panel(panel_idx).zbound(1)=min(val(1),obj.panel(panel_idx).zbound(1));
@@ -432,9 +431,9 @@ if ishandle(panel_handle)
                             status=true;
                         case 'cfix'
                             if val
-                                set(panel_handle,'ZLimMode','manual');
+                                set(panel_handle,'CLimMode','manual');
                             else
-                                set(panel_handle,'ZLimMode','auto');
+                                set(panel_handle,'CLimMode','auto');
                             end
                             obj.panel(panel_idx).cscale(4)=val;
                             status=true;

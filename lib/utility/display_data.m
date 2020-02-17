@@ -68,7 +68,7 @@ if ~isempty(data)
             end
             if isempty(surf_plot)
                 %add new plot
-                set(axeshandle,'NextPlot','add');
+                set(axeshandle,'NextPlot','replace');
                 surf_plot=mesh(axeshandle,dim{2},dim{1},data,'EdgeColor','interp','FaceColor','interp');
                 set(surf_plot,'Tag','surf');
             else
@@ -92,11 +92,10 @@ if ~isempty(data)
                 SETTING.update_panel_control('set','xlim',[xminmax(1),xminmax(2)],...
                     'ylim',[yminmax(1),yminmax(2)],...
                     'zlim',[zbound(1),zbound(2)]);
-                %caxis(axeshandle,'auto');
             else
                 xlim(axeshandle,xminmax);ylim(axeshandle,yminmax);
-                %caxis(axeshandle,'auto');
             end
+            set(axeshandle,'ZLimMode','auto');
             % ----------------------
         case 'mod_surf' % 2D surface map with modulated colour scalar map
             colormap(axeshandle,SETTING.panel(SETTING.current_panel).colormap);
@@ -104,7 +103,7 @@ if ~isempty(data)
             cmap=squeeze(data{2});
             data=squeeze(data{1});
             if isempty(surf_plot)
-                set(axeshandle,'NextPlot','add');
+                set(axeshandle,'NextPlot','replace');
                 surf_plot=mesh(axeshandle,dim{2},dim{1},data,cmap,'EdgeColor','interp','FaceColor','interp');
                 set(surf_plot,'Tag','mod_surf');
             else
@@ -129,8 +128,8 @@ if ~isempty(data)
             else
                 xlim(axeshandle,xminmax);
                 ylim(axeshandle,yminmax);
-                %caxis(axeshandle,'auto');
             end
+            set(axeshandle,'ZLimMode','auto');
             grid(axeshandle,'off');
             % ----------------------
         case 'scatter' % 2D scatter plot
@@ -242,7 +241,7 @@ if ~isempty(data)
             end
             if isempty(histmap_plot)
                 %add new plot
-                set(axeshandle,'NextPlot','add');
+                set(axeshandle,'NextPlot','replace');
                 histmap_plot=mesh(axeshandle,dim{2},dim{1},data,'EdgeColor','interp','FaceColor','interp');
                 set(histmap_plot,'Tag','surf');
             else
@@ -365,7 +364,7 @@ if ~isempty(data)
             temp(temp==0)=nan;
             if isempty(phasor_plot)||tohold%check if exist or is plot hold mode
                 %plot new line
-                set(axeshandle,'NextPlot','add');
+                set(axeshandle,'NextPlot','replace');
                 phasor_plot=mesh(axeshandle,dim{2}{1},dim{2}{2},temp','EdgeColor','none','FaceColor','interp');
                 set(phasor_plot,'Tag','phasor_map');
             else

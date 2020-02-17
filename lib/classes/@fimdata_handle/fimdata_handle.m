@@ -229,7 +229,8 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         [ status, message ] = load_olympus_oib_file( obj, filename);
         %import Femtonics mes files
         [ status, message ] = load_femtonic_mes_file( obj, filename);
-        
+        %import Femtonics mesc files
+        [ status, message ] = load_femtonic_mesc_file( obj, filename);
         %--------------
         %auxilary file type
         %--------------

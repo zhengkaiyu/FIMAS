@@ -15,7 +15,7 @@ try
     dataname=dataname(isdata);
     % get measurement time and comment for each data item
     timestr=cell2mat(cellfun(@(x)datevec(x(1).MeasurementDate,'yyyy.mm.dd. HH:MM:SS,FFF'),struct_data,'UniformOutput',false));
-    commentstr=cellfun(@(x)char(x(1).Comment),struct_data,'UniformOutput',false);
+    commentstr=cellfun(@(x)regexprep(char(x(1).Comment),'\s',';'),struct_data,'UniformOutput',false);
     % sort data by measurement time
     [~,measure_order]=sortrows(timestr,[1 2 3 4 5 6]);
     timestr=datestr(timestr(measure_order,:),'yyyy-mm-dd|HH:MM:SS');
