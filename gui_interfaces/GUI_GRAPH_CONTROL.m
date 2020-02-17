@@ -3,7 +3,7 @@ function varargout = GUI_GRAPH_CONTROL(varargin)
 
 % Edit the above text to modify the response to help GUI_GRAPH_CONTROL
 
-% Last Modified by GUIDE v2.5 21-Feb-2017 16:27:19
+% Last Modified by GUIDE v2.5 17-Feb-2020 17:29:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -270,6 +270,17 @@ else
     set(hObject,'String','Auto');
 end
 SETTING.update_panel_control('set','zfix',val);
+
+% --- Executes on button press in CHECK_EQUALAXIS.
+function CHECK_EQUALAXIS_Callback(hObject, ~, ~)
+global SETTING;
+val=get(hObject,'Value');
+if val
+    set(hObject,'String','Equal');
+else
+    set(hObject,'String','Tight');
+end
+SETTING.update_panel_control('axisequal',val);
 
 % --- Executes during object creation, after setting all properties.
 function MENU_COLORMAP_CreateFcn(hObject, ~, ~)

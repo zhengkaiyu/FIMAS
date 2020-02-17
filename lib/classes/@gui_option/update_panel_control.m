@@ -67,6 +67,17 @@ if ishandle(panel_handle)
                 obj.panel(panel_idx).norm=false;
             end
             status=true;
+        case 'axisequal'
+            % change plot normalisation mode
+            val=varargin{1};% get argument
+            if val
+                obj.panel(panel_idx).eqaxis=true;
+                axis(obj.panel(panel_idx).handle,'equal','tight');
+            else
+                obj.panel(panel_idx).eqaxis=false;
+                axis(obj.panel(panel_idx).handle,'normal','tight');
+            end
+            status=true;
         case 'display'
             % display saved control parameters
             if obj.panel_control_active	% if we have opened panel control
@@ -113,8 +124,7 @@ if ishandle(panel_handle)
                     set(ui_handle.VAL_MAXC,'String',obj.panel(panel_idx).zscale(2));
                     set(ui_handle.VAL_CMAXBOUND,'String',obj.panel(panel_idx).zbound(2));
                     set(ui_handle.TOGGLE_LOGC,'Value',obj.panel(panel_idx).zscale(3));
-                    
-                    
+
                     % hold toggle control
                     set(ui_handle.TOGGLE_HOLD,'Value',obj.panel(panel_idx).hold);
                     if obj.panel(panel_idx).hold
@@ -132,6 +142,9 @@ if ishandle(panel_handle)
                         iconimg=imread(cat(2,obj.rootpath.icon_path,'normoff_icon.png'));
                     end
                     set(ui_handle.TOGGLE_NORM,'CData',iconimg);
+                    
+                    % set axis equal tick
+                    set(ui_handle.CHECK_EQUALAXIS,'Value',obj.panel(panel_idx).eqaxis);
                     
                     % colormap menu
                     colormapidx=find(strcmp(obj.COLOR_MAP_LIST,obj.panel(panel_idx).colormap));
@@ -452,7 +465,7 @@ if ishandle(panel_handle)
                             end
                             status=true;
                         case 'hControl'
-                            
+                  
                         case 'colormap'
                             obj.panel(panel_idx).colormap=obj.COLOR_MAP_LIST{val};
                             colormap(obj.panel(panel_idx).handle,obj.panel(panel_idx).colormap);

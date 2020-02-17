@@ -44,6 +44,7 @@ classdef ( ConstructOnLoad = true ) gui_option < handle
                 obj.panel(panel_idx).T_seq=false;%whether has T Page sequence
                 obj.panel(panel_idx).hold=false;    % is panel on hold
                 obj.panel(panel_idx).norm=false;    % should plot be normalised
+                obj.panel(panel_idx).eqaxis=false;    % axis equal or square
                 obj.panel(panel_idx).xscale=[0,1,0,0];%[min,max,islog,isfix]
                 obj.panel(panel_idx).xbound=[0,1,0,0];%[min,max,minlevel,maxlevel]
                 obj.panel(panel_idx).yscale=[0,1,0,0];%[min,max,islog,isfix]
