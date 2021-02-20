@@ -345,7 +345,7 @@ try
                                 obj.data(current_data).datainfo.t=0;
                                 obj.data(current_data).datainfo.dt=1;
                             end
-                            if ~isempty(obj.data(current_data).datainfo.X)
+                            if ~isempty(obj.data(parent_data).datainfo.X)
                                 obj.data(current_data).datainfo.X=nanmean(reshape(obj.data(parent_data).datainfo.X(1:offset_size(2)),[binsize(2),newsize(2)]),1);
                                 if numel(obj.data(current_data).datainfo.X)>1
                                     obj.data(current_data).datainfo.dX=obj.data(current_data).datainfo.X(2)-obj.data(current_data).datainfo.X(1);
@@ -354,7 +354,7 @@ try
                                 obj.data(current_data).datainfo.X=0;
                                 obj.data(current_data).datainfo.dX=1;
                             end
-                            if ~isempty(obj.data(current_data).datainfo.Y)
+                            if ~isempty(obj.data(parent_data).datainfo.Y)
                                 obj.data(current_data).datainfo.Y=nanmean(reshape(obj.data(parent_data).datainfo.Y(1:offset_size(3)),[binsize(3),newsize(3)]),1);
                                 if numel(obj.data(current_data).datainfo.Y)>1
                                     obj.data(current_data).datainfo.dY=obj.data(current_data).datainfo.Y(2)-obj.data(current_data).datainfo.Y(1);

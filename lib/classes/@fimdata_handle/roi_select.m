@@ -8,7 +8,9 @@ for m=1:numel(obj.data(current_data).current_roi)
     if obj.data(current_data).current_roi(m)>1
         %ignore template whoes index is 1
         %change colour of the current one to blue
-        setColor(obj.data(current_data).roi(obj.data(current_data).current_roi(m)).handle,'b');
+        if ~isempty(obj.data(current_data).roi(obj.data(current_data).current_roi(m)).handle)
+            setColor(obj.data(current_data).roi(obj.data(current_data).current_roi(m)).handle,'b');
+        end
     end
 end
 

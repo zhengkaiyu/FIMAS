@@ -86,7 +86,7 @@ try
         message=sprintf('one new data added\n');
         status=true;
     end
-    if status==true;
+    if status==true
         % update current data pointer
         obj.data_select(current_data);
     end

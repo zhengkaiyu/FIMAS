@@ -173,7 +173,7 @@ try
                 'Color',[0.2,0.2,0.2]);
             setappdata(waitbar_handle,'canceling',0);
             
-            for slice_idx=2:n_slices
+            for slice_idx=1:n_slices
                 obj.data(current_data).dataval(1,:,:,:,slice_idx) = spatial_interp(squeeze(obj.data(parent_data).dataval(1,:,:,:,slice_idx)),shift_size(slice_idx,:)', 'cubic','translation', nx, ny);
                 
                 %output some progress so we know it is doing things
@@ -215,7 +215,7 @@ try
                 'WindowStyle','modal',...
                 'Color',[0.2,0.2,0.2]);
             setappdata(waitbar_handle,'canceling',0);
-            for slice_idx=2:n_slices
+            for slice_idx=1:n_slices
                 obj.data(current_data).dataval(:,:,:,:,slice_idx) = circshift(obj.data(parent_data).dataval(:,:,:,:,slice_idx),[0,shift_size(slice_idx,:),0,0]);
                 
                 %output some progress so we know it is doing things
