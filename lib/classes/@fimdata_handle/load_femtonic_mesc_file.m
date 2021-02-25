@@ -63,9 +63,15 @@ try
             % get metainfo fieldnames
             metafname=fieldnames(metainfo);
             % find channel names
-            metafnameidx=find(cellfun(@(x)~isempty(x),regexp(metafname,'Channel_\d_Name')));
-            metafname=metafname(metafnameidx);
-            ch_name=cell2mat(cellfun(@(x)[metainfo.(x)(1:end-1),'|'],metafname,'UniformOutput',false)');
+            % extract channel number id
+            ChNum=regexp(metafname,'Channel_(\d)_Name','tokens');
+            metafnameidx=find(cellfun(@(x)~isempty(x),ChNum));
+            % sort channel id from 0->N
+            [~,chorder]=sort(cellfun(@(x)str2double(x{:}),ChNum(metafnameidx)));
+            % get sorted channel name
+            metafname=metafname(metafnameidx(chorder));
+            ch_name=cell2mat(cellfun(@(x)[regexprep(char(metainfo.(x)(:)'),'\W',''),'|'],metafname,'UniformOutput',false)');
+            % get number of channels
             nCh=numel(metafname);
             % C info
             datainfo.t=1:1:nCh;
