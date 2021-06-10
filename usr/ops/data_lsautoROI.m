@@ -68,7 +68,7 @@ try
                         int_dim='T';
                 end
                 int_interval=str2num(answer{7}); %#ok<ST2NM>
-                reversal=boolean(str2double(answer{8}));
+                reversal=logical(str2double(answer{8}));
                 int_interval=find(obj.data(current_data).datainfo.(int_dim)>=int_interval(1)&obj.data(current_data).datainfo.(int_dim)<=int_interval(end));
                 % for multiple data ask for apply to all option
                 if numel(selected_data)>1

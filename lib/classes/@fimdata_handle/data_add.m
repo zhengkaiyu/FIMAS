@@ -46,7 +46,7 @@ try
         %work out data type
         obj.data(current_data).datatype=obj.get_datatype;
         %add display dim
-        obj.data(current_data).datainfo.display_dim=boolean(datasize>1);
+        obj.data(current_data).datainfo.display_dim=logical(datasize>1);
         %update data last change date
         obj.data(current_data).datainfo.last_change=datestr(now);
         %return information and success status

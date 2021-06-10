@@ -66,7 +66,7 @@ try
         end
         
         obj.data(data_end_pos).datainfo.data_dim=[1,info.Width,info.Height,1,n_frame];
-        obj.data(data_end_pos).datainfo.display_dim=boolean([0,1,1,0,n_frame>1]);
+        obj.data(data_end_pos).datainfo.display_dim=logical([0,1,1,0,n_frame>1]);
         obj.data(data_end_pos).datatype=obj.get_datatype;
         obj.data(data_end_pos).datainfo.last_change=datestr(now);
         message=sprintf('%s loaded\n',cat(2,pathname,filesep,filename));

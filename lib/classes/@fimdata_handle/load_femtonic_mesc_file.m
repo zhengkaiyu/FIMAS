@@ -129,11 +129,11 @@ try
                     case 'Tstack'
                         % work out dimension size
                         obj.data(data_end_pos).dataval(datasetidx,:,:,1,:)=double(rawdata)*imgscale+imgoffset;
-                        datainfo.display_dim=boolean([0,1,1,0,1]);
+                        datainfo.display_dim=logical([0,1,1,0,1]);
                     case 'slowzstack'
                         % work out dimension size
                         obj.data(data_end_pos).dataval(datasetidx,:,:,:,1)=double(rawdata)*imgscale+imgoffset;
-                        datainfo.display_dim=boolean([0,1,1,1,0]);
+                        datainfo.display_dim=logical([0,1,1,1,0]);
                 end
             end
             datainfo.data_dim=[nCh,nX,nY,nZ,nT];

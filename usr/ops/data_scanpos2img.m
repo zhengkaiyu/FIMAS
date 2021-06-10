@@ -180,7 +180,7 @@ try
                 val=char(fval{fidx});
                 switch fname{fidx}
                     case 'newdata'
-                        newdata=boolean(str2double(val));
+                        newdata=logical(str2double(val));
                     case 'signaldataidx'
                         % signal data index in t channel
                         signaldataidx=str2double(val);
@@ -189,7 +189,7 @@ try
                         scandataidx=str2num(val);
                     case 'split_ROI'
                         % split_roi option
-                        split_ROI=boolean(str2double(val));
+                        split_ROI=logical(str2double(val));
                     case 'bglev'
                         % background intensity level
                         bglev=str2double(val);

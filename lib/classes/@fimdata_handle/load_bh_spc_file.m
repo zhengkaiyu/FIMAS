@@ -190,7 +190,7 @@ try
                         case {'I','F','L','U'}
                             val=str2double(buffer{idx}(i(4)+1:i(end)-1));
                         case {'B'}
-                            val=boolean(str2double(temp{5}));
+                            val=logical(str2double(temp{5}));
                     end
                     info.setup_info.(fname)=val;
                 end

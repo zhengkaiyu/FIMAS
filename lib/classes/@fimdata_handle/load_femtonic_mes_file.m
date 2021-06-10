@@ -114,7 +114,7 @@ try
                         datainfo.data_dim=[1,metainfo.Width,metainfo.Height,1,1];
                         % no scanline info needed
                         datainfo.scanline=[];
-                        datainfo.display_dim=boolean([0,1,1,0,0]);
+                        datainfo.display_dim=logical([0,1,1,0,0]);
                         status=true;
                     case 'XY'%images
                         switch metainfo.Context
@@ -141,7 +141,7 @@ try
                                 datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,1,1];
                                 % datinfo.scanline from its parent
                                 % should've been carried forward
-                                datainfo.display_dim=boolean([0,1,1,0,0]);
+                                datainfo.display_dim=logical([0,1,1,0,0]);
                                 status=true;
                             case {'ZStack','Zstack'}% Zstack images XYZ
                                 % add new data object
@@ -183,7 +183,7 @@ try
                                 datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,nZSlice,1];
                                 % no scanline info needed
                                 datainfo.scanline=[];
-                                datainfo.display_dim=boolean([0,1,1,1,0]);
+                                datainfo.display_dim=logical([0,1,1,1,0]);
                                 status=true;
                             case 'Photo'% single XY image captured
                                 % add new data object
@@ -208,7 +208,7 @@ try
                                 datainfo.data_dim=[nCh,metainfo.Width,metainfo.Height,1,1];
                                 % no scanline info needed
                                 datainfo.scanline=[];
-                                datainfo.display_dim=boolean([0,1,1,0,0]);
+                                datainfo.display_dim=logical([0,1,1,0,0]);
                                 status=true;
                             otherwise
                                 return;
@@ -236,7 +236,7 @@ try
                         datainfo.data_dim=[nCh,metainfo.Width,1,1,metainfo.Height];
                         % assign scanline info for background image to capture
                         datainfo.scanline=metainfo.ScanLine;
-                        datainfo.display_dim=boolean([0,1,0,0,1]);
+                        datainfo.display_dim=logical([0,1,0,0,1]);
                         status=true;
                     case 'FF'%folded frame XYT
                         % add new data object
@@ -268,7 +268,7 @@ try
                         datainfo.data_dim=[nCh,metainfo.Width,nLines,1,nFrames];
                         % assign scanline info for background image to capture
                         datainfo.scanline=metainfo.ScanLine;
-                        datainfo.display_dim=boolean([0,1,1,0,1]);
+                        datainfo.display_dim=logical([0,1,1,0,1]);
                         status=true;
                     otherwise
                         message=sprintf('%s\nUnable t process image type %s yet',message,metainfo.Type);

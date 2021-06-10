@@ -114,7 +114,7 @@ try
             if numel(val)==5
                 % make sure display only existing data dims
                 val=and(val,obj.data(data_idx).datainfo.data_dim-1);
-                obj.data(data_idx).datainfo.display_dim=boolean(val);
+                obj.data(data_idx).datainfo.display_dim=logical(val);
                 status=true;
             else
                 errordlg('bin_dim must specified for all 5 tXYZT dimensions.','Error','modal');
