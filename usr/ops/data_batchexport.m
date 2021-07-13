@@ -132,7 +132,7 @@ try
                 filename=sprintf('%s%s%s_bundle.%s',exportpath,filesep,obj.data(selected_data(1)).dataname,exportformat);
                 % export
                 obj.data_export(selected_data,filename);
-                message=sprintf('%s\nData %s to %s exported',message,num2str(selected_data),filename);
+                message=sprintf('%s\nData %s to %s exported',message,num2str(selected_data),num2str(current_data));
                 status=true;
                 % close waitbar if exist
                 if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
@@ -144,7 +144,7 @@ try
                 filename=sprintf('%s%s%s.%s',exportpath,filesep,obj.data(current_data).dataname,exportformat);
                 % export
                 obj.data_export(current_data,filename);
-                message=sprintf('%s\nData %s to %s exported',message,num2str(current_data),filename);
+                message=sprintf('%s\nData %s to %s exported',message,num2str(current_data),num2str(current_data));
             end
         end
         data_idx=data_idx+1;

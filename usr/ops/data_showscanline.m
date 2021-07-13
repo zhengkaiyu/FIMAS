@@ -75,9 +75,10 @@ if isempty(sl_name)
 end
 hsl=findobj(where_to,'Tag',sl_name);
 if isempty(hsl)
-    %set(where_to,'NextPlot','add');
+    set(where_to,'NextPlot','add');
     hsl=plot(where_to,coord(:,2),coord(:,1),'Color','y','LineStyle','-','LineWidth',1);
     set(hsl,'Tag',sl_name);
+    set(where_to,'NextPlot','replace');
 else
     set(hsl,'XData',coord(:,2),'YData',coord(:,1));
 end

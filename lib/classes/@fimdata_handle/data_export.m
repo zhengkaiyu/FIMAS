@@ -47,12 +47,33 @@ try
                 message=sprintf('data item %g exported\n',index);
                 status=true;
             case {'tiff','tif','TIFF','TIF'}
+                %{
+                databit=8;
+                for dataidx=index
+                    dataitem=obj.data(dataidx);
+                    dataval=squeeze(dataitem.dataval);
+                    tifobj = Tiff(filename,'w');
+                                tagstruct.ImageLength=size(dataval,1);
+                                tagstruct.ImageWidth=size(dataval,2);
+                                tagstruct.Photometric = Tiff.Photometric.MinIsBlack;
+                                tagstruct.BitsPerSample = databit;
+                                tagstruct.SamplesPerPixel = 1;
+                                %tagstruct.RowsPerStrip = 1;
+                                tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
+                                tagstruct.Software = 'MATLAB';
+                                tagstruct.Copyright = 'FIMAS';
+                                tifobj.setTag(tagstruct);
+                                tifobj.write(uint8(dataval));
+                                % close tiff file construct
+                                tifobj.close();
+                end
+                %}
                 databit=16;
                 for dataidx=index
                     dataitem=obj.data(dataidx);
                     dataval=dataitem.dataval;
-                    maxval=max(dataval(:));
-                    dataval=uint16(dataval/maxval*2^databit);
+                    %maxval=max(dataval(:));
+                    %dataval=uint16(dataval/maxval*2^databit);
                     dataval=permute(dataval,[2,3,1,4,5]);
                     nch=size(dataval,3);
                     nslice=size(dataval,4);
@@ -100,6 +121,7 @@ try
                     % close tiff file construct
                     tifobj.close();
                 end
+                
                 % update saved path
                 obj.path.export=pathname;
                 message=sprintf('data item %g exported\n',index);
