@@ -29,7 +29,7 @@ assert(status, ['Missing Bio-Formats library. Either add loci_tools.jar '...
 [ ver, date ] = version;
 release_yr = str2double(datestr(date,'YYYY'));
 switch release_yr
-    case {2018,2019,2020}
+    case {2018,2019,2020,2021}
         feature('accel','on');
     otherwise
         errordlg(sprintf('Incompatible MATLAB Version.\nCurrent Version %s\nRequire >R2018b',ver),'Version Error','modal');
