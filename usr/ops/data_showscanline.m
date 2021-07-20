@@ -78,7 +78,7 @@ if isempty(hsl)
     set(where_to,'NextPlot','add');
     hsl=plot(where_to,coord(:,2),coord(:,1),'Color','y','LineStyle','-','LineWidth',1);
     set(hsl,'Tag',sl_name);
-    set(where_to,'NextPlot','replace');
+    %set(where_to,'NextPlot','replace');
 else
     set(hsl,'XData',coord(:,2),'YData',coord(:,1));
 end

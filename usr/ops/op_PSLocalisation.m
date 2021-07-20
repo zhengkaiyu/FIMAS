@@ -361,7 +361,7 @@ try
                                     % if number of peak is less than wanted
                                     if numel(loc)<estn
                                         peakpos=[imgx(loc);(rand(estn-numel(loc),1)-0.5)*xres*dx+mean(imgx)];
-                                        maxval=repmat(maxval,estn,1);
+                                        maxval=[maxval;repmat(max(maxval),(estn-numel(loc)),1)];
                                     else
                                         peakpos=imgx(loc);
                                     end
@@ -408,7 +408,7 @@ try
                                     % if number of peak is less than wanted
                                     if numel(loc)<estn
                                         peakpos=[imgy(loc);(rand(estn-numel(loc),1)-0.5)*yres*dy+mean(imgy)];
-                                        maxval=repmat(maxval,estn,1);
+                                        maxval=[maxval;repmat(max(maxval),(estn-numel(loc)),1)];
                                     else
                                         peakpos=imgy(loc);
                                     end
@@ -466,7 +466,7 @@ try
                                         estimates=estimates';
                                         result(partidx,:)=[estimates(:)',I_total];
                                         if nsource>1
-                                            est_stderr=[est_stderr(1:2:end)';est_stderr(2:2:end)'];
+                                            est_stderr=reshape(est_stderr,nsource,4);
                                             est_stderr=est_stderr(sortidx,:)';
                                         end
                                         result_err(partidx,:)=est_stderr(:)';
