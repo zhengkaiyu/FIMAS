@@ -131,7 +131,7 @@ try
                             % minimum one
                             nsource=max(1,round(str2double(val)));
                             data_handle.data(current_data).datainfo.estimate_nsource=nsource;
-                            data_handle.data(current_data).datainfo.parameter_space=[repmat('Cx|Cy|Sigma|Amp|',1,nsource),'Int',repmat('|dCx|dCy|dSigma|dAmp',1,nsource)];
+                            data_handle.data(current_data).datainfo.parameter_space=[repmat('Cx|Cy|Sigma|Amp|',1,nsource),'Int','res',repmat('|dCx|dCy|dSigma|dAmp',1,nsource)];
                         case 'interval_start'
                             switch val(1)
                                 case 'a'
@@ -264,7 +264,7 @@ try
                         % initialise data holder
                         signaldata=squeeze(data_handle.data(parent_data).dataval);
                         result=nan(size(signalinterval,1),4*estn+1);
-                        result_err=nan(size(signalinterval,1),4*estn);
+                        result_err=nan(size(signalinterval,1),4*estn+1);
                         
                         if doplot
                             hfig=figure(current_data);clf;
@@ -315,16 +315,16 @@ try
                                 bgtimeidx=(Tdata>=signalinterval(partidx,1)-bgdt(partidx-1)&Tdata<signalinterval(partidx,1));
                                 titletext=sprintf('int%i|%g',partidx,signalinterval(partidx,1));
                                 if isempty(find(bgtimeidx, 1))
-                                    % no background correction just track
+                                    % no background correction use baseline
                                     
                                 else
                                     bgimg=squeeze(mean(signaldata(:,:,bgtimeidx),3));
-                                    if max(tempimg(:))>2*pnoiseimg
-                                        % subtract background image
-                                        tempimg=tempimg-bgimg;
-                                    else
-                                        tempimg=[];
-                                    end
+                                end
+                                if max(tempimg(:))>2*pnoiseimg
+                                    % subtract background image
+                                    tempimg=tempimg-bgimg;
+                                else
+                                    tempimg=[];
                                 end
                             end
                             if ~isempty(tempimg)
@@ -368,9 +368,9 @@ try
                                     % make educated guess
                                     xinitestimates=[peakpos,repmat(dx,estn,1),maxval];
                                     % set lower bound (center,sigma,amplitude)
-                                    lb=repmat([xbound(1)-edge_allowance*dx,dx,pnoise/estn],estn,1);
+                                    lb=repmat([xbound(1)-edge_allowance*dx,dx/2,pnoise/estn],estn,1);
                                     % set upper bound (center,sigma,amplitude)
-                                    ub=repmat([xbound(2)+edge_allowance*dx,diff(xbound),satlevel/estn],estn,1);
+                                    ub=repmat([xbound(2)+edge_allowance*dx,diff(xbound)/2,satlevel/estn],estn,1);
                                     % try to fit 1D gaussian
                                     [xestimates,~,xexitflag,output] = fmincon(@chi2gaussfunc,xinitestimates,[],[],[],[],lb,ub,@mygausscon,options,imgx,xprofile,satlevel);
                                     if xexitflag>0
@@ -417,7 +417,7 @@ try
                                     % set lower bound (center,sigma,amplitude)
                                     lb=repmat([ybound(1)-edge_allowance*dy,dy/2,pnoise/estn],estn,1);
                                     % set upper bound (center,sigma,amplitude)
-                                    ub=repmat([ybound(2)+edge_allowance*dy,diff(ybound),satlevel/estn],estn,1);
+                                    ub=repmat([ybound(2)+edge_allowance*dy,diff(ybound)/2,satlevel/estn],estn,1);
                                     % try to fit 1D gaussian
                                     [yestimates,~,yexitflag,output] = fmincon(@chi2gaussfunc,yinitestimates,[],[],[],[],lb,ub,@mygausscon,options,imgy,yprofile,satlevel);
                                     if yexitflag>0
@@ -455,21 +455,23 @@ try
                                             [~,sortidx]=sort(estimates(:,1));
                                             estimates=estimates(sortidx,:);
                                         end
-                                        if exitflag>0
+                                        if exitflag<0
+                                            est_stderr=nan(numel(estimates),1);
+                                        else
                                             % calcuate standard error of the estimated parameters
                                             est_stderr=sqrt(abs(diag(inv(hessian))));
-                                        else
-                                            est_stderr=nan(numel(estimates),1);
                                         end
                                         fitimg=gauss2dfunc(estimates,imgx,imgy);
+                                        resimg=(fitimg-tempimg);
                                         I_total=trapz(imgx,trapz(imgy,fitimg,2));
                                         estimates=estimates';
+                                        imgresidue=sum(resimg(:).^2)/numel(resimg);
                                         result(partidx,:)=[estimates(:)',I_total];
                                         if nsource>1
                                             est_stderr=reshape(est_stderr,nsource,4);
                                             est_stderr=est_stderr(sortidx,:)';
                                         end
-                                        result_err(partidx,:)=est_stderr(:)';
+                                        result_err(partidx,:)=[est_stderr(:)',imgresidue];
                                         if doplot
                                             % plot fitted image
                                             hax=subplot(nplotrow,nplotcol,nplotcol*3+partidx,'Parent',hfig);
@@ -482,12 +484,12 @@ try
                                             axis(hax,'square');view(hax,[0 -90]);
                                             
                                             % draw residual between fitted and original image
-                                            resimg=(fitimg-tempimg);
+                                           
                                             hax=subplot(nplotrow,nplotcol,nplotcol*4+partidx,'Parent',hfig);
                                             mesh(hax,x,y,resimg,'EdgeColor','none','FaceColor','interp');colormap('jet');
                                             xlim(hax,ybound);ylim(hax,xbound);
                                             axis(hax,'square');view(hax,[0 -90]);
-                                            title(hax,sprintf('residual'));
+                                            title(hax,sprintf('residual:\n%12e',imgresidue));
                                             
                                             % plot xy profiles
                                             xprofile=nanmean(fitimg,2);xprofile=xprofile(:);
