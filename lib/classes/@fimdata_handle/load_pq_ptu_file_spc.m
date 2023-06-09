@@ -112,6 +112,7 @@ try
                     %DO NOTHING
                 otherwise
                     %PASS ON VALUES AS IS
+                    Tag_Id=regexprep(Tag_Id,'[\W]','');
             end
             %assign value
             if isempty(idx)
@@ -263,6 +264,9 @@ try
         end
         % --- start getting data into clock data format
         framenum=numel(frame_pos);
+        if framenum==1
+            frame_pos=[1,frame_pos];
+        end
         [~,linestart_framenum]=histc(linestart_pos,frame_pos);
         [startlinenum,~]=histc(linestart_framenum,1:1:framenum);
         [~,linestop_framenum]=histc(linestop_pos,frame_pos);
@@ -293,6 +297,7 @@ try
         validframe=validframe(:)';
         
         % ask if want fly back
+        %{
         button = questdlg(sprintf('Read fly back data?\nThis will double the x pixel numbers.'),...
             'Append flyback','true','false','false');
         if isempty(button)
@@ -300,7 +305,8 @@ try
             button='false';
         end
         readflyback=str2num(button);
-        
+        %}
+        readflyback=0;
         % --- provide info to confirm loading ---
         temp = figure(...
             'WindowStyle','normal',...% able to use
@@ -315,6 +321,8 @@ try
         pos=get(temp,'Position');
         % create table to display meta information
         obj.data(1).metainfo=info;
+        %%temporarily stop diplays info and ask questions
+        %{
         [~,infomess]=obj.display_metainfo(1,1,[]);
         uitable(...
             'Parent',temp,...
@@ -336,7 +344,9 @@ try
             'Position',[pos(3)/2 0 3*pos(3)/2 pos(4)],...% maximise table
             'ColumnWidth',{floor(pos(3)/8) floor(1.5*pos(3)/8)},...
             'ColumnEditable',[false false]);% no editing required
-        button = questdlg('Check data info is correct','Proceed Further?','Proceed','Cancel','Proceed') ;
+        %}
+        %button = questdlg('Check data info is correct','Proceed Further?','Proceed','Cancel','Proceed') ;
+        button='Proceed';
         switch button
             case 'Proceed'
                 %rid of info figure

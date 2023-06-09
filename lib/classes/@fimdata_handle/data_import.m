@@ -9,6 +9,8 @@ function [ status, message ] = data_import( obj, varargin )
 status=false;
 message='';
 options=[];
+persistent ptu_type;
+ptu_type=[];
 
 data_pathname=obj.path.import;%default to obj value
 data_filename=[];%default empty filename
@@ -139,10 +141,19 @@ try
             case 'ptu'
                 %picoquant binary
                 %ask for storage format
-                if isempty(buttonptu)
-                    buttonptu = questdlg('Use spc to minimise memory usage','Storage Format','ndim','spc','ndim');
+                if isempty(ptu_type)
+                    if isempty(buttonptu)
+                        buttonptu = questdlg('Use spc to minimise memory usage','Storage Format','ndim','spc','ndim');
+                    end
+                    answer = questdlg('Use for rest of the files','Storage Format','yes','no','yes');
+                    switch answer
+                        case 'yes'
+                            ptu_type=buttonptu;
+                        otherwise
+                            ptu_type=[];
+                    end
                 end
-                switch buttonptu
+                switch ptu_type
                     case 'ndim'
                         [ status, message ] = obj.load_pq_ptu_file(filename);
                     case 'spc'

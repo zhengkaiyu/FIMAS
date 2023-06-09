@@ -72,8 +72,8 @@ try
                 for dataidx=index
                     dataitem=obj.data(dataidx);
                     dataval=dataitem.dataval;
-                    %maxval=max(dataval(:));
-                    %dataval=uint16(dataval/maxval*2^databit);
+                    maxval=max(dataval(:));
+                    dataval=uint16(dataval/maxval*2^databit);
                     dataval=permute(dataval,[2,3,1,4,5]);
                     nch=size(dataval,3);
                     nslice=size(dataval,4);

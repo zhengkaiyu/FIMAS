@@ -6,7 +6,7 @@ function [ status, message ] = op_PSLocalisation( data_handle, option, varargin 
 %---Batch process----------------------------------------------------------
 %   Parameter=struct('selected_data','1','parameter_space','Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp','estimate_nsource','1','interval_start','[200,366,466,566,666,766]','baseline_deltaT','100','bg_deltaT','20','AP_deltaT','20','edge_allowance','5','display_fitting','true');
 %   selected_data=data index, 1 means previous generated data
-%   parameter_space=Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp
+%   parameter_space=Cx|Cy|Sigma|Amp|Int|res|dCx|dCy|dSigma|dAmp
 %   estimate_nsource=integer(>=0); number of gaussian center in one frame fit
 %   interval_start= 1x(m+1) vector or 'auto\d*'; starting time point for [background,1AP,2AP,...mAP], auto uses AP_deltaT as minimum peak distance in findpeaks function
 %   baseline_deltaT=scalar(>0); time interval in ms for baseline period
@@ -23,7 +23,7 @@ function [ status, message ] = op_PSLocalisation( data_handle, option, varargin 
 %table contents must all have default values
 parameters=struct('note','',...
     'operator','op_PSLocalisation',...
-    'parameter_space','Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp',...
+    'parameter_space','Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp|res',...
     'estimate_nsource',1,...
     'interval_start',[200,366,466,566,666,766],...
     'baseline_deltaT',100,...
@@ -93,7 +93,7 @@ try
                                 data_handle.data(new_data).datainfo.parent_data_idx=parent_data;
                                 % combine the parameter fields
                                 data_handle.data(new_data).datainfo=setstructfields(data_handle.data(new_data).datainfo,parameters);%parameters field will replace duplicate field in data
-                                data_handle.data(new_data).datainfo.parameter_space='Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp';
+                                data_handle.data(new_data).datainfo.parameter_space='Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp|res';
                                 data_handle.data(new_data).datainfo.bin_dim=data_handle.data(parent_data).datainfo.bin_dim;
                                 if isempty(data_handle.data(new_data).datainfo.bin_dim)
                                     data_handle.data(new_data).datainfo.bin_dim=[1,1,1,1,1];
@@ -131,7 +131,7 @@ try
                             % minimum one
                             nsource=max(1,round(str2double(val)));
                             data_handle.data(current_data).datainfo.estimate_nsource=nsource;
-                            data_handle.data(current_data).datainfo.parameter_space=[repmat('Cx|Cy|Sigma|Amp|',1,nsource),'Int','res',repmat('|dCx|dCy|dSigma|dAmp',1,nsource)];
+                            data_handle.data(current_data).datainfo.parameter_space=[repmat('Cx|Cy|Sigma|Amp|',1,nsource),'Int',repmat('|dCx|dCy|dSigma|dAmp',1,nsource),'|res'];
                         case 'interval_start'
                             switch val(1)
                                 case 'a'
@@ -168,7 +168,7 @@ try
                                         end
                                     end
                                 otherwise
-                                    data_handle.data(current_data).datainfo.interval_start=max(10,round(str2num(val)));
+                                    data_handle.data(current_data).datainfo.interval_start=max(0,round(str2num(val)));
                             end
                         case 'baseline_deltaT'
                             data_handle.data(current_data).datainfo.baseline_deltaT=max(10,round(str2double(val)));
@@ -310,7 +310,7 @@ try
                             if partidx==1
                                 % background image
                                 bgimg=tempimg;
-                                titletext='background';
+                                titletext='baseline';
                             else
                                 bgtimeidx=(Tdata>=signalinterval(partidx,1)-bgdt(partidx-1)&Tdata<signalinterval(partidx,1));
                                 titletext=sprintf('int%i|%g',partidx,signalinterval(partidx,1));
@@ -368,7 +368,7 @@ try
                                     % make educated guess
                                     xinitestimates=[peakpos,repmat(dx,estn,1),maxval];
                                     % set lower bound (center,sigma,amplitude)
-                                    lb=repmat([xbound(1)-edge_allowance*dx,dx/2,pnoise/estn],estn,1);
+                                    lb=repmat([xbound(1)-edge_allowance*dx,dx,pnoise/estn],estn,1);
                                     % set upper bound (center,sigma,amplitude)
                                     ub=repmat([xbound(2)+edge_allowance*dx,diff(xbound)/2,satlevel/estn],estn,1);
                                     % try to fit 1D gaussian
@@ -465,7 +465,7 @@ try
                                         resimg=(fitimg-tempimg);
                                         I_total=trapz(imgx,trapz(imgy,fitimg,2));
                                         estimates=estimates';
-                                        imgresidue=sum(resimg(:).^2)/numel(resimg);
+                                        imgresidue=sqrt(mean(resimg(:).^2));
                                         result(partidx,:)=[estimates(:)',I_total];
                                         if nsource>1
                                             est_stderr=reshape(est_stderr,nsource,4);
@@ -489,7 +489,7 @@ try
                                             mesh(hax,x,y,resimg,'EdgeColor','none','FaceColor','interp');colormap('jet');
                                             xlim(hax,ybound);ylim(hax,xbound);
                                             axis(hax,'square');view(hax,[0 -90]);
-                                            title(hax,sprintf('residual:\n%12e',imgresidue));
+                                            title(hax,sprintf('residual:\n%0.3g',imgresidue));
                                             
                                             % plot xy profiles
                                             xprofile=nanmean(fitimg,2);xprofile=xprofile(:);

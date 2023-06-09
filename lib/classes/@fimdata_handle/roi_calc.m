@@ -180,6 +180,43 @@ try
                 end
             otherwise
                 switch parameter
+                    case 'transform'
+                        status=true;
+                        
+                        message='indexed';
+                        switch bin2dec(num2str(pos_dim_idx))%display decide on data dimension
+                            % 0(point)/9(XT)/12(XY)/13(XYT)/14(XYZ)/15(XYZT)/17(tT)/28(tXY)/29(tXYT)/30(tXYZ)/31
+                            % (tXYZT) missing 31
+                            case 13
+                                % XYT(01101)
+                                display_dim=[false,true,false,false,true];
+                                [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
+                                data{1,2}{1}=1:1:numel(pixel_idx);
+                                dimsize=obj.data(current_data).datainfo.data_dim;
+                                temp=reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]);
+                                data{1,1}=reshape(temp(:,pixel_idx,:),[dimsize(1),numel(pixel_idx),1,dimsize(4),dimsize(5)]);
+                            case 28
+                                % tXY(11100)
+                                display_dim=[true,true,false,false,false];
+                                [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
+                                data{1,2}{2}=1:1:numel(pixel_idx);
+                                dimsize=obj.data(current_data).datainfo.data_dim;
+                                temp=reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]);
+                                data{1,1}=reshape(temp(:,pixel_idx,:),[dimsize(1),numel(pixel_idx),1,dimsize(4),dimsize(5)]);
+                            case 29
+                                % tXYT(11101)
+                                % display in t dimension
+                                display_dim=[true,true,false,false,true];
+                                [ data{1,3}, data{1,2} ] = obj.get_displaydata( current_data, display_dim );
+                                data{1,2}{2}=1:1:numel(pixel_idx);
+                                dimsize=obj.data(current_data).datainfo.data_dim;
+                                temp=reshape(obj.data(current_data).dataval,[dimsize(1),dimsize(2)*dimsize(3),dimsize(4),dimsize(5)]);
+                                data{1,1}=reshape(temp(:,pixel_idx,:),[dimsize(1),numel(pixel_idx),1,dimsize(4),dimsize(5)]);
+                            otherwise
+                                status=false;
+                                message=sprintf('does not know how to calculate roi trace for this data type yet\n');
+                        end
+                        
                     case 'trace'
                         % asked for data trace to be calculated
                         status=true;

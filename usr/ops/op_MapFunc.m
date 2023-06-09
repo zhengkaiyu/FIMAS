@@ -7,7 +7,12 @@ function [ status, message ] = op_MapFunc( data_handle, option, varargin )
 %
 % --- Function Library ---
 %----------------------------------------------------------------------
+
+%----LEICA SP8 FLIM confocal 9ns interval--------
 %---OGB1---
+%1det_37C: '@(x)112.26053.*((0.07608-x)./(x-0.37071)).^(1/1.14805)'
+%---Cal590---
+%1det 37C: '@(x)42.37263.*((0.10811-x)./(x-0.23606)).^(1/2.1904)'
 %------- BH NCPCA test ------
 %1det_32C: '@(x)121.58582.*((1.14801-x)./(x-11.02362)).^(1/1.3827)'
 %------- BH 2ns NTC interval ------
@@ -60,7 +65,7 @@ parameters=struct('note','',...
     't_disp_bound',[0,200,128],...
     'disp_lb',20,...
     'disp_ub',100,...
-    'calib_func','@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)');
+    'calib_func','@(x)112.26053.*((0.07608-x)./(x-0.37071)).^(1/1.14805)');
 
 % assume worst
 status=false;

@@ -10,7 +10,7 @@ function varargout = MAIN_GUI(varargin)
 % Operating System: 64bit Matlab 2018b on Linux/Mac/Windows
 % PDF Manual: require xpdf on linux and default pdf viewer on Mac/Windows
 
-% Last Modified by GUIDE v2.5 06-Jun-2019 16:42:21
+% Last Modified by GUIDE v2.5 28-Mar-2023 13:22:17
 
 %==============================================================
 % Begin initialization code - DO NOT EDIT
@@ -924,6 +924,19 @@ if success
     populate_list(handles.LIST_ROI,{hDATA.data(hDATA.current_data).roi.name},hDATA.data(hDATA.current_data).current_roi);
 end
 update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
+
+
+% --------------------------------------------------------------------
+function MENUITEM_ROI_TRANSFORM_Callback(~, ~, handles)
+global hDATA;
+
+[ success, message ]= hDATA.roi_transform;
+if success
+    populate_list(handles.LIST_DATA,{hDATA.data.dataname},hDATA.current_data);
+    populate_list(handles.LIST_ROI,{hDATA.data(hDATA.current_data).roi.name},hDATA.data(hDATA.current_data).current_roi);
+end
+update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
+
 
 % delete roi
 function MENUITEM_ROI_DELETE_Callback(~, ~, handles)

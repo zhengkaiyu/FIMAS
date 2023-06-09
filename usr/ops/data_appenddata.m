@@ -118,30 +118,35 @@ try
             new_dim_size=sum(cell2mat(arrayfun(@(x)obj.data(x).datainfo.data_dim(append_dim),selected_data,'UniformOutput',false)));
             obj.data(current_data).datainfo.data_dim=obj.data(parent_data).datainfo.data_dim;
             obj.data(current_data).datainfo.data_dim(append_dim)=new_dim_size;
-            obj.data(current_data).datatype=obj.get_datatype;
-            obj.data(current_data).dataval=cat(append_dim,obj.data(selected_data).dataval);
-            % recalculate dimension data
-            for dim_idx=1:numel(obj.DIM_TAG)
-                dim=obj.DIM_TAG{dim_idx};
-                if dim_idx==append_dim
-                    obj.data(current_data).datainfo.(dim)=obj.data(selected_data(1)).datainfo.(dim);
-                    for item_idx=2:numel(selected_data)
-                        if obj.data(parent_data).datainfo.(cat(2,'d',dim))~=0
-                            obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
-                            if obj.data(selected_data(2)).datainfo.(dim)(1)>obj.data(selected_data(1)).datainfo.(dim)(end)
-                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)];
-                            else
-                                obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim),obj.data(selected_data(item_idx)).datainfo.(dim)+obj.data(current_data).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
+            switch obj.data(parent_data).datatype
+                case 'DATA_SPC'
+                    
+                otherwise
+                    obj.data(current_data).datatype=obj.get_datatype;
+                    obj.data(current_data).dataval=cat(append_dim,obj.data(selected_data).dataval);
+                    % recalculate dimension data
+                    for dim_idx=1:numel(obj.DIM_TAG)
+                        dim=obj.DIM_TAG{dim_idx};
+                        if dim_idx==append_dim
+                            obj.data(current_data).datainfo.(dim)=obj.data(selected_data(1)).datainfo.(dim);
+                            for item_idx=2:numel(selected_data)
+                                if obj.data(parent_data).datainfo.(cat(2,'d',dim))~=0
+                                    obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
+                                    if obj.data(selected_data(2)).datainfo.(dim)(1)>obj.data(selected_data(1)).datainfo.(dim)(end)
+                                        obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)(:)];
+                                    else
+                                        obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim)(:);obj.data(selected_data(item_idx)).datainfo.(dim)(:)+obj.data(current_data).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
+                                    end
+                                else
+                                    obj.data(current_data).datainfo.(cat(2,'d',dim))=1;
+                                    obj.data(current_data).datainfo.(dim)=linspace(0,new_dim_size-1,new_dim_size);
+                                end
                             end
                         else
-                            obj.data(current_data).datainfo.(cat(2,'d',dim))=1;
-                            obj.data(current_data).datainfo.(dim)=linspace(0,new_dim_size-1,new_dim_size);
+                            obj.data(current_data).datainfo.(dim)=obj.data(parent_data).datainfo.(dim);
+                            obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
                         end
                     end
-                else
-                    obj.data(current_data).datainfo.(dim)=obj.data(parent_data).datainfo.(dim);
-                    obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
-                end
             end
             % output message and status
             obj.data(current_data).datainfo.last_change=datestr(now);

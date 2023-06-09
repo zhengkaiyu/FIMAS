@@ -109,6 +109,7 @@ try
                     %DO NOTHING
                 otherwise
                     %PASS ON VALUES AS IS
+                    Tag_Id=regexprep(Tag_Id,'[\W]','');
             end
             %assign value
             if isempty(idx)

@@ -200,6 +200,8 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         [ status, message ] = roi_delete( obj );
         % save data in selected ROI
         [ status, message ] = roi_save( obj );
+        % transformdata in selected ROI into dataitem
+        [ status, message ] = roi_transform( obj );
         %-----------
     end
     
