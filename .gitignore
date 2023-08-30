@@ -224,3 +224,5 @@ SyncToy_*.dat
 ## Dropbox
 ##############
 .dropbox
+lib/default_path.mat
+xyshift.dat

@@ -10,6 +10,8 @@ status=false;
 message='';
 options=[];
 persistent ptu_type;
+persistent auto_load;
+auto_load=[];
 ptu_type=[];
 
 data_pathname=obj.path.import;%default to obj value
@@ -94,7 +96,7 @@ try
     %set current data to template before proceed
     obj.data_select(1);
     % for batch loading purposes so we only need to ask once
-    buttonoib=[];buttonptu=[];
+    buttonoib=[];buttonptu=[];buttonautoload=[];
     
     %loop through files
     for file_counter=1:1:num_file
@@ -137,7 +139,20 @@ try
                 [ status, message ] = obj.load_bh_sdt_file(filename);
             case 'spc'
                 %B&H spec file data
-                [ status, message ] = obj.load_bh_spc_file(filename);
+                %ask for storage format
+                if isempty(auto_load)
+                    if isempty(buttonautoload)
+                        buttonautoload = questdlg('Auto load BH SPC?','Auto Loading BH SPC','Auto','Manual','Auto');
+                    end
+                    answer = questdlg('Use for rest of the files','Storage Format','yes','no','yes');
+                    switch answer
+                        case 'yes'
+                            auto_load=buttonautoload;
+                        otherwise
+                            auto_load=[];
+                    end
+                end
+                [ status, message ] = obj.load_bh_spc_file(filename,auto_load);
             case 'ptu'
                 %picoquant binary
                 %ask for storage format

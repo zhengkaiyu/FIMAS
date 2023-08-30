@@ -1,4 +1,4 @@
-function [ status, message ] = load_bh_spc_file( obj, filename )
+function [ status, message ] = load_bh_spc_file( obj, filename, autoload )
 %LOAD_SPEC_FILE Import Becker and Hickl spc data file from SPC-830 module
 %  FIFO Data Files (SPC-130, SPC-140, SPC-150, SPC-830, SPC-131 )
 
@@ -291,17 +291,22 @@ try
         end
         % remove data to save space
         clear data;
-        % ask if want auto load
-        button=questdlg(sprintf('Loading %s by: ?',filename),'Loading procedure','manual','auto','auto');
-        switch button
-            case 'auto'
-                manualload=false;
-                forcemanualinput=false;
-            case 'manual'
-                manualload=true;
-                forcemanualinput=true;
-            otherwise
-                return;
+        if isempty(autoload)
+            % ask if want auto load
+            button=questdlg(sprintf('Loading %s by: ?',filename),'Loading procedure','manual','auto','auto');
+            switch button
+                case 'auto'
+                    manualload=false;
+                    forcemanualinput=false;
+                case 'manual'
+                    manualload=true;
+                    forcemanualinput=true;
+                otherwise
+                    return;
+            end
+        else
+            manualload=false;
+            forcemanualinput=false;
         end
         
         dsformat='spc';
@@ -537,7 +542,8 @@ try
                             pixel_per_line=maxdim(3);
                             line_per_frame=maxdim(2);
                             % convert to linear index for storage
-                            clock_data=sub2ind([pixel_per_line,line_per_frame,framenum], clock_data(:,3), clock_data(:,2), clock_data(:,1));
+                            %clock_data=sub2ind([pixel_per_line,line_per_frame,framenum], clock_data(:,3), clock_data(:,2), clock_data(:,1));
+                            clock_data=sub2ind([pixel_per_line,line_per_frame,1,framenum], clock_data(:,3), clock_data(:,2), ones(size(clock_data,1),1),clock_data(:,1));
                             % assign dimension data
                             obj.data(data_end_pos).datainfo.bin_t=dtime_bin;
                             obj.data(data_end_pos).datainfo.X=0:1:(pixel_per_line-1)*1;
@@ -577,7 +583,9 @@ try
                             %clock_data(:,3)=a;clock_data(:,2)=b;clock_data(:,1)=c;
                             validdata=(~invalid_data)&(clock_data(:,1)>0);
                             clock_data=clock_data(validdata,:);
-                            clock_data=sub2ind([pixel_per_line,line_per_frame,nFrame], clock_data(:,3), clock_data(:,2), clock_data(:,1));
+                            % add single z frame index
+                            %check line
+                            clock_data=sub2ind([pixel_per_line,line_per_frame,1,nFrame], clock_data(:,3), clock_data(:,2), ones(size(clock_data,1),1),clock_data(:,1));
                             % assign dimension data
                             obj.data(data_end_pos).datainfo.bin_t=dtime_bin;
                             obj.data(data_end_pos).datainfo.X=linspace(0,linedwell,pixel_per_line);

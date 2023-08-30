@@ -1,5 +1,5 @@
 function [ status, message ] = data_batchexport( obj, selected_data, askforparam, defaultparam )
-%DATA_BATCHEXPORT EXPORT INDIVIDUAL dataitem, use for batch processing
+%DATA_BATCHEXPORT EXPORT INDIVIDUAL non-SPC dataitem, use for batch processing
 %--------------------------------------------------------------------------
 %   1. Can be used for batch exporting with using fimdata_handle.data_export
 %
