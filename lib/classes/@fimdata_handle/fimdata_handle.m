@@ -213,7 +213,7 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         %load bh sdt binary files (image/trace)
         [ status, message ] = load_bh_sdt_file( obj, filename );
         %load bh spc binary files (photon record)
-        [ status, message ] = load_bh_spc_file( obj, filename);
+        [ status, message ] = load_bh_spc_file( obj, filename, autoload);
         %load picoquant ptu binary files (photon record)
         [ status, message ] = load_pq_ptu_file( obj, filename);
         [ status, message ] = load_pq_ptu_file_spc( obj, filename );

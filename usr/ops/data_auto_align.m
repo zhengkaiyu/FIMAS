@@ -1,9 +1,9 @@
 function [ status, message ] = data_auto_align( obj, selected_data, askforparam, defaultparam )
-% DATA_AUTO_ALIGN automatically align X-Y drift in time series XYT/tXYT apply to current selected data.
+% DATA_AUTO_ALIGN automatically align X-Y drift in time series XYT/tXYT apply to current selected non-SPC data.
 %--------------------------------------------------------------------------
-%   Based on Georgios D. Evangelidis ECC algorithm Interp method is accurate but cannot be used for FLIM data.  Only   discrete step shift can be applied to FLIM data at present
+%   Based on Georgios D. Evangelidis ECC algorithm Interp method is accurate but cannot be used for FLIM data.  Only discrete step shift can be applied to FLIM data at present
 %
-%   The process is irreversible, therefore new data holder will be created.
+%   The process is irreversible, new data holder will be created.
 %
 %   Information on usage
 %   0. select the right panel before click calc(assuming gca)

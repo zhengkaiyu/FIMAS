@@ -1,5 +1,5 @@
 function [ status, message ] = data_arithmatic( obj, selected_data, askforparam, defaultparam )
-%DATA_ARITHMATIC apply simple arithmatic operations to selected data items.  The operation must not change the dimensionality of the data, i.e. must be a 1-to-1 mapping
+%DATA_ARITHMATIC apply simple arithmatic operations to selected non-SPC data items.  The operation must not change the dimensionality of the data, i.e. must be a 1-to-1 mapping
 %   $d represents current data
 %--------------------------------------------------------------------------
 %   e.g. 1. $d/255, $d-10, %d*2 for simple scalar division, subtraction, multiplication

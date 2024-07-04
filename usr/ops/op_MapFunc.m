@@ -5,6 +5,17 @@ function [ status, message ] = op_MapFunc( data_handle, option, varargin )
 %
 %   2. Mapping function of scalar to scalar
 %
+%---Batch process----------------------------------------------------------
+%   Parameter=struct('selected_data','1','calib_func','@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)','t_disp_bound','[0,200,128]','disp_lb','20','disp_ub','100','parameter_space','[Ca2+]');
+%   selected_data=data index, 1 means previous generated data
+%   calib_func='@(x)', calibration function used to map values
+%   t_disp_bound=[0,200,128], display bound with [min,max,nlevels]
+%   disp_lb=20, display value lower bound
+%   disp_ub=100, display value upper bound
+%   parameter_space='[Ca2+]', name for generated parameters 
+%--------------------------------------------------------------------------
+%   HEADER END
+%--------------------------------------------------------------------------
 % --- Function Library ---
 %----------------------------------------------------------------------
 
@@ -48,16 +59,7 @@ function [ status, message ] = op_MapFunc( data_handle, option, varargin )
 %1det_33C_UR_3ns_bgcorr: '@(x)46.65768*((0.14742-x)./(x-0.53825)).^(1/1.95332)'
 %--------------------------------------------
 %
-%---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','calib_func','@(x)128.54063*((0.06294-x)./(x-0.37057)).^(1/1.12492)','t_disp_bound','[0,200,128]','disp_lb','20','disp_ub','100','parameter_space','[Ca2+]');
-%   selected_data=data index, 1 means previous generated data
-%   calib_func='@(x)', calibration function used to map values
-%   t_disp_bound=[0,200,128], display bound with [min,max,nlevels]
-%   disp_lb=20, display value lower bound
-%   disp_ub=100, display value upper bound
-%   parameter_space='[Ca2+]', name for generated parameters 
-%--------------------------------------------------------------------------
-%   HEADER END
+
 
 parameters=struct('note','',...
     'operator','op_MapFunc',...
@@ -65,7 +67,7 @@ parameters=struct('note','',...
     't_disp_bound',[0,200,128],...
     'disp_lb',20,...
     'disp_ub',100,...
-    'calib_func','@(x)112.26053.*((0.07608-x)./(x-0.37071)).^(1/1.14805)');
+    'calib_func','@(x)139.06885*((0.08921-x)./(x-0.37016)).^(1/0.99636)');
 
 % assume worst
 status=false;
@@ -84,7 +86,7 @@ try
         % loop through to assign input values
         for option_idx=1:numel(usroption)
             switch usroption{option_idx}
-                case 'data_index'
+               case {'data_index','selected_data'}
                     % specified data indices
                     data_idx=usrval{option_idx};
                 case 'batch_param'
@@ -151,7 +153,7 @@ try
                             status=false;
                         case 'disp_lb'
                             val=str2double(val);
-                            if val>=data_handle.data(current_data).datainfo.disp_ub;
+                            if val>=data_handle.data(current_data).datainfo.disp_ub
                                 message=sprintf('%s\ndisp_lb must be strictly < disp_ub',message);
                                 status=false;
                             else
@@ -160,7 +162,7 @@ try
                             end
                         case 'disp_ub'
                             val=str2double(val);
-                            if val<=data_handle.data(current_data).datainfo.disp_lb;
+                            if val<=data_handle.data(current_data).datainfo.disp_lb
                                 message=sprintf('%s\ndisp_ub must be strictly > disp_up',message);
                                 status=false;
                             else

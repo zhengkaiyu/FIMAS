@@ -1,7 +1,7 @@
 function [ status, message ] = data_appenddata( obj, selected_data, askforparam, defaultparam )
 % DATA_APPENDDATA combines currently selected data into a new data of larger size
 %--------------------------------------------------------------------------
-%   1. The process is irreversible, therefore new data holder will be created.
+%   1. The process is irreversible, new data holder will be created
 %
 %   2. Combined data size must match in the dimensions not to be appended
 %
@@ -25,14 +25,15 @@ try
     % initialise counter
     data_idx=1;
     % number of data to process
-    ndata=numel(selected_data);
+    num_data=numel(selected_data(:));
     % get all selected data dimensions and check
     dim_check=arrayfun(@(x)obj.data(x).datainfo.data_dim,selected_data,'UniformOutput',false);
     dim_master=dim_check{1};
     % find any free dimension
     free_dim=obj.DIM_TAG(dim_master==1);
+    % if we are full suggest append in T
     if isempty(free_dim)
-        free_dim={'T'};% if we are full suggest append in T
+        free_dim={'T'};
     end
     % ---- Parameter Assignment ----
     if askforparam
@@ -74,9 +75,9 @@ try
         end
         % only use waitbar for user attention if we are in
         % automated mode
-        if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
+        if exist('waitbar_handle','var')&&ishandle(waitbar_handle) %#ok<NODEF>
             % Report current estimate in the waitbar's message field
-            done=data_idx/ndata;
+            done=data_idx/num_data;
             waitbar(done,waitbar_handle,sprintf('%3.1f%%',100*done));
         else
             % create waitbar if it doesn't exist
@@ -97,7 +98,8 @@ try
         % check all non-appending dim has the same dimensions
         dim_check=cell2mat(cellfun(@(x)dim_master~=x,dim_check,'UniformOutput',false)');
         % find if there is any mismatch, should be all zero if matches
-        [r,c,~]=find(dim_check(~append_dim));
+        dim_append=boolean(dim_master);dim_append(append_dim)=0;
+        [r,c,~]=find(dim_check(:,dim_append));
         if isempty(r)
             % --- calculation part ---
             parent_data=selected_data(1);% treat the first one of selected as parent
@@ -120,8 +122,25 @@ try
             obj.data(current_data).datainfo.data_dim(append_dim)=new_dim_size;
             switch obj.data(parent_data).datatype
                 case 'DATA_SPC'
-                    
+                    % SPC type data
+                    %{
+                     data_size=obj.data(current_data).datainfo.data_dim;
+                     % recalculate dimension data
+                            crop_index=cellfun(@(x,y)find(obj.data(current_data).datainfo.(x)>=y(1)&obj.data(current_data).datainfo.(x)<=y(2)),obj.DIM_TAG,dim_interval,'UniformOutput',false);
+                            [p,l,f]=ind2sub([data_size(2),data_size(3),data_size(5)],obj.data(current_data).dataval(:,1));
+                            spc_index=((obj.data(current_data).dataval(:,2)>=dim_interval{1}(1))&(obj.data(current_data).dataval(:,2)<=dim_interval{1}(2))&...
+                                (p>=crop_index{2}(1))&(p<=crop_index{2}(end))&...
+                                (l>=crop_index{3}(1))&(l<=crop_index{3}(end))&...
+                                (f>=crop_index{5}(1))&(f<=crop_index{5}(end)));
+                            newdatasize=cellfun(@(x)numel(x),crop_index);
+                            pixel_per_line=newdatasize(2);
+                            line_per_frame=newdatasize(3);
+                            framenum=newdatasize(5);
+                            % reindex
+                            clock_data=sub2ind([pixel_per_line,line_per_frame,framenum], p(spc_index)-crop_index{2}(1)+1,l(spc_index)-crop_index{3}(1)+1,f(spc_index)-crop_index{5}(1)+1);
+                    %}
                 otherwise
+                    % matrix type data
                     obj.data(current_data).datatype=obj.get_datatype;
                     obj.data(current_data).dataval=cat(append_dim,obj.data(selected_data).dataval);
                     % recalculate dimension data
@@ -133,7 +152,7 @@ try
                                 if obj.data(parent_data).datainfo.(cat(2,'d',dim))~=0
                                     obj.data(current_data).datainfo.(cat(2,'d',dim))=obj.data(parent_data).datainfo.(cat(2,'d',dim));
                                     if obj.data(selected_data(2)).datainfo.(dim)(1)>obj.data(selected_data(1)).datainfo.(dim)(end)
-                                        obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)(:)];
+                                        obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim);obj.data(selected_data(item_idx)).datainfo.(dim)];
                                     else
                                         obj.data(current_data).datainfo.(dim)=[obj.data(current_data).datainfo.(dim)(:);obj.data(selected_data(item_idx)).datainfo.(dim)(:)+obj.data(current_data).datainfo.(dim)(end)+obj.data(current_data).datainfo.(cat(2,'d',dim))];
                                     end
@@ -154,7 +173,7 @@ try
             message=sprintf('%s\n%s',message,sprintf('Data %g to %g appended\n',[selected_data;repmat(current_data,1,numel(selected_data))]));
         else
             % one of the data has mismatched dimension
-            message=sprintf('%s\nData %s has mismatched %s dimensions\n',message,selected_data(r),obj.DIM_TAG{c});
+            message=sprintf('%s\nData %g has mismatched %s dimensions\n',message,selected_data(r),obj.DIM_TAG{c});
         end
     end
     % close waitbar if exist

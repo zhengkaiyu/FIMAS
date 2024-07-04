@@ -124,7 +124,7 @@ try
                                 tagstruct.ImageWidth=size(colours,2);
                                 tagstruct.Photometric = Tiff.Photometric.MinIsBlack;
                                 tagstruct.BitsPerSample = databit;
-                                tagstruct.SamplesPerPixel = 1;
+                                tagstruct.SamplesPerPixel = size(colours,3);
                                 %tagstruct.RowsPerStrip = 1;
                                 tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
                                 tagstruct.Software = 'MATLAB';

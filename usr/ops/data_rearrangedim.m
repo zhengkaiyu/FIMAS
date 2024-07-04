@@ -105,7 +105,15 @@ try
                 message=sprintf('%s\nInvalid swap',message);
             else
                 %do actual swap of value
-                obj.data(current_data).dataval=permute(obj.data(current_data).dataval,new_dim);
+                switch obj.data(current_data).datatype
+                    case 'DATA_SPC'
+                         data_size=obj.data(current_data).datainfo.data_dim;
+                         %[clkidx(1),l,f]=ind2sub([data_size(2),data_size(3),data_size(5)],obj.data(current_data).dataval(:,1));
+                           
+                    otherwise
+                        
+                        obj.data(current_data).dataval=permute(obj.data(current_data).dataval,new_dim);
+                end
                 %get old order
                 old_axis={obj.data(current_data).datainfo.t,...
                     obj.data(current_data).datainfo.X,...

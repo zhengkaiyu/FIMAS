@@ -368,7 +368,7 @@ try
                 % ------
                 %clock_data format in Frame|Line|Pixel and to be converted using
                 %ind2sub function to pixind in data variable
-                clock_data=zeros(numel(gtime),3,'uint16');
+                clock_data=zeros(numel(gtime),4,'uint16');
                 % start loading frames
                 framenum=0;
                 T=zeros(numel(validframe),1);
@@ -421,7 +421,7 @@ try
                     [~,lastline]=histc(gtime(signal_ls(end):signal_le(end)),linspace(gtime(signal_ls(end)),gtime(signal_le(end)),pixel_per_line));
                     
                     % assignment
-                    clock_data(signal_ls(1):signal_le(end),3)=[pixind;lastline];
+                    clock_data(signal_ls(1):signal_le(end),4)=[pixind;lastline];
                     pixind=[];
                 end
                 delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
@@ -436,10 +436,9 @@ try
                 %gtime=gtime(validdata);%remove nondata record
                 clock_data=double(clock_data(validdata,:));
                 %delaytime=delaytime(validdata)=[];%remove nondata record
-                pixel_per_line=max(clock_data(:,3));
+                pixel_per_line=max(clock_data(:,4));
                 line_per_frame=max(clock_data(:,2));
-                clock_data=sub2ind([pixel_per_line,line_per_frame,framenum], clock_data(:,3), clock_data(:,2), clock_data(:,1));
-                
+                clock_data=sub2ind([pixel_per_line,line_per_frame,1,framenum], clock_data(:,3), clock_data(:,2), ones(size(clock_data,1),1), clock_data(:,1));
                 %assign data
                 data_end_pos=numel(obj.data);
                 obj.data(data_end_pos+1)=obj.data(1);
