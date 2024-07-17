@@ -177,7 +177,7 @@ try
                                 otherwise
                                     Tlim=data_handle.data(parent_data).datainfo.T;
                                     div=data_handle.data(current_data).datainfo.grid_interp_size;
-                                    switch bin2dec(num2str(data_handle.data(current_data).datainfo.data_dim>1))
+                                    switch bin2dec(num2str(data_handle.data(parent_data).datainfo.data_dim>1))
                                         case 9
                                             %XT (01001)
                                             F = griddedInterpolant({xlim,ylim,Tlim},squeeze(temp(1,:,:,1,:)),'spline');
