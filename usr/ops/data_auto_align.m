@@ -98,10 +98,27 @@ try
                     setappdata(waitbar_handle,'canceling',0);
                     
                     %loop through stack to find x-y drifts
+                    %template frame is the first slice
+                    refimg=squeeze(val(:,:,1)./max(val(:,:,1),[],'all'));
                     for slice_idx=2:n_slices
                         %get the correlation matrix between current and template frame
-                        %template frame is the first slice
-                        [~, final_warp{slice_idx}, ~]=ecc(val(:,:,slice_idx), val(:,:,1), NoL, NoI, 'translation', init);
+                        movimg=squeeze(val(:,:,slice_idx)./max(val(:,:,slice_idx),[],'all'));
+                        [~, final_warp{slice_idx}, ~]=ecc(movimg, refimg, NoL, NoI, 'translation', init);
+
+                         %{
+                        imregobj=imregcorr(movimg,refimg,'translation');
+                        final_warp{slice_idx}=imregobj.Translation;
+                         %}
+                        %{
+                        figure(1);subplot(2,2,1);mesh(squeeze(val(:,:,slice_idx)),'EdgeColor','interp','FaceColor','interp');view([0 -90])
+                        subplot(2,2,2);surf(squeeze(refimg),'EdgeColor','interp','FaceColor','interp');view([0 -90])
+                        
+                        shift_size=-flipud(round(final_warp{slice_idx}));
+                        val(:,:,slice_idx) = circshift(squeeze(val(:,:,slice_idx)),shift_size);
+                        
+                        figure(1);subplot(2,2,3);surf(squeeze(val(:,:,slice_idx)),'EdgeColor','interp','FaceColor','interp');view([0 -90])
+                        subplot(2,2,4);surf(squeeze(refimg)-squeeze(val(:,:,slice_idx)),'EdgeColor','interp','FaceColor','interp');view([0 -90])
+                        %}
                         init=final_warp{slice_idx}/2;
                         %output some progress so we know it is doing things
                         if getappdata(waitbar_handle,'canceling')
@@ -124,13 +141,13 @@ try
                     %out_bound=(abs(shift_size(:,1))>numel(px_lim)/2|abs(shift_size(:,2))>numel(py_lim)/2);
                     %shift_size(out_bound,:)=[];x(out_bound)=[];
                     %respline the points missed
-                    temp(:,1)=spline(x,shift_size(:,1),xx);
-                    temp(:,2)=spline(x,shift_size(:,2),xx);
+                    %temp(:,1)=spline(x,shift_size(:,1),xx);
+                    %temp(:,2)=spline(x,shift_size(:,2),xx);
                     %reinitialise shift_size
-                    shift_size=zeros(n_slices,2);
+                    %shift_size=zeros(n_slices,2);
                     %smooth out noises use robust cubic spline
-                    shift_size(:,1)=smooth(temp(:,1),0.05,'rlowess');
-                    shift_size(:,2)=smooth(temp(:,2),0.05,'rlowess');
+                    %shift_size(:,1)=smooth(temp(:,1),0.05,'rlowess');
+                    %shift_size(:,2)=smooth(temp(:,2),0.05,'rlowess');
                 else
                     %didn't draw the box
                     message=sprintf('action cancelled\n');

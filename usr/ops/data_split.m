@@ -145,18 +145,21 @@ try
         temp=regexp(splitexp,';','split');
         if ~isempty(obj.data(current_data).datainfo.parameter_space)
             psname=regexp(obj.data(current_data).datainfo.parameter_space,'[|]','split');
+            %{
             if numel(psname)~=numel(temp)
                 indstr=sprintf('%s,',temp{:});
                 indstr=eval(cat(2,'[',indstr(1:end-1),']'));
                 psname=psname(indstr);
             end
+            %}
         else
             psname=temp;
         end
         for newdata_idx=1:numel(temp)
             % create new data items
             % add new data
-            obj.data_add(sprintf('data_split|%s#%g|%s',psname{newdata_idx},newdata_idx,obj.data(current_data).dataname),[],[]);
+            dimidx=eval(temp{newdata_idx});
+            obj.data_add(sprintf('data_split|%s#%g|%s',psname{dimidx(1)},newdata_idx,obj.data(current_data).dataname),[],[]);
             % get new data index
             new_data=obj.current_data;
             % set parent data index
