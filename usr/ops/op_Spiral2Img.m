@@ -29,7 +29,7 @@ try
             end
         end
     end
-    
+
     switch option
         case 'add_data'
             for current_data=data_idx
@@ -63,7 +63,7 @@ try
                                     data_handle.data(new_data).datainfo.ref_dataindex=[];
                                     data_handle.data(new_data).datainfo.ref_scanline=[];
                                 end
-                                message=sprintf('%s added\n',data_handle.data(new_data).dataname);
+                                message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
                                 message=sprintf('only take tXT, XT, tX NON-SPC format data type\n');
@@ -74,73 +74,74 @@ try
             end
             % ---------------------
         case 'modify_parameters'
-            current_data=data_handle.current_data;
-            %change parameters from this method only
-            for pidx=numel(varargin)/2
-                parameters=varargin{2*pidx-1};
-                val=varargin{2*pidx};
-                switch parameters
-                    case 'note'
-                        data_handle.data(current_data).datainfo.note=num2str(val);
-                        status=true;
-                    case 'operator'
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                    case 'ref_dataindex'
-                        status=false;
-                        % ask for ref .mat file or ref data item
-                        orig_ref = data_handle.data(current_data).datainfo.ref_scanline;
-                        val=str2double(val);
-                        if isfield(data_handle.data(val).datainfo,'ScanLine')
-                            % specified ref data index has scanline field
-                            data_handle.data(current_data).datainfo.ref_dataindex=val;
-                            data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(val).datainfo.ScanLine;
-                            message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
-                        else
-                            % ask to select dataitem
-                            [s,v]=listdlg('ListString',{data_handle.data.dataname},...
-                                'SelectionMode','single',...
-                                'Name','op_Spiral2Img',...
-                                'PromptString','Select scanref data item, specified data has no scanline',...
-                                'ListSize',[400,300]);
-                            if v
-                                % check if scanline field exist
-                                if isfield(data_handle.data(s).datainfo,'ScanLine')
-                                    data_handle.data(current_data).datainfo.ref_dataindex=s;
-                                    data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(s).datainfo.ScanLine;
-                                    message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
-                                else
-                                    errordlg('Selected dataitem has now ScanLine information','Check selection','modal');
-                                end
+            for current_data=data_idx
+                %change parameters from this method only
+                for pidx=1:1:numel(varargin)/2
+                    parameters=varargin{2*pidx-1};
+                    val=varargin{2*pidx};
+                    switch parameters
+                        case 'note'
+                            data_handle.data(current_data).datainfo.note=num2str(val);
+                            status=true;
+                        case 'operator'
+                            message=sprintf('%sUnauthorised to change %s\n',message,parameters);
+                            status=false;
+                        case 'ref_dataindex'
+                            status=false;
+                            % ask for ref .mat file or ref data item
+                            orig_ref = data_handle.data(current_data).datainfo.ref_scanline;
+                            val=str2double(val);
+                            if isfield(data_handle.data(val).datainfo,'ScanLine')
+                                % specified ref data index has scanline field
+                                data_handle.data(current_data).datainfo.ref_dataindex=val;
+                                data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(val).datainfo.ScanLine;
+                                message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
                             else
-                                % didn't change
-                                data_handle.data(current_data).datainfo.ref_scanline=orig_ref;
+                                % ask to select dataitem
+                                [s,v]=listdlg('ListString',{data_handle.data.dataname},...
+                                    'SelectionMode','single',...
+                                    'Name','op_Spiral2Img',...
+                                    'PromptString','Select scanref data item, specified data has no scanline',...
+                                    'ListSize',[400,300]);
+                                if v
+                                    % check if scanline field exist
+                                    if isfield(data_handle.data(s).datainfo,'ScanLine')
+                                        data_handle.data(current_data).datainfo.ref_dataindex=s;
+                                        data_handle.data(current_data).datainfo.ref_scanline=data_handle.data(s).datainfo.ScanLine;
+                                        message=sprintf('Scanline information loaded from %s\n',data_handle.data(s).dataname);
+                                    else
+                                        errordlg('Selected dataitem has now ScanLine information','Check selection','modal');
+                                    end
+                                else
+                                    % didn't change
+                                    data_handle.data(current_data).datainfo.ref_scanline=orig_ref;
+                                end
                             end
-                        end
-                    case 'grid_interp_size'
-                        % ask to select dataitem
-                        button = questdlg(sprintf('grid interpolation factor?\nChoose 1 for no interpolation'),'Grid Interpolation','1','2','3','1');
-                        switch button
-                            case ''
-                                message=sprintf('%scancelled %s change\n',message,parameters);
-                            otherwise
-                                data_handle.data(current_data).datainfo.grid_interp_size=str2double(button);
-                        end
-                    case 'grid_interp'
-                        % ask to select dataitem
-                        button = questdlg('grid interpolation method?','Grid Interpolation','linear','cubic','spline','none');
-                        switch button
-                            case ''
-                                message=sprintf('%scancelled %s change\n',message,parameters);
-                            otherwise
-                                data_handle.data(current_data).datainfo.grid_interp=char(button);
-                        end
-                    otherwise
-                        message=sprintf('%sUnauthorised to change %s\n',message,parameters);
-                        status=false;
-                end
-                if status
-                    message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                        case 'grid_interp_size'
+                            % ask to select dataitem
+                            button = questdlg(sprintf('grid interpolation factor?\nChoose 1 for no interpolation'),'Grid Interpolation','1','2','3','1');
+                            switch button
+                                case ''
+                                    message=sprintf('%scancelled %s change\n',message,parameters);
+                                otherwise
+                                    data_handle.data(current_data).datainfo.grid_interp_size=str2double(button);
+                            end
+                        case 'grid_interp'
+                            % ask to select dataitem
+                            button = questdlg('grid interpolation method?','Grid Interpolation','linear','cubic','spline','none');
+                            switch button
+                                case ''
+                                    message=sprintf('%scancelled %s change\n',message,parameters);
+                                otherwise
+                                    data_handle.data(current_data).datainfo.grid_interp=char(button);
+                            end
+                        otherwise
+                            message=sprintf('%sUnauthorised to change %s\n',message,parameters);
+                            status=false;
+                    end
+                    if status
+                        message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                    end
                 end
             end
             % ---------------------

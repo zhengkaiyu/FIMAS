@@ -193,10 +193,10 @@ for nol=levels:-1:1
     [A,B]=size(temp);
     % Warning for tiny images
     if prod([A,B])<400
-        disp(' -> ECC Warning: The size of images in high pyramid levels is quite small and it may cause errors.');
-        disp(' -> To avoid such errors you could try fewer levels or larger images.');
-        disp(' -> Press any key to continue.')
-        pause
+        %disp(' -> ECC Warning: The size of images in high pyramid levels is quite small and it may cause errors.');
+        %disp(' -> To avoid such errors you could try fewer levels or larger images.');
+        %disp(' -> Press any key to continue.')
+        %pause
     end
         
     % Define the rectangular Region of Interest (ROI) by nx and ny (you can modify

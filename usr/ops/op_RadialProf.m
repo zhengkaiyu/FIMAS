@@ -55,7 +55,7 @@ try
             end
         end
     end
-    
+
     switch option
         case 'add_data'
             for current_data=data_idx
@@ -71,7 +71,7 @@ try
                                 % XYZT (01111) / tXYZT (11111)
                                 parent_data=current_data;
                                 % add new data
-                                data_handle.data_add(cat(2,'op_RadialProf|',data_handle.data(current_data).dataname),[],[]);
+                                data_handle.data_add(sprintf('%s|%s',parameters.operator,data_handle.data(current_data).dataname),[],[]);
                                 % get new data index
                                 new_data=data_handle.current_data;
                                 % copy over datainfo
@@ -88,7 +88,7 @@ try
                                 end
                                 % pass on metadata info
                                 data_handle.data(new_data).metainfo=data_handle.data(parent_data).metainfo;
-                                message=sprintf('%s added\n',data_handle.data(new_data).dataname);
+                                message=sprintf('%s\nData %s to %s added.',message,num2str(parent_data),num2str(new_data));
                                 status=true;
                             otherwise
                                 message=sprintf('only take XY, XYT, XYZ, XYZT, tXY, tXYT, tXYZ, tXYZT data type\n');
@@ -97,61 +97,63 @@ try
                 end
             end
         case 'modify_parameters'
-            current_data=data_handle.current_data;
-            %change parameters from this method only
-            for pidx=numel(varargin)/2
-                parameters=varargin{2*pidx-1};
-                val=varargin{2*pidx};
-                switch parameters
-                    case 'note'
-                        data_handle.data(current_data).datainfo.note=num2str(val);
-                        status=true;
-                    case 'operator'
-                        errordlg('Unauthorised to change parameter');
-                        status=false;
-                    case 'val_lb'
-                        val=str2double(val);
-                        if val>=data_handle.data(current_data).datainfo.val_ub
-                            fprintf('val_lb must be strictly < val_ub\n');
-                        else
-                            data_handle.data(current_data).datainfo.val_lb=val;
-                        end
-                    case 'val_ub'
-                        val=str2double(val);
-                        if val<=data_handle.data(current_data).datainfo.val_lb
-                            fprintf('val_ub must be strictly > val_lb\n');
-                        else
-                            data_handle.data(current_data).datainfo.val_ub=val;
+            for current_data=data_idx
+                %change parameters from this method only
+                for pidx=1:1:numel(varargin)/2
+                    parameters=varargin{2*pidx-1};
+                    val=varargin{2*pidx};
+                    switch parameters
+                        case 'note'
+                            data_handle.data(current_data).datainfo.note=num2str(val);
                             status=true;
-                        end
-                    case 'dr'
-                        val=str2double(val);
-                        val=max(val,0.005);
-                        data_handle.data(current_data).datainfo.dr=val;
-                        status=true;
-                end
-                if status
-                    message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                        case 'operator'
+                            errordlg('Unauthorised to change parameter');
+                            status=false;
+                        case 'val_lb'
+                            val=str2double(val);
+                            if val>=data_handle.data(current_data).datainfo.val_ub
+                                fprintf('val_lb must be strictly < val_ub\n');
+                            else
+                                data_handle.data(current_data).datainfo.val_lb=val;
+                            end
+                        case 'val_ub'
+                            val=str2double(val);
+                            if val<=data_handle.data(current_data).datainfo.val_lb
+                                fprintf('val_ub must be strictly > val_lb\n');
+                            else
+                                data_handle.data(current_data).datainfo.val_ub=val;
+                                status=true;
+                            end
+                        case 'dr'
+                            val=str2double(val);
+                            val=max(val,0.005);
+                            data_handle.data(current_data).datainfo.dr=val;
+                            status=true;
+                    end
+                    if status
+                        message=sprintf('%s%s has changed to %s\n',message,parameters,val);
+                    end
                 end
             end
         case 'calculate_data'
-            current_data=data_handle.current_data;
-            parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
-            current_roi=data_handle.data(parent_data).current_roi(1);%only take one ROI
-            data=squeeze(data_handle.data(parent_data).dataval);
-            roi=data_handle.data(parent_data).roi(current_roi);
-            
-            [r,v,centerval]=calculate_rprofile( data, data_handle.data(parent_data).datainfo, data_handle.data(current_data).datainfo, roi );
-            message=sprintf('%s\n MaxVal=%f \t Xc=%f \t Yc=%f.',message,centerval(1),centerval(2),centerval(3));
-            data_handle.data(current_data).dataval=v;
-            data_handle.data(current_data).datainfo.X=r;
-            data_handle.data(current_data).datainfo.dX=r(2)-r(1);
-            data_handle.data(current_data).datainfo.data_dim=[1,numel(v),1,1,1];
-            data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
-            data_handle.data(current_data).datainfo.last_change=datestr(now);
-            
-            message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
-            status=true;
+            for current_data=data_dix
+                parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
+                current_roi=data_handle.data(parent_data).current_roi(1);%only take one ROI
+                data=squeeze(data_handle.data(parent_data).dataval);
+                roi=data_handle.data(parent_data).roi(current_roi);
+
+                [r,v,centerval]=calculate_rprofile( data, data_handle.data(parent_data).datainfo, data_handle.data(current_data).datainfo, roi );
+                message=sprintf('%s\n MaxVal=%f \t Xc=%f \t Yc=%f.',message,centerval(1),centerval(2),centerval(3));
+                data_handle.data(current_data).dataval=v;
+                data_handle.data(current_data).datainfo.X=r;
+                data_handle.data(current_data).datainfo.dX=r(2)-r(1);
+                data_handle.data(current_data).datainfo.data_dim=[1,numel(v),1,1,1];
+                data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);
+                data_handle.data(current_data).datainfo.last_change=datestr(now);
+
+                message=sprintf('%s\nData %s to %s %s calculated.',message,num2str(parent_data),num2str(current_data),parameters.operator);
+                status=true;
+            end
     end
 catch exception
     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
@@ -166,12 +168,12 @@ end
         data(invalid)=nan;
         invalid=(data>parameter.val_ub);
         data(invalid)=nan;
-        
+
         %x and y coordinate
         x_val=datainfo.X;
         y_val=datainfo.Y;
         roi_idx=roi.idx;
-        
+
         if strmatch(roi.name,'ALL')
             %take center of the map
             %vertices=[y_val(round(length(y_val)/2)),x_val(round(length(x_val)/2))];
@@ -182,7 +184,7 @@ end
         else
             vertices=roi.coord;
         end
-        
+
         center=vertices(1,:);%
         center=fliplr(center);%
         maxc=[data(maxrow,maxcol),center];
@@ -190,12 +192,12 @@ end
         length(x_in_ind)
         x_trans_ind=x_val(x_in_ind)-center(1);
         y_trans_ind=y_val(y_in_ind)-center(2);
-        
+
         [~,r]=cart2pol(y_trans_ind,x_trans_ind);
-        
+
         dr=parameter.dr;%*diff(datainfo.X(1:2));
         new_r=min(r):dr:max(r);
-        
+
         [n,bin]=histc(r,new_r);
         max_m=length(new_r);
         re=zeros(1,max_m);

@@ -36,7 +36,7 @@ try
     while data_idx<=ndata
         % get the current data index
         current_data=selected_data(data_idx);
-        
+
         % ---- Parameter Assignment ----
         % if it is not automated, we need manual parameter input/adjustment
         if askforparam
@@ -81,7 +81,7 @@ try
                 dx=psfsig(1)/3;
                 dy=psfsig(2)/3;
             end
-            
+
             % need user input/confirm some parameters
             prompt = {'signaldataindx (signal data index in t channel)',...
                 'scandataidx (scan data index [scx,scy] in t channel)',...
@@ -100,27 +100,27 @@ try
                 % get answer and check options
                 % get number of t channel size
                 chnum=obj.data(current_data).datainfo.data_dim(1);
-                
+
                 % check signal data index
                 signaldataidx=round(str2double(answer{1}));
                 if isempty(find(signaldataidx>chnum))||isempty(find(signaldataidx<1))
-                    
+
                 else
                     % one or two scandata idx is invalid
                     message=sprintf('%s\nsignal data index invalid. current t dim size %i.',message,chnum);
                     return;
                 end
-                
+
                 % check scan data index
                 scandataidx=round(str2num(answer{2}));
                 if isempty(find(scandataidx>chnum))||isempty(find(scandataidx<1))
-                    
+
                 else
                     % one or two scandata idx is invalid
                     message=sprintf('%s\nscan data index invalid. current t dim size %i.',message,chnum);
                     return;
                 end
-                
+
                 % check split roi option
                 switch answer{3}
                     case {'1','true'}
@@ -131,19 +131,19 @@ try
                         message=sprintf('%s\nUnknown split_ROI answer %s entered.',message,answer{2});
                         return;
                 end
-                
+
                 % make sure bglev background intensity level is >=0
                 bglev=max(0,round(str2double(answer{4})));
-                
+
                 % make sure bglev background intensity level is >=1e-3
                 I_scaling=max(1e-3,round(str2double(answer{5})));
-                
+
                 % make sure psfwd is reasonable >=150nm
                 psfwd=max(0.15,str2double(answer{6}));
                 % calculate psf sigma and dx and dy from psfwd
                 psfsig = [psfwd,psfwd]/2.3548;  % sigma=FWHM/(2*sqrt(2*log(2)))
                 dx=psfsig(1)/3;dy=psfsig(2)/3;  % x,y grid resolution
-                
+
                 % check if dx,dy is same as auto calculated
                 inputdx=str2double(answer{7});
                 inputdy=str2double(answer{8});
@@ -159,10 +159,10 @@ try
                             return;
                     end
                 end
-                
+
                 % get scan metainfo for easy access
                 metainfo=obj.data(current_data).metainfo;
-                
+
                 % for multiple data ask for apply to all option
                 if numel(selected_data)>1
                     askforparam=askapplyall('apply');
@@ -229,7 +229,7 @@ try
                 setappdata(waitbar_handle,'canceling',0);
             end
         end
-        
+
         % ---- Data Calculation ----
         if isempty(metainfo)
             % decided to cancel action
@@ -282,7 +282,7 @@ try
             ybound=[min(yposdata(:)),max(yposdata(:))];
             yedges=ybound(1)-dy:dy:ybound(2)+dy;
             imgy=diff(yedges)+yedges(1:end-1);imgy=imgy(:);
-            
+
             % initialise data holder to x,y,T
             recondata=zeros(numel(imgx),numel(imgy),obj.data(parent_data).datainfo.data_dim(5));
             % reconstruct image through each time frame
@@ -366,20 +366,21 @@ try
             obj.data(current_data).datainfo.last_change=datestr(now);
             message=sprintf('%s\nData %s to %s converted',message,num2str(parent_data),num2str(current_data));
             status=true;
+            % close waitbar if exist
+            if exist('waitbar_handle2','var')&&ishandle(waitbar_handle2)
+                delete(waitbar_handle2);
+            end
         end
         % increment data index
         data_idx=data_idx+1;
     end
-    
+
     %--------clean up------------------------
     % close waitbar if exist
     if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
         delete(waitbar_handle);
     end
-     % close waitbar if exist
-    if exist('waitbar_handle2','var')&&ishandle(waitbar_handle2)
-        delete(waitbar_handle2);
-    end
+
     %-------- error handle ----------------------
 catch exception
     % delete waitbar if exist
