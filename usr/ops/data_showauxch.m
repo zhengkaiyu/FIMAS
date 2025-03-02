@@ -36,7 +36,7 @@ try
         if askforparam
             %find existing AUXi channels
             fnames=fieldnames(obj.data(current_data).metainfo);
-            temp=regexp(fnames,'(AUXi|AnI)\d+','match');
+            temp=regexp(fnames,'(AUXi|AnI|PC|Sh|Stim|Trig)\d+','match');
             ch_present=fnames(cellfun(@(x)~isempty(x),temp));
             if isempty(ch_present)
                 %ask for channel
@@ -104,7 +104,7 @@ try
                 setappdata(waitbar_handle,'canceling',0);
             end
         end
-        
+
         % ---- Data Calculation ----
         if isempty(channel)
             % decided to cancel action
@@ -125,10 +125,22 @@ try
                 % ---- Calculation ----
                 x=obj.data(current_data).metainfo.(channel).x;
                 y=obj.data(current_data).metainfo.(channel).y;
-                xunit=obj.data(current_data).metainfo.(channel).xunit;
-                yunit=obj.data(current_data).metainfo.(channel).yunit;
-                npts=numel(y);
-                t=linspace(x(1),x(2)*npts,npts);
+                if size(y,1)==2
+                    dt=x(2);
+                    temp=y;
+                    t=[temp(1,1:end-1);temp(1,2:end)-dt];
+                    t=[t(:);temp(1,end)]*dt;
+                    y=[temp(2,1:end-1);temp(2,1:end-1)];
+                    y=[y(:);temp(2,end)];
+                    xunit=obj.data(current_data).metainfo.(channel).xunit;
+                    yunit='Val';
+                else
+                    npts=numel(y);
+                    t=linspace(x(1),x(2)*npts,npts);
+                    xunit=obj.data(current_data).metainfo.(channel).xunit;
+                    yunit=obj.data(current_data).metainfo.(channel).yunit;
+                end
+
                 if displaytrace
                     figure('Name',sprintf('%s from data item %s',channel,obj.data(current_data).dataname),...
                         'NumberTitle','off',...

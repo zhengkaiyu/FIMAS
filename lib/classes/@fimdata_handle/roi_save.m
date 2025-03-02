@@ -7,7 +7,9 @@ status=false;
 parent_data=obj.current_data;
 % get current roi
 parent_roi=obj.data(parent_data).current_roi;
-[result,success,message]=obj.roi_calc([],'trace');
+for roiidx=1:numel(parent_roi)
+    
+[result,success,message]=obj.roi_calc(parent_roi(roiidx),'trace');
 if success
     % calculated fine
     switch message
@@ -90,4 +92,5 @@ if success
 else
     % got calculation error
     message=sprintf('Saving ROI failed. %s \n',message);
+end
 end

@@ -329,11 +329,11 @@ switch clicktype
         [ message ]=hDATA.data_select(data_idx);
         update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
         update_info(sprintf('%s\n','wait...'),0,handles.EDIT_INFO);
-        pause(0.001);
+        %pause(0.001);
         data_idx=data_idx(1);
         [ ~, message ]=hDATA.display_datamap(handles,'data_idx',data_idx,'notify',true);
         update_info(sprintf('%s\n',message),0,handles.EDIT_INFO);
-        pause(0.001);
+        %pause(0.001);
         % populate roi list
         populate_list(handles.LIST_ROI,{hDATA.data(data_idx).roi.name},hDATA.data(data_idx).current_roi);
         set(handles.MAIN_GUI,'SelectionType','normal');

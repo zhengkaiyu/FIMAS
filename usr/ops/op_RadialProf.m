@@ -136,14 +136,15 @@ try
                 end
             end
         case 'calculate_data'
-            for current_data=data_dix
+            for current_data=data_idx
+                % go through each selected data
                 parent_data=data_handle.data(current_data).datainfo.parent_data_idx;
                 current_roi=data_handle.data(parent_data).current_roi(1);%only take one ROI
                 data=squeeze(data_handle.data(parent_data).dataval);
                 roi=data_handle.data(parent_data).roi(current_roi);
 
                 [r,v,centerval]=calculate_rprofile( data, data_handle.data(parent_data).datainfo, data_handle.data(current_data).datainfo, roi );
-                message=sprintf('%s\n MaxVal=%f \t Xc=%f \t Yc=%f.',message,centerval(1),centerval(2),centerval(3));
+                %message=sprintf('%s\n MaxVal=%f \t Xc=%f \t Yc=%f.',message,centerval(1),centerval(2),centerval(3));
                 data_handle.data(current_data).dataval=v;
                 data_handle.data(current_data).datainfo.X=r;
                 data_handle.data(current_data).datainfo.dX=r(2)-r(1);
@@ -160,58 +161,4 @@ catch exception
         delete(waitbar_handle);
     end
     message=sprintf('%s\n%s',message,exception.message);
-end
-
-    function [r, val, maxc] = calculate_rprofile( data, datainfo, parameter, roi )
-        %disregard invalid data point outside Ca lb and ub
-        invalid=(data<parameter.val_lb);
-        data(invalid)=nan;
-        invalid=(data>parameter.val_ub);
-        data(invalid)=nan;
-
-        %x and y coordinate
-        x_val=datainfo.X;
-        y_val=datainfo.Y;
-        roi_idx=roi.idx;
-
-        if strmatch(roi.name,'ALL')
-            %take center of the map
-            %vertices=[y_val(round(length(y_val)/2)),x_val(round(length(x_val)/2))];
-            % auto find maximum
-            [maxval,maxidx]=nanmax(data(:));
-            [maxrow,maxcol]=ind2sub([size(data)],maxidx);
-            vertices=[y_val(maxcol),x_val(maxrow)];
-        else
-            vertices=roi.coord;
-        end
-
-        center=vertices(1,:);%
-        center=fliplr(center);%
-        maxc=[data(maxrow,maxcol),center];
-        [x_in_ind,y_in_ind,z_in_ind]=ind2sub(datainfo.data_dim(2:4),roi_idx);
-        length(x_in_ind)
-        x_trans_ind=x_val(x_in_ind)-center(1);
-        y_trans_ind=y_val(y_in_ind)-center(2);
-
-        [~,r]=cart2pol(y_trans_ind,x_trans_ind);
-
-        dr=parameter.dr;%*diff(datainfo.X(1:2));
-        new_r=min(r):dr:max(r);
-
-        [n,bin]=histc(r,new_r);
-        max_m=length(new_r);
-        re=zeros(1,max_m);
-        for m=1:max_m
-            if n(m)>0
-                %only calculate if there are members here
-                in_idx=(bin==m);
-                a_idx=sub2ind(size(data),x_in_ind(in_idx),y_in_ind(in_idx));
-                re(m)=nanmean(data(a_idx));
-            end
-        end
-        r=new_r;
-        val=re;
-        %plot(where_to,new_r,re,'Color','w','LineStyle','-','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
-        %axis(where_to,'tight');
-    end
 end

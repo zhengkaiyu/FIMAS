@@ -18,20 +18,22 @@ try
     isdata=find(cellfun(@(x)~isempty(x),dataname));
     % get measurement time and comment for each data item
     timestr=cellfun(@(x)x.MeasurementDatePosix,content(isdata),'UniformOutput',false);
+    [~,timesortidx]=sort(datetime(timestr'));
+    %timesortidx=1:1:numel(timestr);
     commentstr=cellfun(@(x)char(x.Comment),content(isdata),'UniformOutput',false);
-    datalist=cellfun(@(x,y,z)[x,' | ',char(y),' | ',regexprep(z,'\s',';')],groupname(isdata),timestr,commentstr,'UniformOutput',false);
+    datalist=cellfun(@(x,y,z)[x,' | ',char(y),' | ',regexprep(z,'\s',';')],groupname(isdata(timesortidx)),timestr(timesortidx),commentstr(timesortidx),'UniformOutput',false);
     % ask user to select data to import
     [selected,answer]=listdlg('Name','Select Data Item','PromptString','Which data items?','OKString','Load','ListString',datalist,'ListSize',[400,500],'InitialValue',1:1:numel(datalist));
     if answer
         % ok pressed
         % do the loading bit
         % get name of selected data
-        seldata=dataname(isdata(selected));
+        seldata=dataname(isdata(timesortidx(selected)));
         % get name of selected data
         ndata=numel(seldata);
         % load selected data and pass on metainfo
         for dataidx=1:ndata
-            currentloadidx=isdata(selected(dataidx));
+            currentloadidx=isdata(timesortidx(selected(dataidx)));
             % make progress bar
             if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
                 % Report current estimate in the waitbar's message field

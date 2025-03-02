@@ -97,28 +97,34 @@ try
                         'Color',[0.2,0.2,0.2]);
                     setappdata(waitbar_handle,'canceling',0);
                     
+                    refimg=squeeze(val(:,:,1)./max(val(:,:,1),[],'All'));
                     %loop through stack to find x-y drifts
-                    %template frame is the first slice
-                    refimg=squeeze(val(:,:,1)./max(val(:,:,1),[],'all'));
                     for slice_idx=2:n_slices
                         %get the correlation matrix between current and template frame
-                        movimg=squeeze(val(:,:,slice_idx)./max(val(:,:,slice_idx),[],'all'));
+                        %template frame is the first slice
+                        %tempimg=mean(val(:,:,1:slice_idx-1),3);
+                        %refimg=squeeze(tempimg./max(tempimg,[],'All'));
+                        movimg=squeeze(val(:,:,slice_idx)./max(val(:,:,slice_idx),[],'All'));
+
                         [~, final_warp{slice_idx}, ~]=ecc(movimg, refimg, NoL, NoI, 'translation', init);
 
-                         %{
+                        shift_size=-flipud(round(final_warp{slice_idx}));
+                        val(:,:,slice_idx) = circshift(squeeze(val(:,:,slice_idx)),shift_size);
+
+                        %{
                         imregobj=imregcorr(movimg,refimg,'translation');
                         final_warp{slice_idx}=imregobj.Translation;
-                         %}
+                        %}
                         %{
                         figure(1);subplot(2,2,1);mesh(squeeze(val(:,:,slice_idx)),'EdgeColor','interp','FaceColor','interp');view([0 -90])
                         subplot(2,2,2);surf(squeeze(refimg),'EdgeColor','interp','FaceColor','interp');view([0 -90])
                         
-                        shift_size=-flipud(round(final_warp{slice_idx}));
-                        val(:,:,slice_idx) = circshift(squeeze(val(:,:,slice_idx)),shift_size);
+                        
                         
                         figure(1);subplot(2,2,3);surf(squeeze(val(:,:,slice_idx)),'EdgeColor','interp','FaceColor','interp');view([0 -90])
                         subplot(2,2,4);surf(squeeze(refimg)-squeeze(val(:,:,slice_idx)),'EdgeColor','interp','FaceColor','interp');view([0 -90])
                         %}
+
                         init=final_warp{slice_idx}/2;
                         %output some progress so we know it is doing things
                         if getappdata(waitbar_handle,'canceling')

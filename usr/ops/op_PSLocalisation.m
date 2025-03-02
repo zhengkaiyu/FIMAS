@@ -4,14 +4,15 @@ function [ status, message ] = op_PSLocalisation( data_handle, option, varargin 
 %   1. Details here
 %
 %---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','parameter_space','Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp','estimate_nsource','1','interval_start','[200,366,466,566,666,766]','baseline_deltaT','100','bg_deltaT','20','AP_deltaT','20','edge_allowance','5','display_fitting','true');
+%   Parameter=struct('selected_data','1','parameter_space','Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp','estimate_nsource','1','estimate_func','gauss2dsimplefunc','interval_start','[200,366,466,566,666,766]','baseline_deltaT','100','bg_deltaT','20','AP_deltaT','20','edge_allowance','5','display_fitting','true');
 %   selected_data=data index, 1 means previous generated data
 %   parameter_space=Cx|Cy|Sigma|Amp|Int|res|dCx|dCy|dSigma|dAmp
 %   estimate_nsource=integer(>=0); number of gaussian center in one frame fit
-%   interval_start= 1x(m+1) vector or 'auto\d*'; starting time point for [background,1AP,2AP,...mAP], auto uses AP_deltaT as minimum peak distance in findpeaks function
+%   estimate_func=gauss2dsimplefunc; 2d function used to estimate the shape use gauss2dsimplefunc or gauss2dgeneralfunc
 %   baseline_deltaT=scalar(>0); time interval in ms for baseline period
 %   bg_deltaT=scalar or 1xm vector~(>0);   time interval in ms for background pre APs
 %   AP_deltaT=scalar or 1xm vector(>0); time interval in ms for m post APs
+%   interval_start= 1x(m+1) vector or 'auto\d*'; starting time point for [background,1AP,2AP,...mAP], auto uses AP_deltaT as minimum peak distance in findpeaks function
 %   edge_allowance=scalar(>=0); off the edge c(x,y) bounds as multiples of (dx,dy)
 %   display_fitting=1|0;    display figure for fitting
 %--------------------------------------------------------------------------
@@ -25,10 +26,11 @@ parameters=struct('note','',...
     'operator','op_PSLocalisation',...
     'parameter_space','Cx|Cy|Sigma|Amp|Int|dCx|dCy|dSigma|dAmp|res',...
     'estimate_nsource',1,...
-    'interval_start',[200,366,466,566,666,766],...
+    'estimate_func','gauss2dsimplefunc',...
     'baseline_deltaT',100,...
     'bg_deltaT',20,...
     'AP_deltaT',20,...
+    'interval_start',[200,366,466,566,666,766],...
     'edge_allowance',5,...
     'display_fitting',true);
 
@@ -66,7 +68,7 @@ try
             end
         end
     end
-    
+
     % performed specified actions
     switch option
         case 'add_data'
@@ -132,6 +134,31 @@ try
                             nsource=max(1,round(str2double(val)));
                             data_handle.data(current_data).datainfo.estimate_nsource=nsource;
                             data_handle.data(current_data).datainfo.parameter_space=[repmat('Cx|Cy|Sigma|Amp|',1,nsource),'Int',repmat('|dCx|dCy|dSigma|dAmp',1,nsource),'|res'];
+                        case 'estimate_func'
+                            data_handle.data(current_data).datainfo.estimate_func=val;
+                            nsource=data_handle.data(current_data).datainfo.estimate_nsource;
+                            data_handle.data(current_data).datainfo.parameter_space=[repmat('Cx|Cy|Sigmax|Sigmay|Amp|Angle',1,nsource),'Int',repmat('|dCx|dCy|dSigmax|dSigmay|dAmp|dAngle',1,nsource),'|res'];
+                            status=true;
+                        case 'baseline_deltaT'
+                            data_handle.data(current_data).datainfo.baseline_deltaT=max(10,round(str2double(val)));
+                        case 'bg_deltaT'
+                            val=str2num(val);
+                            paramsize=numel(val);
+                            if paramsize==1||paramsize==numel(data_handle.data(current_data).datainfo.interval_start)-1
+                                data_handle.data(current_data).datainfo.bg_deltaT=max(0,val);
+                            else
+                                message=sprintf('%s\n%s size does not match size of intervals.',message,parameters);
+                                status=false;
+                            end
+                        case 'AP_deltaT'
+                            val=str2num(val);
+                            paramsize=numel(val);
+                            if paramsize==1||paramsize==numel(data_handle.data(current_data).datainfo.interval_start)-1
+                                data_handle.data(current_data).datainfo.AP_deltaT=max(1,val);
+                            else
+                                message=sprintf('%s\n%s size does not match size of intervals.',message,parameters);
+                                status=false;
+                            end
                         case 'interval_start'
                             switch val(1)
                                 case 'a'
@@ -141,10 +168,11 @@ try
                                     if ~isempty(peakdataidx)
                                         peakdata=squeeze(data_handle.data(peakdataidx).dataval);
                                         Tdata=data_handle.data(peakdataidx).datainfo.T;
-                                        minpdist=min(data_handle.data(current_data).datainfo.AP_deltaT);
-                                        [pks,locs,w,p]=findpeaks(peakdata,Tdata,'MinPeakDistance',minpdist,'MinPeakProminence',4);
+                                        minpdist=min(data_handle.data(current_data).datainfo.bg_deltaT);
+                                        pprominence=2*std(peakdata);
+                                        [pks,locs,w,p]=findpeaks(peakdata,Tdata,'MinPeakDistance',minpdist,'MinPeakProminence',pprominence);
                                         % plot in debug mode
-                                        %figure;plot(Tdata,peakdata,'k-',locs,pks,'ro');
+                                        figure(1);plot(Tdata,peakdata,'r-',locs,pks,'ro');
                                         if isempty(locs)%no peak found revert to default
                                             opts.Interpreter='tex';
                                             answer=inputdlg({'Use auto\d* format failed please input intervals manually here'},'Interval Start',1,{'[200,366,466,566,666,766]'},opts);
@@ -169,26 +197,6 @@ try
                                     end
                                 otherwise
                                     data_handle.data(current_data).datainfo.interval_start=max(0,round(str2num(val)));
-                            end
-                        case 'baseline_deltaT'
-                            data_handle.data(current_data).datainfo.baseline_deltaT=max(10,round(str2double(val)));
-                        case 'bg_deltaT'
-                            val=str2num(val);
-                            paramsize=numel(val);
-                            if paramsize==1||paramsize==numel(data_handle.data(current_data).datainfo.interval_start)-1
-                                data_handle.data(current_data).datainfo.bg_deltaT=max(0,val);
-                            else
-                                message=sprintf('%s\n%s size does not match size of intervals.',message,parameters);
-                                status=false;
-                            end
-                        case 'AP_deltaT'
-                            val=str2num(val);
-                            paramsize=numel(val);
-                            if paramsize==1||paramsize==numel(data_handle.data(current_data).datainfo.interval_start)-1
-                                data_handle.data(current_data).datainfo.AP_deltaT=max(1,val);
-                            else
-                                message=sprintf('%s\n%s size does not match size of intervals.',message,parameters);
-                                status=false;
                             end
                         case 'edge_allowance'
                             % minimum one
@@ -228,6 +236,7 @@ try
                         bgdt=data_handle.data(current_data).datainfo.bg_deltaT(:);% duration for the background
                         APdt=data_handle.data(current_data).datainfo.AP_deltaT(:);% duration for the action potentials
                         estn=data_handle.data(current_data).datainfo.estimate_nsource;
+                        fit2dfunc=data_handle.data(current_data).datainfo.estimate_func;
                         doplot=data_handle.data(current_data).datainfo.display_fitting;
                         ninterval=numel(signalstart);   % nubmer of intervals
                         if numel(APdt)==1
@@ -238,7 +247,7 @@ try
                         if numel(bgdt)==1
                             bgdt=repmat(bgdt,1,ninterval-1);
                         end
-                        
+
                         edge_allowance=data_handle.data(current_data).datainfo.edge_allowance;
                         % time T is interval order bg->AP1->AP2->...->APn
                         T=0:1:ninterval-1;
@@ -246,10 +255,10 @@ try
                         nparam=numel(regexp(data_handle.data(current_data).datainfo.parameter_space,'[|]','split'));
                         nsource=data_handle.data(current_data).datainfo.estimate_nsource;
                         t=1:1:nparam;%
-                        
+
                         % total time interval
                         Tdata=data_handle.data(parent_data).datainfo.T;
-                        
+
                         % x and y interval
                         imgx=data_handle.data(parent_data).datainfo.X;imgx=imgx(:);
                         xbound=[imgx(1),imgx(end)];
@@ -259,17 +268,24 @@ try
                         dy=data_handle.data(parent_data).datainfo.dY;
                         [x,y]=meshgrid(imgy,imgx);
                         xres=numel(imgx);yres=numel(imgy);
-                        
+
                         %-------------------
                         % initialise data holder
                         signaldata=squeeze(data_handle.data(parent_data).dataval);
-                        result=nan(size(signalinterval,1),4*estn+1);
-                        result_err=nan(size(signalinterval,1),4*estn+1);
-                        
+                        switch fit2dfunc
+                            case 'gauss2dsimplefunc'
+                                result=nan(size(signalinterval,1),4*estn+1);
+                                result_err=nan(size(signalinterval,1),4*estn+1);
+                            case 'gauss2dgeneralfunc'
+                                result=nan(size(signalinterval,1),6*estn+1);
+                                result_err=nan(size(signalinterval,1),6*estn+1);
+                        end
+                        exportdata=[];
                         if doplot
                             hfig=figure(current_data);clf;
                             hfig.Name=data_handle.data(current_data).dataname;
-                            nplotrow=5;nplotcol=ninterval;
+                            hfig.WindowState='maximized';
+                            nplotrow=7;nplotcol=ninterval;
                         end
                         %initialise waitbar
                         waitbar_handle = waitbar(0,'Please wait...','Progress Bar','Calculating...',...
@@ -302,7 +318,7 @@ try
                                 waitbar(done,waitbar_handle,sprintf('%g%%',barstep));
                                 barstep=max(barstep+1,floor(100*done));
                             end
-                            
+
                             % find time interval
                             timeidx=(Tdata>=signalinterval(partidx,1)&Tdata<=signalinterval(partidx,2));
                             % find corresponding images
@@ -310,13 +326,16 @@ try
                             if partidx==1
                                 % background image
                                 bgimg=tempimg;
+                                tracetimeidx=timeidx;bgtimeidx=timeidx;
                                 titletext='baseline';
                             else
+                                timestamp(partidx)=signalinterval(partidx,1);
                                 bgtimeidx=(Tdata>=signalinterval(partidx,1)-bgdt(partidx-1)&Tdata<signalinterval(partidx,1));
                                 titletext=sprintf('int%i|%g',partidx,signalinterval(partidx,1));
+                                tracetimeidx=(Tdata>=signalinterval(partidx,1)-bgdt(partidx-1)&Tdata<=10*(signalinterval(partidx,2)-signalinterval(partidx,1))+signalinterval(partidx,1));
                                 if isempty(find(bgtimeidx, 1))
                                     % no background correction use baseline
-                                    
+
                                 else
                                     bgimg=squeeze(mean(signaldata(:,:,bgtimeidx),3));
                                 end
@@ -340,6 +359,15 @@ try
                                     xlim(hax,ybound);ylim(hax,xbound);
                                     axis(hax,'square');view(hax,[0 -90]);
                                     title(hax,titletext);
+
+                                    % plot temporal profile
+                                    temporaltrace=squeeze(mean(signaldata(:,:,tracetimeidx),[1,2]));
+                                    f0=squeeze(mean(signaldata(:,:,bgtimeidx),[1,2,3]));
+                                    temporaltrace=(temporaltrace-f0)./f0;
+                                    hax=subplot(nplotrow,nplotcol,nplotcol*1+partidx,'Parent',hfig);
+                                    plot(hax,Tdata(tracetimeidx),temporaltrace,'b-');axis(hax,'square');hold(hax,'on');
+                                    title(hax,'t profile');
+                                    exportdata{partidx}.temporalall=[Tdata(tracetimeidx)',temporaltrace];
                                 end
                                 %------
                                 % estimate position in x axis
@@ -347,9 +375,9 @@ try
                                 xprofile=nanmean(tempimg,2);xprofile=xprofile(:);
                                 if doplot
                                     % plot xprofile
-                                    hax=subplot(nplotrow,nplotcol,nplotcol*1+partidx,'Parent',hfig);
-                                    plot(hax,imgx,xprofile,'bo');hold(hax,'on');
-                                    title(hax,'x profile');
+                                    hax=subplot(nplotrow,nplotcol,nplotcol*2+partidx,'Parent',hfig);
+                                    plot(hax,imgx,xprofile,'bo');axis(hax,'square');view(hax,[90 90]);hold(hax,'on');
+                                    title(hax,'y profile');
                                 end
                                 if median(xprofile)>0
                                     % try and find peak position firsts
@@ -372,13 +400,13 @@ try
                                     % set upper bound (center,sigma,amplitude)
                                     ub=repmat([xbound(2)+edge_allowance*dx,diff(xbound)/2,satlevel/estn],estn,1);
                                     % try to fit 1D gaussian
-                                    [xestimates,~,xexitflag,output] = fmincon(@chi2gaussfunc,xinitestimates,[],[],[],[],lb,ub,@mygausscon,options,imgx,xprofile,satlevel);
+                                    [xestimates,~,xexitflag,output] = fmincon(@chi2gauss1dfunc,xinitestimates,[],[],[],[],lb,ub,@mygausscon,options,imgx,xprofile,satlevel/numel(imgx));
                                     if xexitflag>0
                                         if doplot
                                             for fidx=1:estn
-                                                plot(hax,imgx,gaussfunc(xestimates(fidx,:),imgx),'r--');
+                                                plot(hax,imgx,gauss1dfunc(xestimates(fidx,:),imgx),'r--','LineWidth',3);
                                             end
-                                            plot(hax,imgx,gaussfunc(xestimates,imgx),'b--');
+                                            plot(hax,imgx,gauss1dfunc(xestimates,imgx),'b--','LineWidth',3);
                                             ylim(hax,sort([0,max(xprofile)]));
                                         end
                                     else
@@ -394,9 +422,9 @@ try
                                 yprofile=nanmean(tempimg,1);yprofile=yprofile(:);
                                 if doplot
                                     % plot y profile
-                                    hax=subplot(nplotrow,nplotcol,nplotcol*2+partidx,'Parent',hfig);
-                                    plot(hax,imgy,yprofile,'bo');hold(hax,'on');
-                                    title(hax,'y profile');
+                                    hax=subplot(nplotrow,nplotcol,nplotcol*3+partidx,'Parent',hfig);
+                                    plot(hax,imgy,yprofile,'bo');axis(hax,'square');hold(hax,'on');
+                                    title(hax,'x profile');
                                 end
                                 if median(yprofile)>0
                                     % try and find peak position firsts
@@ -419,13 +447,13 @@ try
                                     % set upper bound (center,sigma,amplitude)
                                     ub=repmat([ybound(2)+edge_allowance*dy,diff(ybound)/2,satlevel/estn],estn,1);
                                     % try to fit 1D gaussian
-                                    [yestimates,~,yexitflag,output] = fmincon(@chi2gaussfunc,yinitestimates,[],[],[],[],lb,ub,@mygausscon,options,imgy,yprofile,satlevel);
+                                    [yestimates,~,yexitflag,output] = fmincon(@chi2gauss1dfunc,yinitestimates,[],[],[],[],lb,ub,@mygausscon,options,imgy,yprofile,satlevel/numel(imgx));
                                     if yexitflag>0
                                         if doplot
                                             for fidx=1:estn
-                                                plot(hax,imgy,gaussfunc(yestimates(fidx,:),imgy),'r--');
+                                                plot(hax,imgy,gauss1dfunc(yestimates(fidx,:),imgy),'r--','LineWidth',3);
                                             end
-                                            plot(hax,imgy,gaussfunc(yestimates,imgy),'b--');
+                                            plot(hax,imgy,gauss1dfunc(yestimates,imgy),'b--','LineWidth',3);
                                             ylim(hax,sort([0,max(yprofile)]));
                                         end
                                     else
@@ -438,14 +466,27 @@ try
                                 if ~fail
                                     %--------
                                     % 2d gaussian estimates
-                                    % use xesitmate and yestimate to make a educated guess
-                                    initestimates=[xestimates(:,1),yestimates(:,1),min([xestimates(:,2),yestimates(:,2)],[],2),max([xestimates(:,3),yestimates(:,3)],[],2)];
-                                    % allow 5dx and 5dy variation from original estimate
-                                    xmin=xestimates(:,1)-edge_allowance*dx;xmax=xestimates(:,1)+edge_allowance*dx;
-                                    ymin=yestimates(:,1)-edge_allowance*dy;ymax=yestimates(:,1)+edge_allowance*dy;
-                                    % make lower and upper bound
-                                    lb=[xmin,ymin,min([xestimates(:,2),yestimates(:,2)],[],2)*0.5,min([xestimates(:,3),yestimates(:,3)],[],2)*0.5];
-                                    ub=[xmax,ymax,max([xestimates(:,2),yestimates(:,2)],[],2)*1.5,max([xestimates(:,3),yestimates(:,3)],[],2)*1.5];
+                                    switch fit2dfunc
+                                        case 'gauss2dsimplefunc'
+                                            % use xesitmate and yestimate to make a educated guess
+                                            initestimates=[xestimates(:,1),yestimates(:,1),min([xestimates(:,2),yestimates(:,2)],[],2),max([xestimates(:,3),yestimates(:,3)],[],2)];
+                                            % allow 5dx and 5dy variation from original estimate
+                                            xmin=xestimates(:,1)-edge_allowance*dx;xmax=xestimates(:,1)+edge_allowance*dx;
+                                            ymin=yestimates(:,1)-edge_allowance*dy;ymax=yestimates(:,1)+edge_allowance*dy;
+                                            % make lower and upper bound
+                                            lb=[xmin,ymin,min([xestimates(:,2),yestimates(:,2)],[],2)*0.5,min([xestimates(:,3),yestimates(:,3)],[],2)*0.5];
+                                            ub=[xmax,ymax,max([xestimates(:,2),yestimates(:,2)],[],2)*1.5,max([xestimates(:,3),yestimates(:,3)],[],2)*1.5];
+                                        case 'gauss2dgeneralfunc'
+
+                                            initestimates=[xestimates(:,1),yestimates(:,1),min([xestimates(:,2),yestimates(:,2)],[],2),min([xestimates(:,2),yestimates(:,2)],[],2),max([xestimates(:,3),yestimates(:,3)],[],2),0];
+                                            % allow 5dx and 5dy variation from original estimate
+                                            xmin=xestimates(:,1)-edge_allowance*dx;xmax=xestimates(:,1)+edge_allowance*dx;
+                                            ymin=yestimates(:,1)-edge_allowance*dy;ymax=yestimates(:,1)+edge_allowance*dy;
+                                            % make lower and upper bound
+                                            lb=[xmin,ymin,min([xestimates(:,2),yestimates(:,2)],[],2)*0.5,min([xestimates(:,2),yestimates(:,2)],[],2)*0.5,min([xestimates(:,3),yestimates(:,3)],[],2)*0.5,0];
+                                            ub=[xmax,ymax,max([xestimates(:,2),yestimates(:,2)],[],2)*1.5,max([xestimates(:,2),yestimates(:,2)],[],2)*1.5,max([xestimates(:,3),yestimates(:,3)],[],2)*1.5,180];
+                                    end
+
                                     % conditional function minimum search for a 2D gaussian
                                     [estimates,fval,exitflag,output] = fmincon(@chi2gauss2dfunc,initestimates,[],[],[],[],lb,ub,@mygausscon,optimset(options),imgx,imgy,tempimg,satlevel);
                                     if exitflag>0
@@ -461,7 +502,13 @@ try
                                             % calcuate standard error of the estimated parameters
                                             est_stderr=sqrt(abs(diag(inv(hessian))));
                                         end
-                                        fitimg=gauss2dfunc(estimates,imgx,imgy);
+                                        estimates(:,3)=abs(estimates(:,3));
+                                        switch fit2dfunc
+                                            case 'gauss2dsimplefunc'
+                                                fitimg=gauss2dsimplefunc(estimates,imgx,imgy);
+                                            case 'gauss2dgeneralfunc'
+                                                fitimg=gauss2dgeneralfunc(estimates,imgx,imgy);
+                                        end
                                         resimg=(fitimg-tempimg);
                                         I_total=trapz(imgx,trapz(imgy,fitimg,2));
                                         estimates=estimates';
@@ -474,7 +521,7 @@ try
                                         result_err(partidx,:)=[est_stderr(:)',imgresidue];
                                         if doplot
                                             % plot fitted image
-                                            hax=subplot(nplotrow,nplotcol,nplotcol*3+partidx,'Parent',hfig);
+                                            hax=subplot(nplotrow,nplotcol,nplotcol*4+partidx,'Parent',hfig);
                                             mesh(hax,x,y,fitimg,'EdgeColor','none','FaceColor','interp');colormap('jet');
                                             hold(hax,'on');
                                             % plot estimated center
@@ -482,32 +529,78 @@ try
                                             title(hax,sprintf('fitted'));
                                             xlim(hax,ybound);ylim(hax,xbound);
                                             axis(hax,'square');view(hax,[0 -90]);
-                                            
+
                                             % draw residual between fitted and original image
-                                           
-                                            hax=subplot(nplotrow,nplotcol,nplotcol*4+partidx,'Parent',hfig);
+
+                                            hax=subplot(nplotrow,nplotcol,nplotcol*5+partidx,'Parent',hfig);
                                             mesh(hax,x,y,resimg,'EdgeColor','none','FaceColor','interp');colormap('jet');
                                             xlim(hax,ybound);ylim(hax,xbound);
                                             axis(hax,'square');view(hax,[0 -90]);
                                             title(hax,sprintf('residual:\n%0.3g',imgresidue));
-                                            
+
                                             % plot xy profiles
                                             xprofile=nanmean(fitimg,2);xprofile=xprofile(:);
-                                            hax=subplot(nplotrow,nplotcol,nplotcol*1+partidx,'Parent',hfig);
-                                            plot(hax,imgx,xprofile,'k-');
-                                            yprofile=nanmean(fitimg,1);yprofile=yprofile(:);
                                             hax=subplot(nplotrow,nplotcol,nplotcol*2+partidx,'Parent',hfig);
-                                            plot(hax,imgy,yprofile,'k-');
+                                            plot(hax,imgx,xprofile,'r-','LineWidth',3);
+                                            yprofile=nanmean(fitimg,1);yprofile=yprofile(:);
+                                            hax=subplot(nplotrow,nplotcol,nplotcol*3+partidx,'Parent',hfig);
+                                            plot(hax,imgy,yprofile,'r-','LineWidth',3);
+
+                                            % plot radial profile
+                                            datainfo.X=imgx;datainfo.Y=imgy;datainfo.data_dim=[1,size(tempimg),1,1];
+                                            parameter.val_lb=-Inf;parameter.val_ub=Inf;parameter.dr=max(max(diff(datainfo.X)),max(diff(datainfo.Y)));
+                                            roi.name='CENTER';roi.coord=[estimates(2,:),estimates(1,:)];
+                                            hax=subplot(nplotrow,nplotcol,nplotcol*6+partidx,'Parent',hfig);
+                                            [r,v,~]=calculate_rprofile( tempimg, datainfo, parameter, roi );
+                                            plot(hax,r,v,'bo');axis(hax,'square');hold(hax,'on');
+                                            % export this
+                                            exportdata{partidx}.radialraw=[r',v'];
+                                            title(hax,'radial profile');
+                                            [r,v,~]=calculate_rprofile( fitimg, datainfo, parameter, roi );
+                                            plot(hax,r,v,'r-','LineWidth',3);
+                                            ylim(hax,[0 max(v)])
+                                            exportdata{partidx}.radialfit=[r',v'];
+
+                                            % plot peak temporal profile
+                                            delta=0.1;
+                                            posxidx=(imgx>=(estimates(1,:)-delta)&imgx<=(estimates(1,:)+delta));
+                                            posyidx=(imgy>=(estimates(2,:)-delta)&imgy<=(estimates(2,:)+delta));
+                                            temporaltrace=squeeze(mean(signaldata(posxidx,posyidx,tracetimeidx),[1,2]));
+                                            f0=squeeze(mean(signaldata(posxidx,posyidx,bgtimeidx),[1,2,3]));
+                                            temporaltrace=(temporaltrace-f0)./f0;
+                                            hax=subplot(nplotrow,nplotcol,nplotcol*1+partidx,'Parent',hfig);
+                                            plot(hax,Tdata(tracetimeidx),temporaltrace,'r-','LineWidth',1);
+
+                                            exportdata{partidx}.temporalsource=[Tdata(tracetimeidx)',temporaltrace];
+                                            exportdata{partidx}.estimate=[signalinterval(partidx,1),result(partidx,:)];
+
+                                            % plot temporal profile
+                                            temporaltrace=squeeze(mean(signaldata(:,:,tracetimeidx),[1,2]));
+                                            f0=squeeze(mean(signaldata(:,:,bgtimeidx),[1,2,3]));
+                                            temporaltrace=(temporaltrace-f0)./f0;
+                                            hax=subplot(nplotrow,nplotcol,nplotcol*1+partidx,'Parent',hfig);
+                                            plot(hax,Tdata(tracetimeidx),temporaltrace,'b-');axis(hax,'square');hold(hax,'on');
+                                            title(hax,'t profile');
+                                            exportdata{partidx}.temporalall=[Tdata(tracetimeidx)',temporaltrace];
+
+                                            if partidx>1
+                                                plot(hax,[signalinterval(partidx,1),signalinterval(partidx,1)],[-0.05,0.5],'k--','LineWidth',0.5);
+                                                plot(hax,[signalinterval(partidx,1)-bgdt(partidx-1),signalinterval(partidx,1)-bgdt(partidx-1)],[-0.05,0.5],'k-','LineWidth',1);
+                                                plot(hax,[signalinterval(partidx,2),signalinterval(partidx,2)],[-0.05,0.5],'k--','LineWidth',0.5);
+
+                                                xlim(hax,[signalinterval(partidx,1)-10,signalinterval(partidx,1)+50]);
+                                            end
                                         end
                                     else
                                         fprintf('%s\n',output.message);
                                     end
                                 end
                             else
-                                
+
                             end
                         end
                         delete(waitbar_handle);       % DELETE the waitbar; don't try to CLOSE it.
+                        save(regexprep(cat(2,data_handle.data(current_data).dataname,'.m'),'[|]','_'),"exportdata",'-mat');
                         data_handle.data(current_data).dataval(:,1,1,1,:)=[result,result_err]';
                         data_handle.data(current_data).datainfo.t=t;
                         data_handle.data(current_data).datainfo.dt=1;
@@ -515,7 +608,7 @@ try
                         data_handle.data(current_data).datainfo.dX=1;
                         data_handle.data(current_data).datainfo.Y=1;
                         data_handle.data(current_data).datainfo.dY=1;
-                        data_handle.data(current_data).datainfo.T=T;
+                        data_handle.data(current_data).datainfo.T=timestamp;
                         data_handle.data(current_data).datainfo.dT=1;
                         data_handle.data(current_data).datainfo.data_dim=size(data_handle.data(current_data).dataval);
                         data_handle.data(current_data).datatype=data_handle.get_datatype(current_data);

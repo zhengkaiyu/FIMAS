@@ -163,6 +163,7 @@ try
                         end
                         temp=bsxfun(@minus,temp,bg_val);%background subtraction
                         T_int=(data_handle.data(parent_data).datainfo.T>=data_handle.data(current_data).datainfo.f0_t_int(1)&data_handle.data(parent_data).datainfo.T<=data_handle.data(current_data).datainfo.f0_t_int(2));
+                        %T_int(1:199)=1;
                         % time frame
                         f0_val=nanmean(temp(1,:,T_int),3);
                         if data_handle.data(current_data).datainfo.F_CH==data_handle.data(current_data).datainfo.R_CH
@@ -210,6 +211,7 @@ try
                         end
                         fval=bsxfun(@minus,fval,bg_val);%background subtraction
                         T_int=(data_handle.data(parent_data).datainfo.T>=data_handle.data(current_data).datainfo.f0_t_int(1)&data_handle.data(parent_data).datainfo.T<=data_handle.data(current_data).datainfo.f0_t_int(2));
+                       
                         % time frame
                         f0_val=nanmean(fval(1,:,T_int),3);
                         if data_handle.data(current_data).datainfo.F_CH==data_handle.data(current_data).datainfo.R_CH

@@ -112,7 +112,7 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         roi_placeholder;
     end
     
-    properties ( SetAccess = private )
+    properties ( SetAccess = private, Transient )
         DATA_SIZE_LIMIT = (2^37)/8;   %=16GIGABYTE if data bigger than this we will ask for binning
     end
     
@@ -212,6 +212,7 @@ classdef (ConstructOnLoad = true) fimdata_handle < handle
         
         %load bh sdt binary files (image/trace)
         [ status, message ] = load_bh_sdt_file( obj, filename );
+        info = read_bh_setup_info( fid, setup_offset, setup_length );
         %load bh spc binary files (photon record)
         [ status, message ] = load_bh_spc_file( obj, filename, autoload);
         %load picoquant ptu binary files (photon record)

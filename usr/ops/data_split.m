@@ -121,7 +121,7 @@ try
                         splitexp=char(fval{fidx});
                 end
             end
-            
+
             % only use waitbar for user attention if we are in
             % automated mode
             if exist('waitbar_handle','var')&&ishandle(waitbar_handle)
@@ -140,26 +140,38 @@ try
                 setappdata(waitbar_handle,'canceling',0);
             end
         end
-        
+
         % ---- Data Calculation ----
         temp=regexp(splitexp,';','split');
-        if ~isempty(obj.data(current_data).datainfo.parameter_space)
+        if ~isempty(obj.data(current_data).datainfo.parameter_space)&&~isempty(regexp(obj.data(current_data).datainfo.parameter_space,'[|]', 'once'))
             psname=regexp(obj.data(current_data).datainfo.parameter_space,'[|]','split');
-            %{
-            if numel(psname)~=numel(temp)
-                indstr=sprintf('%s,',temp{:});
-                indstr=eval(cat(2,'[',indstr(1:end-1),']'));
-                psname=psname(indstr);
-            end
-            %}
+            paramtype=0;
         else
             psname=temp;
+            paramtype=1;
         end
         for newdata_idx=1:numel(temp)
+            paramidx=eval(temp{newdata_idx});
             % create new data items
+            if numel(psname)~=numel(paramidx)
+                indstr=sprintf('%s,',temp{newdata_idx});
+                indstr=eval(cat(2,'[',indstr(1:end-1),']'));
+                switch paramtype
+                    case 0
+                        psloopname=psname(indstr);
+                    case 1
+                        indstr=(cat(2,'[',indstr(1:end-1),']'));
+                        psloopname=psname(newdata_idx);
+                end
+            else
+                psloopname=psname;
+            end
+
+            paraname=cell2mat(cellfun(@(x)sprintf('%s|',x),psloopname,'UniformOutput',false));
+            paraname=paraname(1:end-1);
             % add new data
-            dimidx=eval(temp{newdata_idx});
-            obj.data_add(sprintf('data_split|%s#%g|%s',psname{dimidx(1)},newdata_idx,obj.data(current_data).dataname),[],[]);
+
+            obj.data_add(sprintf('data_split|%s#%g|%s',paraname,newdata_idx,obj.data(current_data).dataname),[],[]);
             % get new data index
             new_data=obj.current_data;
             % set parent data index
@@ -205,7 +217,7 @@ try
             obj.data(new_data).datatype=obj.get_datatype(new_data);
             % pass on metadata info
             obj.data(new_data).metainfo=obj.data(current_data).metainfo;
-            obj.data(new_data).datainfo.parameter_space=[];
+            obj.data(new_data).datainfo.parameter_space=cell2mat(psloopname);
             obj.data(new_data).datainfo.last_change=datestr(now);
             message=sprintf('%s\nData %s to %s splitted into %g new dataitems.',message,num2str(current_data),num2str(new_data),numel(temp));
         end

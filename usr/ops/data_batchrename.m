@@ -9,12 +9,13 @@ function [ status, message ] = data_batchrename( obj, selected_data, askforparam
 %
 %   4. Indexed part empty for same names
 %
-%   5. e.g. common='trial_%s_Ch1', indexed=1:1:10
-%           common='%s',indexd=1:1:10
-%           common='trial',indexed=[]
+%   5. e.g. common='trial_%s_Ch1', indexed=1:1:10, ,replace=''
+%           common='%s',indexd=1:1:10,,replace=''
+%           common='trial',indexed=[],,replace=''
+%           common='([\w|]*pos#\d[|])',indexed=[],replace='UG'
 %
 %---Batch process----------------------------------------------------------
-%   Parameter=struct('selected_data','1','common','trial_%s_Ch1','indexed','[1:1:10]');
+%   Parameter=struct('selected_data','1','common','([\w|]*pos#\d[|])','indexed','[]','replace','');
 %   selected_data=data index, 1 means previous generated data
 %   common=string of common name expressiong
 %   indexed=string of expression used to index or differentiate dataitems
@@ -44,7 +45,7 @@ try
                 'Indexed part naming string'};
             dlg_title = cat(2,'Data rename',obj.data(current_data).dataname);
             num_lines = 1;
-            def = {'trial_%s_Ch1','[1:1:10]'};
+            def = {'trial_%s_Ch1','[1:1:10]',''};
             answer = inputdlg(prompt,dlg_title,num_lines,def);
             if ~isempty(answer)
                 % make out automated naming using common and indexed part
@@ -55,9 +56,10 @@ try
                 else
                     indexed=eval(answer{2});
                 end
+                replace=answer{3}
                 if numel(indexed)==numel(selected_data)
                     % we are ok with the index
-                    
+
                 else
                     % index doesn't match number of selected data
                     message=sprintf('%s\nSpecified index has %g elements does not match %g selected data.',message,numel(indexed),numel(selected_data));
@@ -65,7 +67,7 @@ try
                 end
             else
                 % cancel clicked don't do anything to this data item
-                common=[];indexed=[];
+                common=[];indexed=[];replace=[];
                 message=sprintf('%s\nAction cancelled!',message);
                 return;
             end
@@ -85,6 +87,8 @@ try
                         common=fval{fidx};
                     case 'indexed'
                         indexed=eval(fval{fidx});
+                    case 'replace'
+                        replace=fval{fidx};
                 end
             end
             % only use waitbar for user attention if we are in
@@ -105,25 +109,30 @@ try
                 setappdata(waitbar_handle,'canceling',0);
             end
         end
-        
+
         % ---- Data Calculation ----
         if isempty(common)
             % action cancelled
             return;
         else
-            if strcmp(common,'%s')
-                % use exiting name as backbone
+            if ischar(replace)
                 oldname=obj.data(current_data).dataname;
-                newname=eval(cat(2,'sprintf(''',oldname,'_%s'',num2str(indexed(data_idx)));'));
+                newname=regexprep(oldname,common,replace);
             else
-                newname=eval(cat(2,'sprintf(''',common,''',num2str(indexed(data_idx)));'));
+                if strcmp(common,'%s')
+                    % use exiting name as backbone
+                    oldname=obj.data(current_data).dataname;
+                    newname=eval(cat(2,'sprintf(''',oldname,'_%s'',num2str(indexed(data_idx)));'));
+                else
+                    newname=eval(cat(2,'sprintf(''',common,''',num2str(indexed(data_idx)));'));
+                end
             end
             obj.data(current_data).dataname=newname;
-            
+
             % same data to same data for renaming
             message=sprintf('%s\nData %s to %s renamed',message,num2str(current_data),num2str(current_data));
         end
-        
+
         % increment data index
         data_idx=data_idx+1;
         status=true;
